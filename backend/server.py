@@ -74,10 +74,15 @@ class Anamnese(BaseModel):
     debut_symptomes: str
     facteurs_declenchants: str
     activites_genantes: List[str]
+    autres_activites: Optional[str] = None
     antecedents_medicaux: str
     traitements_actuels: str
     objectifs_patient: str
     notes_supplementaires: Optional[str] = None
+    pain_areas: Optional[Dict[str, int]] = None  # Zone: intensité 1-10
+    red_flags: Optional[List[str]] = None
+    yellow_flags: Optional[List[str]] = None
+    blue_flags: Optional[List[str]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AnamneseCreate(BaseModel):
@@ -88,10 +93,34 @@ class AnamneseCreate(BaseModel):
     debut_symptomes: str
     facteurs_declenchants: str
     activites_genantes: List[str]
+    autres_activites: Optional[str] = None
     antecedents_medicaux: str
     traitements_actuels: str
     objectifs_patient: str
     notes_supplementaires: Optional[str] = None
+    pain_areas: Optional[Dict[str, int]] = None
+    red_flags: Optional[List[str]] = None
+    yellow_flags: Optional[List[str]] = None
+    blue_flags: Optional[List[str]] = None
+
+class Suggestion(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    titre: str
+    description: str
+    categorie: str  # amelioration, nouvelle_fonctionnalite, bug, interface, performance
+    priorite: str  # basse, moyenne, haute
+    statut: str = "en_attente"  # en_attente, approuve, en_cours, termine, rejete
+    user_id: Optional[str] = None  # Futur: pour tracer qui a suggéré
+    date_approbation: Optional[datetime] = None
+    date_completion: Optional[datetime] = None
+    notes_admin: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SuggestionCreate(BaseModel):
+    titre: str
+    description: str
+    categorie: str
+    priorite: str
 
 class BilanClinique(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
