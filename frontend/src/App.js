@@ -760,7 +760,33 @@ const NewPatientForm = () => {
     }
   };
 
-  const handleActivitesChange = (activite, checked) => {
+  const handlePainAreaClick = (areaId) => {
+    if (areaId === 'clear') {
+      setAnamneseData(prev => ({ ...prev, pain_areas: {} }));
+      return;
+    }
+
+    // Demander l'intensité de la douleur (1-10)
+    const intensity = prompt(`Intensité de la douleur pour ${areaId} (1-10):`);
+    if (intensity && !isNaN(intensity) && intensity >= 1 && intensity <= 10) {
+      setAnamneseData(prev => ({
+        ...prev,
+        pain_areas: {
+          ...prev.pain_areas,
+          [areaId]: parseInt(intensity)
+        }
+      }));
+    }
+  };
+
+  const handleFlagChange = (flagType, flag, checked) => {
+    setAnamneseData(prev => ({
+      ...prev,
+      [flagType]: checked 
+        ? [...prev[flagType], flag]
+        : prev[flagType].filter(f => f !== flag)
+    }));
+  };
     if (checked) {
       setAnamneseData(prev => ({
         ...prev,
