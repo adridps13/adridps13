@@ -2567,6 +2567,523 @@ const SuggestionsPage = () => {
   );
 };
 
+// Messagerie & Notifications Page Component
+const MessagingPage = () => {
+  const [activeTab, setActiveTab] = useState('notifications');
+  const [notifications, setNotifications] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [patients, setPatients] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    fetchNotifications();
+    fetchConversations();
+    fetchPatients();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(`${API}/notifications`);
+      setNotifications(response.data);
+      setUnreadCount(response.data.filter(n => !n.lu).length);
+    } catch (error) {
+      console.error('Erreur lors du chargement des notifications:', error);
+      // Données factices pour démonstration
+      setNotifications([
+        {
+          id: '1',
+          type: 'exercice_complete',
+          titre: 'Exercice terminé',
+          message: 'Marie Dupont a terminé sa séance de renforcement quadriceps',
+          patient_nom: 'Marie Dupont',
+          patient_id: '1',
+          lu: false,
+          created_at: new Date().toISOString(),
+          icone: 'CheckCircle'
+        },
+        {
+          id: '2',
+          type: 'commentaire',
+          titre: 'Nouveau commentaire',
+          message: 'Test TestPatient a ajouté un commentaire sur son programme',
+          patient_nom: 'Test TestPatient',
+          patient_id: '2',
+          lu: false,
+          created_at: new Date(Date.now() - 3600000).toISOString(),
+          icone: 'MessageCircle'
+        },
+        {
+          id: '3',
+          type: 'douleur_elevee',
+          titre: 'Douleur élevée signalée',
+          message: 'Marie Dupont a signalé une douleur de 8/10 après sa séance',
+          patient_nom: 'Marie Dupont', 
+          patient_id: '1',
+          lu: true,
+          created_at: new Date(Date.now() - 7200000).toISOString(),
+          icone: 'AlertCircle'
+        }
+      ]);
+      setUnreadCount(2);
+    }
+  };
+
+  const fetchConversations = async () => {
+    try {
+      const response = await axios.get(`${API}/conversations`);
+      setConversations(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des conversations:', error);
+      // Données factices pour démonstration
+      setConversations([
+        {
+          id: '1',
+          patient_id: '1',
+          patient_nom: 'Marie Dupont',
+          patient_avatar: null,
+          dernier_message: 'Merci pour les exercices, je me sens mieux !',
+          dernier_message_date: new Date().toISOString(),
+          messages_non_lus: 2,
+          statut: 'active'
+        },
+        {
+          id: '2', 
+          patient_id: '2',
+          patient_nom: 'Test TestPatient',
+          patient_avatar: null,
+          dernier_message: 'Bonjour docteur, j\'ai une question sur mon programme',
+          dernier_message_date: new Date(Date.now() - 1800000).toISOString(),
+          messages_non_lus: 0,
+          statut: 'active'
+        }
+      ]);
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      const response = await axios.get(`${API}/patients`);
+      setPatients(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des patients:', error);
+    }
+  };
+
+  const fetchMessages = async (conversationId) => {
+    try {
+      const response = await axios.get(`${API}/conversations/${conversationId}/messages`);
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des messages:', error);
+      // Messages factices pour démonstration
+      if (conversationId === '1') {
+        setMessages([
+          {
+            id: '1',
+            contenu: 'Bonjour, comment se passent vos exercices ?',
+            expediteur: 'therapeute',
+            timestamp: new Date(Date.now() - 86400000).toISOString(),
+            lu: true
+          },
+          {
+            id: '2',
+            contenu: 'Bonjour docteur ! Ça va bien, mais j\'ai encore un peu mal au genou après les squats muraux.',
+            expediteur: 'patient',
+            timestamp: new Date(Date.now() - 82800000).toISOString(),
+            lu: true
+          },
+          {
+            id: '3',
+            contenu: 'C\'est normal au début. Essayez de réduire un peu l\'amplitude et augmentez progressivement. Comment évaluez-vous votre douleur sur 10 ?',
+            expediteur: 'therapeute',
+            timestamp: new Date(Date.now() - 82800000).toISOString(),
+            lu: true
+          },
+          {
+            id: '4',
+            contenu: 'Je dirais environ 4/10 pendant l\'exercice, et 2/10 au repos. C\'est supportable !',
+            expediteur: 'patient',
+            timestamp: new Date(Date.now() - 3600000).toISOString(),
+            lu: true
+          },
+          {
+            id: '5',
+            contenu: 'Parfait ! Continuez comme ça. Merci pour les exercices, je me sens mieux !',
+            expediteur: 'patient',
+            timestamp: new Date().toISOString(),
+            lu: false
+          }
+        ]);
+      }
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    try {
+      const messageData = {
+        contenu: newMessage,
+        conversation_id: selectedConversation.id,
+        expediteur: 'therapeute'
+      };
+
+      await axios.post(`${API}/messages`, messageData);
+      
+      // Ajouter le message localement
+      const newMessageObj = {
+        id: Date.now().toString(),
+        contenu: newMessage,
+        expediteur: 'therapeute',
+        timestamp: new Date().toISOString(),
+        lu: true
+      };
+      
+      setMessages(prev => [...prev, newMessageObj]);
+      setNewMessage('');
+      
+      // Mettre à jour la conversation
+      setConversations(prev => prev.map(conv => 
+        conv.id === selectedConversation.id 
+          ? { ...conv, dernier_message: newMessage, dernier_message_date: new Date().toISOString() }
+          : conv
+      ));
+
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi du message:', error);
+      alert('Erreur lors de l\'envoi du message');
+    }
+  };
+
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      await axios.put(`${API}/notifications/${notificationId}/read`);
+      setNotifications(prev => prev.map(n => 
+        n.id === notificationId ? { ...n, lu: true } : n
+      ));
+      setUnreadCount(prev => prev - 1);
+    } catch (error) {
+      console.error('Erreur lors du marquage de la notification:', error);
+      // Marquer localement pour la démo
+      setNotifications(prev => prev.map(n => 
+        n.id === notificationId ? { ...n, lu: true } : n
+      ));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    }
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'exercice_complete':
+        return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case 'commentaire':
+        return <MessageCircle className="w-5 h-5 text-blue-600" />;
+      case 'douleur_elevee':
+        return <AlertCircle className="w-5 h-5 text-red-600" />;
+      case 'seance_manquee':
+        return <Clock className="w-5 h-5 text-orange-600" />;
+      default:
+        return <Bell className="w-5 h-5 text-gray-600" />;
+    }
+  };
+
+  const formatTimeAgo = (timestamp) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInHours = Math.floor((now - time) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'À l\'instant';
+    if (diffInHours < 24) return `Il y a ${diffInHours}h`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `Il y a ${diffInDays}j`;
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Messagerie & Notifications</h1>
+          <p className="text-gray-600">Communication avec vos patients et suivi d'activité</p>
+        </div>
+        {unreadCount > 0 && (
+          <Badge className="bg-red-500 text-white">
+            {unreadCount} non lues
+          </Badge>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Sidebar avec onglets */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Communication</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="space-y-1">
+                <button
+                  onClick={() => setActiveTab('notifications')}
+                  className={`w-full flex items-center px-4 py-3 text-left transition-colors ${
+                    activeTab === 'notifications' 
+                      ? 'bg-emerald-100 text-emerald-700 border-r-2 border-emerald-600' 
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Bell className="w-4 h-4 mr-3" />
+                  <span>Notifications</span>
+                  {unreadCount > 0 && (
+                    <Badge className="ml-auto bg-red-500 text-white text-xs">
+                      {unreadCount}
+                    </Badge>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('messages')}
+                  className={`w-full flex items-center px-4 py-3 text-left transition-colors ${
+                    activeTab === 'messages' 
+                      ? 'bg-emerald-100 text-emerald-700 border-r-2 border-emerald-600' 
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <MessageCircle className="w-4 h-4 mr-3" />
+                  <span>Messages</span>
+                  {conversations.reduce((acc, conv) => acc + conv.messages_non_lus, 0) > 0 && (
+                    <Badge className="ml-auto bg-blue-500 text-white text-xs">
+                      {conversations.reduce((acc, conv) => acc + conv.messages_non_lus, 0)}
+                    </Badge>
+                  )}
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Contenu principal */}
+        <div className="lg:col-span-3">
+          {activeTab === 'notifications' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Bell className="w-5 h-5 mr-2 text-emerald-600" />
+                  Notifications d'Activité
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`flex items-start space-x-4 p-4 rounded-lg border transition-colors cursor-pointer ${
+                        !notification.lu 
+                          ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' 
+                          : 'bg-white border-gray-200 hover:bg-gray-50'
+                      }`}
+                      onClick={() => !notification.lu && markNotificationAsRead(notification.id)}
+                    >
+                      <div className="flex-shrink-0">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h4 className={`text-sm font-medium ${!notification.lu ? 'text-gray-900' : 'text-gray-700'}`}>
+                            {notification.titre}
+                          </h4>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-500">
+                              {formatTimeAgo(notification.created_at)}
+                            </span>
+                            {!notification.lu && (
+                              <Circle className="w-2 h-2 fill-blue-600 text-blue-600" />
+                            )}
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mt-1">
+                          {notification.message}
+                        </p>
+                        
+                        <div className="flex items-center mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            {notification.patient_nom}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {notifications.length === 0 && (
+                    <div className="text-center py-12">
+                      <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Aucune notification
+                      </h3>
+                      <p className="text-gray-600">
+                        Les activités de vos patients apparaîtront ici
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'messages' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+              {/* Liste des conversations */}
+              <div className="lg:col-span-1">
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Conversations</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <ScrollArea className="h-[500px]">
+                      <div className="space-y-1">
+                        {conversations.map((conversation) => (
+                          <button
+                            key={conversation.id}
+                            onClick={() => {
+                              setSelectedConversation(conversation);
+                              fetchMessages(conversation.id);
+                            }}
+                            className={`w-full flex items-center p-4 text-left transition-colors ${
+                              selectedConversation?.id === conversation.id
+                                ? 'bg-emerald-100 border-r-2 border-emerald-600'
+                                : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
+                                <span className="text-white text-sm font-medium">
+                                  {conversation.patient_nom.split(' ').map(n => n[0]).join('')}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="ml-3 flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-medium text-gray-900 truncate">
+                                  {conversation.patient_nom}
+                                </h4>
+                                {conversation.messages_non_lus > 0 && (
+                                  <Badge className="bg-blue-500 text-white text-xs">
+                                    {conversation.messages_non_lus}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-600 truncate mt-1">
+                                {conversation.dernier_message}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {formatTimeAgo(conversation.dernier_message_date)}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Zone de chat */}
+              <div className="lg:col-span-2">
+                <Card className="h-full flex flex-col">
+                  {selectedConversation ? (
+                    <>
+                      <CardHeader className="border-b">
+                        <CardTitle className="flex items-center">
+                          <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-white text-sm font-medium">
+                              {selectedConversation.patient_nom.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                          {selectedConversation.patient_nom}
+                        </CardTitle>
+                      </CardHeader>
+                      
+                      <CardContent className="flex-1 flex flex-col p-0">
+                        <ScrollArea className="flex-1 p-4">
+                          <div className="space-y-4">
+                            {messages.map((message) => (
+                              <div
+                                key={message.id}
+                                className={`flex ${message.expediteur === 'therapeute' ? 'justify-end' : 'justify-start'}`}
+                              >
+                                <div
+                                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                    message.expediteur === 'therapeute'
+                                      ? 'bg-emerald-600 text-white'
+                                      : 'bg-gray-100 text-gray-900'
+                                  }`}
+                                >
+                                  <p className="text-sm">{message.contenu}</p>
+                                  <div className={`flex items-center justify-end mt-1 space-x-1 ${
+                                    message.expediteur === 'therapeute' ? 'text-emerald-100' : 'text-gray-500'
+                                  }`}>
+                                    <span className="text-xs">
+                                      {new Date(message.timestamp).toLocaleTimeString('fr-FR', { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                      })}
+                                    </span>
+                                    {message.expediteur === 'therapeute' && (
+                                      message.lu ? <CheckCheck className="w-3 h-3" /> : <Check className="w-3 h-3" />
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                        
+                        <div className="border-t p-4">
+                          <form onSubmit={sendMessage} className="flex space-x-2">
+                            <Input
+                              value={newMessage}
+                              onChange={(e) => setNewMessage(e.target.value)}
+                              placeholder="Tapez votre message..."
+                              className="flex-1"
+                            />
+                            <Button 
+                              type="submit" 
+                              disabled={!newMessage.trim()}
+                              className="bg-emerald-600 hover:bg-emerald-700"
+                            >
+                              <Send className="w-4 h-4" />
+                            </Button>
+                          </form>
+                        </div>
+                      </CardContent>
+                    </>
+                  ) : (
+                    <CardContent className="flex-1 flex items-center justify-center">
+                      <div className="text-center">
+                        <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Sélectionnez une conversation
+                        </h3>
+                        <p className="text-gray-600">
+                          Choisissez un patient pour commencer à discuter
+                        </p>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   return (
     <div className="App min-h-screen bg-gray-50">
