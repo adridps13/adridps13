@@ -2266,6 +2266,299 @@ const ProgrammesPage = () => {
     </div>
   );
 };
+
+// Suggestions Page Component
+const SuggestionsPage = () => {
+  const [suggestions, setSuggestions] = useState([]);
+  const [showNewSuggestion, setShowNewSuggestion] = useState(false);
+  const [newSuggestion, setNewSuggestion] = useState({
+    titre: '',
+    description: '',
+    categorie: 'amelioration',
+    priorite: 'moyenne'
+  });
+
+  useEffect(() => {
+    fetchSuggestions();
+  }, []);
+
+  const fetchSuggestions = async () => {
+    try {
+      const response = await axios.get(`${API}/suggestions`);
+      setSuggestions(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des suggestions:', error);
+    }
+  };
+
+  const createSuggestion = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/suggestions`, newSuggestion);
+      alert('Suggestion soumise avec succès !');
+      setNewSuggestion({
+        titre: '',
+        description: '',
+        categorie: 'amelioration',
+        priorite: 'moyenne'
+      });
+      setShowNewSuggestion(false);
+      fetchSuggestions();
+    } catch (error) {
+      console.error('Erreur lors de la création de la suggestion:', error);
+      alert('Erreur lors de la soumission de votre suggestion');
+    }
+  };
+
+  const getStatusColor = (statut) => {
+    switch (statut) {
+      case 'en_attente':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approuve':
+        return 'bg-green-100 text-green-800';
+      case 'en_cours':
+        return 'bg-blue-100 text-blue-800';
+      case 'termine':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'rejete':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (priorite) => {
+    switch (priorite) {
+      case 'haute':
+        return 'text-red-600';
+      case 'moyenne':
+        return 'text-yellow-600';
+      case 'basse':
+        return 'text-green-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Suggestions d'Amélioration</h1>
+          <p className="text-gray-600">Proposez vos idées pour améliorer KineTrack</p>
+        </div>
+        <Button
+          onClick={() => setShowNewSuggestion(true)}
+          className="bg-emerald-600 hover:bg-emerald-700"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Nouvelle Suggestion
+        </Button>
+      </div>
+
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card className="border-l-4 border-l-yellow-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">En Attente</CardTitle>
+            <Clock className="h-5 w-5 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">
+              {suggestions.filter(s => s.statut === 'en_attente').length}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">En Cours</CardTitle>
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">
+              {suggestions.filter(s => s.statut === 'en_cours').length}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-green-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Terminées</CardTitle>
+            <CheckCircle className="h-5 w-5 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">
+              {suggestions.filter(s => s.statut === 'termine').length}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-emerald-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Total</CardTitle>
+            <Star className="h-5 w-5 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">{suggestions.length}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Liste des suggestions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {suggestions.map((suggestion) => (
+          <Card key={suggestion.id} className="hover:shadow-md transition-shadow">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-lg">{suggestion.titre}</CardTitle>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Badge variant="outline" className={getPriorityColor(suggestion.priorite)}>
+                      {suggestion.priorite}
+                    </Badge>
+                    <Badge className={getStatusColor(suggestion.statut)}>
+                      {suggestion.statut?.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">{suggestion.description}</p>
+              
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  {new Date(suggestion.created_at).toLocaleDateString()}
+                </div>
+                <div className="capitalize">
+                  {suggestion.categorie}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {suggestions.length === 0 && (
+        <Card className="mt-8">
+          <CardContent className="text-center py-12">
+            <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Aucune suggestion pour le moment
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Soyez le premier à proposer une amélioration !
+            </p>
+            <Button
+              onClick={() => setShowNewSuggestion(true)}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Proposer une Suggestion
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dialog nouvelle suggestion */}
+      <Dialog open={showNewSuggestion} onOpenChange={setShowNewSuggestion}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Star className="w-5 h-5 text-emerald-600" />
+              <span>Nouvelle Suggestion</span>
+            </DialogTitle>
+            <DialogDescription>
+              Partagez vos idées pour améliorer KineTrack
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={createSuggestion} className="space-y-4">
+            <div>
+              <Label htmlFor="titre">Titre de la suggestion *</Label>
+              <Input
+                id="titre"
+                value={newSuggestion.titre}
+                onChange={(e) => setNewSuggestion(prev => ({ ...prev, titre: e.target.value }))}
+                placeholder="Ex: Ajouter un système de notifications"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="categorie">Catégorie</Label>
+                <Select
+                  value={newSuggestion.categorie}
+                  onValueChange={(value) => setNewSuggestion(prev => ({ ...prev, categorie: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="amelioration">Amélioration</SelectItem>
+                    <SelectItem value="nouvelle_fonctionnalite">Nouvelle fonctionnalité</SelectItem>
+                    <SelectItem value="bug">Correction de bug</SelectItem>
+                    <SelectItem value="interface">Interface utilisateur</SelectItem>
+                    <SelectItem value="performance">Performance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="priorite">Priorité</Label>
+                <Select
+                  value={newSuggestion.priorite}
+                  onValueChange={(value) => setNewSuggestion(prev => ({ ...prev, priorite: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basse">Basse</SelectItem>
+                    <SelectItem value="moyenne">Moyenne</SelectItem>
+                    <SelectItem value="haute">Haute</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description détaillée *</Label>
+              <Textarea
+                id="description"
+                value={newSuggestion.description}
+                onChange={(e) => setNewSuggestion(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Décrivez votre suggestion en détail..."
+                className="h-32"
+                required
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowNewSuggestion(false)}
+              >
+                Annuler
+              </Button>
+              <Button
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                Soumettre
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 function App() {
   return (
     <div className="App min-h-screen bg-gray-50">
