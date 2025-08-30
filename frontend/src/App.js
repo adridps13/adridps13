@@ -692,6 +692,7 @@ const NewPatientForm = () => {
     debut_symptomes: '',
     facteurs_declenchants: '',
     activites_genantes: [],
+    autres_activites: '',
     antecedents_medicaux: '',
     traitements_actuels: '',
     objectifs_patient: '',
