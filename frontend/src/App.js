@@ -974,6 +974,29 @@ const NewPatientForm = () => {
                         <span className="text-sm">{activite}</span>
                       </label>
                     ))}
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={anamneseData.autres_activites !== ''}
+                        onChange={(e) => {
+                          if (!e.target.checked) {
+                            setAnamneseData(prev => ({ ...prev, autres_activites: '' }));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span className="text-sm">Autres</span>
+                    </label>
+                  </div>
+                  
+                  {/* Champ "Autres" activités */}
+                  <div className="mt-3">
+                    <Input
+                      placeholder="Précisez d'autres activités gênantes..."
+                      value={anamneseData.autres_activites}
+                      onChange={(e) => setAnamneseData(prev => ({ ...prev, autres_activites: e.target.value }))}
+                      className="w-full"
+                    />
                   </div>
                 </div>
 
