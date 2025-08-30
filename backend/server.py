@@ -291,23 +291,6 @@ def suggerer_adaptation(seances_recentes: List[Dict], seuils: Dict) -> str:
     return " | ".join(suggestions) if suggestions else "✅ Programme adapté"
 
 # Nouveaux modèles pour remplacer les anciens
-class ProgrammeExercices(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_id: str
-    nom_programme: str
-    exercices: List[str]  # Liste des IDs d'exercices
-    frequence_semaine: int
-    duree_programme_semaines: int
-    instructions_generales: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class ProgrammeExercicesCreate(BaseModel):
-    patient_id: str
-    nom_programme: str
-    exercices: List[str]
-    frequence_semaine: int
-    duree_programme_semaines: int
-    instructions_generales: str
 
 class DocumentGenere(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
