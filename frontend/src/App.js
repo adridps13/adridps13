@@ -1069,7 +1069,146 @@ const NewPatientForm = () => {
   );
 };
 
-// Body Diagram Component
+// Pain Drawing Component
+const PainDrawing = ({ painAreas, onPainAreaClick }) => {
+  const bodyParts = [
+    { id: 'tete', name: 'Tête', x: 150, y: 30, width: 60, height: 50 },
+    { id: 'cou', name: 'Cou', x: 160, y: 80, width: 40, height: 25 },
+    { id: 'epaule_g', name: 'Épaule G', x: 110, y: 105, width: 40, height: 30 },
+    { id: 'epaule_d', name: 'Épaule D', x: 210, y: 105, width: 40, height: 30 },
+    { id: 'bras_g', name: 'Bras G', x: 90, y: 135, width: 25, height: 60 },
+    { id: 'bras_d', name: 'Bras D', x: 245, y: 135, width: 25, height: 60 },
+    { id: 'coude_g', name: 'Coude G', x: 85, y: 195, width: 30, height: 20 },
+    { id: 'coude_d', name: 'Coude D', x: 245, y: 195, width: 30, height: 20 },
+    { id: 'avant_bras_g', name: 'Avant-bras G', x: 90, y: 215, width: 25, height: 50 },
+    { id: 'avant_bras_d', name: 'Avant-bras D', x: 245, y: 215, width: 25, height: 50 },
+    { id: 'main_g', name: 'Main G', x: 85, y: 265, width: 30, height: 25 },
+    { id: 'main_d', name: 'Main D', x: 245, y: 265, width: 30, height: 25 },
+    { id: 'thorax', name: 'Thorax', x: 140, y: 105, width: 80, height: 60 },
+    { id: 'abdomen', name: 'Abdomen', x: 145, y: 165, width: 70, height: 50 },
+    { id: 'dos_haut', name: 'Dos Haut', x: 145, y: 105, width: 70, height: 40 },
+    { id: 'dos_bas', name: 'Dos Bas', x: 145, y: 145, width: 70, height: 50 },
+    { id: 'bassin', name: 'Bassin', x: 145, y: 215, width: 70, height: 40 },
+    { id: 'cuisse_g', name: 'Cuisse G', x: 140, y: 255, width: 30, height: 70 },
+    { id: 'cuisse_d', name: 'Cuisse D', x: 190, y: 255, width: 30, height: 70 },
+    { id: 'genou_g', name: 'Genou G', x: 140, y: 325, width: 30, height: 25 },
+    { id: 'genou_d', name: 'Genou D', x: 190, y: 325, width: 30, height: 25 },
+    { id: 'jambe_g', name: 'Jambe G', x: 140, y: 350, width: 25, height: 60 },
+    { id: 'jambe_d', name: 'Jambe D', x: 195, y: 350, width: 25, height: 60 },
+    { id: 'cheville_g', name: 'Cheville G', x: 140, y: 410, width: 25, height: 20 },
+    { id: 'cheville_d', name: 'Cheville D', x: 195, y: 410, width: 25, height: 20 },
+    { id: 'pied_g', name: 'Pied G', x: 135, y: 430, width: 30, height: 20 },
+    { id: 'pied_d', name: 'Pied D', x: 195, y: 430, width: 30, height: 20 }
+  ];
+
+  const getPainColor = (bodyPartId) => {
+    if (!painAreas[bodyPartId]) return 'transparent';
+    const intensity = painAreas[bodyPartId];
+    if (intensity <= 3) return 'rgba(34, 197, 94, 0.6)'; // Vert (léger)
+    if (intensity <= 6) return 'rgba(251, 191, 36, 0.6)'; // Jaune (modéré)
+    return 'rgba(239, 68, 68, 0.6)'; // Rouge (intense)
+  };
+
+  return (
+    <div className="bg-white p-4 rounded-lg border shadow-sm">
+      <h3 className="font-medium text-gray-900 mb-4 text-center">Dessin de la Douleur</h3>
+      <p className="text-sm text-gray-600 mb-4 text-center">
+        Cliquez sur les zones douloureuses pour indiquer l'intensité (1-10)
+      </p>
+      
+      <div className="flex justify-center mb-4">
+        <svg width="360" height="470" viewBox="0 0 360 470" className="border rounded">
+          {/* Corps humain simplifié */}
+          <defs>
+            <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style={{stopColor:'#f8fafc', stopOpacity:1}} />
+              <stop offset="100%" style={{stopColor:'#e2e8f0', stopOpacity:1}} />
+            </linearGradient>
+          </defs>
+          
+          {/* Anatomie de base */}
+          {/* Tête */}
+          <circle cx="180" cy="55" r="25" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Corps */}
+          <rect x="145" y="105" width="70" height="110" rx="15" fill="url(#bodyGradient)" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Bras */}
+          <rect x="95" y="135" width="20" height="80" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="245" y="135" width="20" height="80" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Mains */}
+          <ellipse cx="100" cy="275" rx="12" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="260" cy="275" rx="12" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Jambes */}
+          <rect x="145" y="255" width="25" height="100" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="190" y="255" width="25" height="100" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Pieds */}
+          <ellipse cx="150" cy="440" rx="15" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="210" cy="440" rx="15" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Zones cliquables pour douleur */}
+          {bodyParts.map((part) => (
+            <g key={part.id}>
+              <rect
+                x={part.x}
+                y={part.y}
+                width={part.width}
+                height={part.height}
+                fill={getPainColor(part.id)}
+                stroke={painAreas[part.id] ? "#ef4444" : "transparent"}
+                strokeWidth="2"
+                rx="5"
+                className="cursor-pointer hover:stroke-emerald-500 transition-all"
+                onClick={() => onPainAreaClick(part.id)}
+              />
+              {painAreas[part.id] && (
+                <text
+                  x={part.x + part.width/2}
+                  y={part.y + part.height/2 + 5}
+                  textAnchor="middle"
+                  className="text-xs font-bold fill-white pointer-events-none"
+                  style={{fontSize: '12px'}}
+                >
+                  {painAreas[part.id]}
+                </text>
+              )}
+            </g>
+          ))}
+        </svg>
+      </div>
+      
+      {/* Légende */}
+      <div className="flex justify-center space-x-4 text-xs">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-green-400 rounded"></div>
+          <span>Léger (1-3)</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+          <span>Modéré (4-6)</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-red-400 rounded"></div>
+          <span>Intense (7-10)</span>
+        </div>
+      </div>
+      
+      <div className="mt-3 text-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPainAreaClick('clear')}
+          className="text-xs"
+        >
+          Effacer tout
+        </Button>
+      </div>
+    </div>
+  );
+};
 const BodyDiagram = ({ onZoneClick, selectedZone }) => {
   const zones = [
     { id: 'cervicales', name: 'Cervicales', x: 160, y: 75, width: 40, height: 20 },
