@@ -549,6 +549,7 @@ async def initialize_database():
     if existing_exercises == 0:
         # Créer des exercices de base
         sample_exercises = [
+            # Exercices Genou
             {
                 "id": str(uuid.uuid4()),
                 "nom": "Flexion/Extension du genou",
@@ -581,6 +582,23 @@ async def initialize_database():
             },
             {
                 "id": str(uuid.uuid4()),
+                "nom": "Squats muraux",
+                "description": "Squats avec appui dorsal contre le mur pour renforcement des quadriceps",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "genou",
+                "difficulte": 3,
+                "duree_minutes": 12,
+                "repetitions": "3 séries de 12",
+                "series": 3,
+                "materiel_requis": "Mur",
+                "url_video": "https://www.youtube.com/watch?v=wall-squats",
+                "consignes_specifiques": "Descendre jusqu'à 90° de flexion, maintenir 2 secondes",
+                "created_at": datetime.now(timezone.utc)
+            },
+            
+            # Exercices Cuisse
+            {
+                "id": str(uuid.uuid4()),
                 "nom": "Étirement des ischio-jambiers",
                 "description": "Étirement passif des muscles ischio-jambiers",
                 "type_exercice": "etirement",
@@ -594,6 +612,23 @@ async def initialize_database():
                 "consignes_specifiques": "Maintenir l'étirement sans rebond, respirer profondément",
                 "created_at": datetime.now(timezone.utc)
             },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Renforcement des fessiers",
+                "description": "Ponts de hanche pour renforcer les muscles fessiers",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "cuisse",
+                "difficulte": 2,
+                "duree_minutes": 10,
+                "repetitions": "3 séries de 15",
+                "series": 3,
+                "materiel_requis": "Tapis de sol",
+                "url_video": "https://www.youtube.com/watch?v=hip-bridges",
+                "consignes_specifiques": "Serrer les fessiers en haut, maintenir 2 secondes",
+                "created_at": datetime.now(timezone.utc)
+            },
+            
+            # Exercices Épaule
             {
                 "id": str(uuid.uuid4()),
                 "nom": "Mobilisation de l'épaule",
@@ -611,6 +646,38 @@ async def initialize_database():
             },
             {
                 "id": str(uuid.uuid4()),
+                "nom": "Renforcement de la coiffe des rotateurs",
+                "description": "Exercices avec élastique pour renforcer les rotateurs de l'épaule",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "epaule",
+                "difficulte": 3,
+                "duree_minutes": 15,
+                "repetitions": "3 séries de 12",
+                "series": 3,
+                "materiel_requis": "Élastique",
+                "url_video": "https://www.youtube.com/watch?v=rotator-cuff",
+                "consignes_specifiques": "Maintenir le coude contre le corps, mouvement lent",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Étirement capsulaire postérieur",
+                "description": "Étirement de la capsule postérieure de l'épaule",
+                "type_exercice": "etirement",
+                "zone_corporelle": "epaule",
+                "difficulte": 2,
+                "duree_minutes": 8,
+                "repetitions": "3 fois 30 secondes",
+                "series": 3,
+                "materiel_requis": "Aucun",
+                "url_video": "https://www.youtube.com/watch?v=shoulder-stretch",
+                "consignes_specifiques": "Étirement doux, ne pas forcer si douleur",
+                "created_at": datetime.now(timezone.utc)
+            },
+            
+            # Exercices Cheville
+            {
+                "id": str(uuid.uuid4()),
                 "nom": "Proprioception cheville",
                 "description": "Exercice d'équilibre sur un pied pour améliorer la proprioception",
                 "type_exercice": "proprioception",
@@ -622,6 +689,115 @@ async def initialize_database():
                 "materiel_requis": "Coussin d'équilibre (optionnel)",
                 "url_video": "https://www.youtube.com/watch?v=example5",
                 "consignes_specifiques": "Garder les yeux ouverts puis fermés, progresser vers surfaces instables",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Mobilisation cheville",
+                "description": "Mobilisations passives et actives de la cheville",
+                "type_exercice": "mobilite",
+                "zone_corporelle": "cheville",
+                "difficulte": 1,
+                "duree_minutes": 10,
+                "repetitions": "3 séries de 15",
+                "series": 3,
+                "materiel_requis": "Aucun",
+                "url_video": "https://www.youtube.com/watch?v=ankle-mobility",
+                "consignes_specifiques": "Mouvements dans tous les plans, amplitude maximale sans douleur",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Renforcement des mollets",
+                "description": "Élévations sur la pointe des pieds pour renforcer les mollets",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "cheville",
+                "difficulte": 2,
+                "duree_minutes": 8,
+                "repetitions": "3 séries de 20",
+                "series": 3,
+                "materiel_requis": "Marche ou surface surélevée",
+                "url_video": "https://www.youtube.com/watch?v=calf-raises",
+                "consignes_specifiques": "Montée rapide, descente lente et contrôlée",
+                "created_at": datetime.now(timezone.utc)
+            },
+            
+            # Exercices Dos
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Étirement du dos (Chat-Chameau)",
+                "description": "Mobilisation de la colonne vertébrale en flexion-extension",
+                "type_exercice": "mobilite",
+                "zone_corporelle": "dos",
+                "difficulte": 1,
+                "duree_minutes": 8,
+                "repetitions": "3 séries de 10",
+                "series": 3,
+                "materiel_requis": "Tapis de sol",
+                "url_video": "https://www.youtube.com/watch?v=cat-cow",
+                "consignes_specifiques": "Mouvements lents et contrôlés, synchroniser avec la respiration",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Renforcement du core",
+                "description": "Planche statique pour renforcer les muscles profonds du tronc",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "dos",
+                "difficulte": 4,
+                "duree_minutes": 10,
+                "repetitions": "3 séries de 30 secondes",
+                "series": 3,
+                "materiel_requis": "Tapis de sol",
+                "url_video": "https://www.youtube.com/watch?v=plank",
+                "consignes_specifiques": "Maintenir alignement tête-bassin, respiration continue",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Étirement des psoas",
+                "description": "Étirement du muscle psoas-iliaque",
+                "type_exercice": "etirement",
+                "zone_corporelle": "dos",
+                "difficulte": 2,
+                "duree_minutes": 8,
+                "repetitions": "2 fois 45 secondes par côté",
+                "series": 2,
+                "materiel_requis": "Tapis de sol",
+                "url_video": "https://www.youtube.com/watch?v=psoas-stretch",
+                "consignes_specifiques": "Étirement en fente, pousser le bassin vers l'avant",
+                "created_at": datetime.now(timezone.utc)
+            },
+            
+            # Exercices Cervicales
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Mobilisation cervicale douce",
+                "description": "Mouvements doux de rotation et flexion des cervicales",
+                "type_exercice": "mobilite",
+                "zone_corporelle": "cervicales",
+                "difficulte": 1,
+                "duree_minutes": 8,
+                "repetitions": "5 répétitions dans chaque direction",
+                "series": 2,
+                "materiel_requis": "Aucun",
+                "url_video": "https://www.youtube.com/watch?v=neck-mobility",
+                "consignes_specifiques": "Mouvements très lents, arrêter si vertiges ou douleurs",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Renforcement cervical isométrique",
+                "description": "Contractions isométriques pour les muscles cervicaux",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "cervicales",
+                "difficulte": 2,
+                "duree_minutes": 10,
+                "repetitions": "5 séries de 10 secondes",
+                "series": 5,
+                "materiel_requis": "Aucun",
+                "url_video": "https://www.youtube.com/watch?v=neck-strengthening",
+                "consignes_specifiques": "Résistance douce avec la main, pas de mouvement",
                 "created_at": datetime.now(timezone.utc)
             }
         ]
