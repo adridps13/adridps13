@@ -959,7 +959,7 @@ const ExercicesPage = () => {
 
   useEffect(() => {
     filterExercices();
-  }, [exercices, searchTerm, typeFilter, zoneFilter]);
+  }, [exercices, searchTerm, typeFilter, zoneFilter, selectedBodyZone]);
 
   const fetchExercices = async () => {
     try {
