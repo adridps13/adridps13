@@ -269,8 +269,52 @@ const PatientsList = () => {
       const endpoint = type === 'anamnese' ? 'compte-rendu-anamnese' : 'lettre-medecin';
       const response = await axios.post(`${API}/generate/${endpoint}/${patientId}`);
       
+      // Ouvrir l'éditeur au lieu de télécharger directement
+      setCurrentDocument(response.data.document);
+      setDocumentContent(response.data.contenu);
+      setShowDocumentEditor(true);
+      
+    } catch (error) {
+      console.error('Erreur lors de la génération du document:', error);
+      alert('Erreur lors de la génération du document');
+    }
+  };
+
+  const regenerateWithInstructions = async () => {
+    if (!currentDocument || !aiInstructions.trim()) {
+      alert('Veuillez saisir des instructions de modification');
+      return;
+    }
+
+    setIsRegenerating(true);
+    try {
+      const response = await axios.post(`${API}/modify-document/${currentDocument.id}`, {
+        instructions: aiInstructions,
+        contenu_actuel: documentContent
+      });
+      
+      setDocumentContent(response.data.contenu_modifie);
+      setAiInstructions('');
+      alert('Document modifié avec succès !');
+    } catch (error) {
+      console.error('Erreur lors de la modification:', error);
+      alert('Erreur lors de la modification du document');
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  const saveAndExportDocument = async () => {
+    if (!currentDocument) return;
+
+    try {
+      // Sauvegarder le contenu modifié
+      await axios.put(`${API}/documents/${currentDocument.id}`, {
+        contenu: documentContent
+      });
+
       // Générer le PDF
-      const pdfResponse = await axios.post(`${API}/export/pdf/${response.data.document.id}`);
+      const pdfResponse = await axios.post(`${API}/export/pdf/${currentDocument.id}`);
       
       // Télécharger le PDF
       const link = document.createElement('a');
@@ -278,10 +322,11 @@ const PatientsList = () => {
       link.download = pdfResponse.data.filename;
       link.click();
       
-      alert('Document généré et téléchargé avec succès !');
+      alert('Document sauvegardé et téléchargé avec succès !');
+      setShowDocumentEditor(false);
     } catch (error) {
-      console.error('Erreur lors de la génération du document:', error);
-      alert('Erreur lors de la génération du document');
+      console.error('Erreur lors de la sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde du document');
     }
   };
 
