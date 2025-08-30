@@ -807,8 +807,8 @@ const ExercicesPage = () => {
   const [exercices, setExercices] = useState([]);
   const [filteredExercices, setFilteredExercices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [zoneFilter, setZoneFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState(undefined);
+  const [zoneFilter, setZoneFilter] = useState(undefined);
   const [showNewExerciceForm, setShowNewExerciceForm] = useState(false);
   const [newExercice, setNewExercice] = useState({
     nom: '',
