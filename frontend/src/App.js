@@ -787,6 +787,8 @@ const NewPatientForm = () => {
         : prev[flagType].filter(f => f !== flag)
     }));
   };
+
+  const handleActivitesChange = (activite, checked) => {
     if (checked) {
       setAnamneseData(prev => ({
         ...prev,
