@@ -987,8 +987,8 @@ const ExercicesPage = () => {
                 variant="outline"
                 onClick={() => {
                   setSearchTerm('');
-                  setTypeFilter('');
-                  setZoneFilter('');
+                  setTypeFilter(undefined);
+                  setZoneFilter(undefined);
                 }}
                 className="w-full"
               >
