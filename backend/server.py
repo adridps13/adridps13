@@ -149,6 +149,148 @@ class ExerciceCreate(BaseModel):
     url_video: Optional[str] = None
     consignes_specifiques: Optional[str] = None
 
+class Programme(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    nom_programme: str
+    objectif_principal: str
+    duree_semaines: int
+    frequence_hebdomadaire: int
+    phase_actuelle: int = 1
+    phases: List[Dict[str, Any]]  # Liste des phases avec exercices et paramètres
+    statut: str = "actif"  # actif, suspendu, termine
+    notes_kine: Optional[str] = None
+    adaptation_auto: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ProgrammeCreate(BaseModel):
+    patient_id: str
+    nom_programme: str
+    objectif_principal: str
+    duree_semaines: int
+    frequence_hebdomadaire: int
+    phases: List[Dict[str, Any]]
+    notes_kine: Optional[str] = None
+    adaptation_auto: bool = True
+
+class SeanceDetail(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    programme_id: str
+    patient_id: str
+    date_seance: datetime
+    numero_seance: int
+    phase: int
+    exercices_prevus: List[Dict[str, Any]]  # Liste avec id_exercice, parametres
+    exercices_realises: List[Dict[str, Any]]  # Liste avec id_exercice, parametres_reels
+    douleur_avant: Optional[int] = None  # 0-10
+    douleur_apres: Optional[int] = None  # 0-10
+    douleur_moyenne: Optional[int] = None  # 0-10 pendant
+    fatigue_niveau: Optional[int] = None  # 0-10
+    motivation_patient: Optional[int] = None  # 0-10
+    compliance: Optional[float] = None  # % exercices réalisés
+    charge_totale: Optional[float] = None  # Calcul automatique
+    volume_total: Optional[int] = None  # Nombre total répétitions
+    duree_effective: Optional[int] = None  # minutes
+    observations_patient: Optional[str] = None
+    observations_kine: Optional[str] = None
+    adaptation_suggere: Optional[str] = None
+    statut: str = "planifie"  # planifie, en_cours, termine, annule
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SeanceDetailCreate(BaseModel):
+    programme_id: str
+    patient_id: str
+    date_seance: datetime
+    numero_seance: int
+    phase: int
+    exercices_prevus: List[Dict[str, Any]]
+
+class SeanceUpdate(BaseModel):
+    exercices_realises: List[Dict[str, Any]]
+    douleur_avant: Optional[int] = None
+    douleur_apres: Optional[int] = None
+    douleur_moyenne: Optional[int] = None  
+    fatigue_niveau: Optional[int] = None
+    motivation_patient: Optional[int] = None
+    duree_effective: Optional[int] = None
+    observations_patient: Optional[str] = None
+    observations_kine: Optional[str] = None
+
+class MetriqueProgression(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    programme_id: str
+    semaine: int
+    charge_moyenne: float
+    volume_moyen: int
+    douleur_moyenne: float
+    compliance_moyenne: float
+    progression_force: Optional[float] = None  # %
+    progression_mobilite: Optional[float] = None  # %
+    adaptation_auto_appliquee: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# Fonctions de calcul pour le système de programmation
+def calculer_charge_exercice(exercice_data: Dict[str, Any]) -> float:
+    """
+    Calcule la charge d'un exercice basée sur:
+    - Difficulté (1-5)
+    - Volume (répétitions × séries)
+    - Durée
+    - Type d'exercice
+    """
+    difficulte = exercice_data.get('difficulte', 1)
+    repetitions = exercice_data.get('repetitions_reelles', exercice_data.get('repetitions_prevues', 10))
+    series = exercice_data.get('series_reelles', exercice_data.get('series_prevues', 1))
+    duree = exercice_data.get('duree_reelle', exercice_data.get('duree_prevue', 10))
+    type_exercice = exercice_data.get('type_exercice', 'mobilite')
+    
+    # Coefficient selon le type d'exercice
+    coefficients = {
+        'renforcement': 1.5,
+        'proprioception': 1.2,
+        'mobilite': 0.8,
+        'etirement': 0.6
+    }
+    
+    coeff_type = coefficients.get(type_exercice, 1.0)
+    
+    # Calcul de base : Difficulté × Volume × Durée × Coefficient type
+    charge_base = difficulte * (repetitions * series) * (duree / 10) * coeff_type
+    
+    return round(charge_base, 2)
+
+def suggerer_adaptation(seances_recentes: List[Dict], seuils: Dict) -> str:
+    """
+    Suggère des adaptations basées sur les données des séances récentes
+    """
+    if not seances_recentes:
+        return "Pas assez de données"
+    
+    douleurs = [s.get('douleur_moyenne', 0) for s in seances_recentes if s.get('douleur_moyenne')]
+    compliance = [s.get('compliance', 0) for s in seances_recentes if s.get('compliance')]
+    
+    if not douleurs or not compliance:
+        return "Données insuffisantes"
+    
+    douleur_moy = sum(douleurs) / len(douleurs)
+    compliance_moy = sum(compliance) / len(compliance)
+    
+    suggestions = []
+    
+    if douleur_moy > seuils.get('douleur_max', 6):
+        suggestions.append("⚠️ Réduire l'intensité - Douleur élevée")
+    elif douleur_moy < seuils.get('douleur_min', 2) and compliance_moy > 0.9:
+        suggestions.append("⬆️ Augmenter l'intensité - Douleur faible et bonne compliance")
+    
+    if compliance_moy < seuils.get('compliance_min', 0.7):
+        suggestions.append("🎯 Simplifier le programme - Compliance faible")
+    elif compliance_moy > seuils.get('compliance_max', 0.95):
+        suggestions.append("📈 Complexifier le programme - Excellente compliance")
+    
+    return " | ".join(suggestions) if suggestions else "✅ Programme adapté"
+
+# Nouveaux modèles pour remplacer les anciens
 class ProgrammeExercices(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     patient_id: str
