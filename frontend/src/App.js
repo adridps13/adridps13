@@ -1124,6 +1124,10 @@ const ExercicesPage = () => {
                   <SelectItem value="cheville">Cheville</SelectItem>
                   <SelectItem value="cuisse">Cuisse</SelectItem>
                   <SelectItem value="cervicales">Cervicales</SelectItem>
+                  <SelectItem value="bras">Bras</SelectItem>
+                  <SelectItem value="coude">Coude</SelectItem>
+                  <SelectItem value="poignet">Poignet</SelectItem>
+                  <SelectItem value="main">Main</SelectItem>
                 </SelectContent>
               </Select>
             </div>
