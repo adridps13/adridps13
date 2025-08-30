@@ -1309,26 +1309,7 @@ const ExercicesPage = () => {
         ))}
       </div>
 
-      {filteredExercices.length === 0 && (
-        <Card className="mt-8">
-          <CardContent className="text-center py-12">
-            <Dumbbell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Aucun exercice trouvé
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Essayez de modifier vos filtres ou ajoutez un nouvel exercice
-            </p>
-            <Button
-              onClick={() => setShowNewExerciceForm(true)}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvel Exercice
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* New Exercise Dialog */}
       <Dialog open={showNewExerciceForm} onOpenChange={setShowNewExerciceForm}>
