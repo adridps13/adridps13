@@ -680,7 +680,7 @@ async def get_exercices_by_zone(zone_corporelle: str):
     exercices = await db.exercices.find({"zone_corporelle": zone_corporelle}).to_list(1000)
     return [Exercice(**exercice) for exercice in exercices]
 
-# Routes Programmes d'exercices
+# Routes Programmes d'exercices avancés
 @api_router.post("/programmes", response_model=Programme)
 async def create_programme(programme: ProgrammeCreate):
     programme_dict = programme.dict()
@@ -692,6 +692,156 @@ async def create_programme(programme: ProgrammeCreate):
 async def get_programmes_by_patient(patient_id: str):
     programmes = await db.programmes.find({"patient_id": patient_id}).to_list(1000)
     return [Programme(**programme) for programme in programmes]
+
+@api_router.get("/programmes/{programme_id}", response_model=Programme)
+async def get_programme(programme_id: str):
+    programme = await db.programmes.find_one({"id": programme_id})
+    if not programme:
+        raise HTTPException(status_code=404, detail="Programme non trouvé")
+    return Programme(**programme)
+
+@api_router.put("/programmes/{programme_id}", response_model=Programme)
+async def update_programme(programme_id: str, programme_update: ProgrammeCreate):
+    existing_programme = await db.programmes.find_one({"id": programme_id})
+    if not existing_programme:
+        raise HTTPException(status_code=404, detail="Programme non trouvé")
+    
+    update_dict = programme_update.dict()
+    await db.programmes.update_one({"id": programme_id}, {"$set": update_dict})
+    
+    updated_programme = await db.programmes.find_one({"id": programme_id})
+    return Programme(**updated_programme)
+
+# Routes Séances Détaillées
+@api_router.post("/seances-detail", response_model=SeanceDetail)
+async def create_seance_detail(seance: SeanceDetailCreate):
+    seance_dict = seance.dict()
+    seance_obj = SeanceDetail(**seance_dict)
+    await db.seances_detail.insert_one(seance_obj.dict())
+    return seance_obj
+
+@api_router.get("/seances-detail/programme/{programme_id}", response_model=List[SeanceDetail])
+async def get_seances_by_programme(programme_id: str):
+    seances = await db.seances_detail.find({"programme_id": programme_id}).to_list(1000)
+    return [SeanceDetail(**seance) for seance in seances]
+
+@api_router.get("/seances-detail/patient/{patient_id}", response_model=List[SeanceDetail])
+async def get_seances_detail_by_patient(patient_id: str):
+    seances = await db.seances_detail.find({"patient_id": patient_id}).to_list(1000)
+    return [SeanceDetail(**seance) for seance in seances]
+
+@api_router.put("/seances-detail/{seance_id}", response_model=SeanceDetail)
+async def update_seance_detail(seance_id: str, seance_update: SeanceUpdate):
+    existing_seance = await db.seances_detail.find_one({"id": seance_id})
+    if not existing_seance:
+        raise HTTPException(status_code=404, detail="Séance non trouvée")
+    
+    update_dict = seance_update.dict(exclude_unset=True)
+    
+    # Calculer automatiquement la charge totale et volume
+    if 'exercices_realises' in update_dict:
+        charge_totale = 0
+        volume_total = 0
+        
+        for exercice in update_dict['exercices_realises']:
+            charge_exercice = calculer_charge_exercice(exercice)
+            charge_totale += charge_exercice
+            
+            reps = exercice.get('repetitions_reelles', 0)
+            series = exercice.get('series_reelles', 1)
+            volume_total += reps * series
+        
+        update_dict['charge_totale'] = charge_totale
+        update_dict['volume_total'] = volume_total
+        
+        # Calculer compliance
+        exercices_prevus = existing_seance.get('exercices_prevus', [])
+        if exercices_prevus:
+            compliance = len(update_dict['exercices_realises']) / len(exercices_prevus)
+            update_dict['compliance'] = min(compliance, 1.0)
+    
+    # Marquer la séance comme terminée si on a des exercices réalisés
+    if 'exercices_realises' in update_dict and update_dict['exercices_realises']:
+        update_dict['statut'] = 'termine'
+    
+    await db.seances_detail.update_one({"id": seance_id}, {"$set": update_dict})
+    
+    updated_seance = await db.seances_detail.find_one({"id": seance_id})
+    return SeanceDetail(**updated_seance)
+
+# Route pour calculer les métriques de progression
+@api_router.post("/metriques/calculer/{programme_id}")
+async def calculer_metriques_progression(programme_id: str):
+    # Récupérer toutes les séances du programme
+    seances = await db.seances_detail.find({"programme_id": programme_id, "statut": "termine"}).to_list(1000)
+    
+    if not seances:
+        return {"message": "Aucune séance terminée trouvée"}
+    
+    # Grouper par semaine
+    seances_par_semaine = {}
+    for seance in seances:
+        semaine = seance['numero_seance'] // 3 + 1  # Approximation 3 séances/semaine
+        if semaine not in seances_par_semaine:
+            seances_par_semaine[semaine] = []
+        seances_par_semaine[semaine].append(seance)
+    
+    # Calculer métriques pour chaque semaine
+    programme = await db.programmes.find_one({"id": programme_id})
+    if not programme:
+        raise HTTPException(status_code=404, detail="Programme non trouvé")
+    
+    metriques = []
+    for semaine, seances_semaine in seances_par_semaine.items():
+        charge_moyenne = sum(s.get('charge_totale', 0) for s in seances_semaine) / len(seances_semaine)
+        volume_moyen = sum(s.get('volume_total', 0) for s in seances_semaine) / len(seances_semaine)
+        
+        douleurs = [s.get('douleur_moyenne') for s in seances_semaine if s.get('douleur_moyenne') is not None]
+        douleur_moyenne = sum(douleurs) / len(douleurs) if douleurs else 0
+        
+        compliances = [s.get('compliance') for s in seances_semaine if s.get('compliance') is not None]
+        compliance_moyenne = sum(compliances) / len(compliances) if compliances else 0
+        
+        # Suggérer adaptation
+        seuils = {'douleur_max': 6, 'douleur_min': 2, 'compliance_min': 0.7, 'compliance_max': 0.95}
+        adaptation = suggerer_adaptation(seances_semaine, seuils)
+        
+        metrique = MetriqueProgression(
+            patient_id=programme['patient_id'],
+            programme_id=programme_id,
+            semaine=semaine,
+            charge_moyenne=charge_moyenne,
+            volume_moyen=int(volume_moyen),
+            douleur_moyenne=douleur_moyenne,
+            compliance_moyenne=compliance_moyenne,
+            adaptation_auto_appliquee=adaptation
+        )
+        
+        await db.metriques.insert_one(metrique.dict())
+        metriques.append(metrique)
+    
+    return {"message": f"Métriques calculées pour {len(metriques)} semaines", "metriques": metriques}
+
+@api_router.get("/metriques/patient/{patient_id}", response_model=List[MetriqueProgression])
+async def get_metriques_by_patient(patient_id: str):
+    metriques = await db.metriques.find({"patient_id": patient_id}).to_list(1000)
+    return [MetriqueProgression(**metrique) for metrique in metriques]
+
+# Route de suggestion d'adaptation
+@api_router.post("/programmes/{programme_id}/suggerer-adaptation")
+async def suggerer_adaptation_programme(programme_id: str):
+    # Récupérer les 3 dernières séances
+    seances_recentes = await db.seances_detail.find(
+        {"programme_id": programme_id, "statut": "termine"}
+    ).sort("date_seance", -1).limit(3).to_list(3)
+    
+    if not seances_recentes:
+        return {"suggestion": "Pas assez de données pour suggérer une adaptation"}
+    
+    seuils = {'douleur_max': 6, 'douleur_min': 2, 'compliance_min': 0.7, 'compliance_max': 0.95}
+    suggestion = suggerer_adaptation(seances_recentes, seuils)
+    
+    return {"suggestion": suggestion, "basee_sur": f"{len(seances_recentes)} séances récentes"}
 
 # Routes Séances
 @api_router.post("/seances", response_model=Seance)
