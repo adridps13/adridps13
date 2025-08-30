@@ -499,7 +499,7 @@ const NewPatientForm = () => {
       });
       setAnamneseData({
         douleur_niveau: 5,
-        douleur_type: '',
+        douleur_type: undefined,
         douleur_localisation: '',
         debut_symptomes: '',
         facteurs_declenchants: '',
