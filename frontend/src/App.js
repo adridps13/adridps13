@@ -1144,8 +1144,30 @@ const ExercicesPage = () => {
         </CardContent>
       </Card>
 
-      {/* Exercises Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Main Content with Body Diagram */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        {/* Body Diagram Sidebar */}
+        <div className="lg:col-span-1">
+          <BodyDiagram 
+            onZoneClick={handleBodyZoneClick} 
+            selectedZone={selectedBodyZone}
+          />
+          
+          {selectedBodyZone && (
+            <Alert className="mt-4 border-emerald-200 bg-emerald-50">
+              <Target className="h-4 w-4 text-emerald-600" />
+              <AlertDescription className="text-emerald-800">
+                Exercices pour: <strong className="capitalize">{selectedBodyZone}</strong>
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        {/* Exercises List */}
+        <div className="lg:col-span-3">
+          {/* Exercises Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredExercices.map((exercice) => (
           <Card key={exercice.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
