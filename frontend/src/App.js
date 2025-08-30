@@ -601,7 +601,8 @@ const NewPatientForm = () => {
                     <Input
                       id="nom"
                       value={patientData.nom}
-                      onChange={(e) => setPatientData(prev => ({ ...prev, nom: e.target.value }))}
+                      onChange={(e) => setPatientData(prev => ({ ...prev, nom: e.target.value.toUpperCase() }))}
+                      placeholder="DUPONT"
                       required
                     />
                   </div>
@@ -610,7 +611,12 @@ const NewPatientForm = () => {
                     <Input
                       id="prenom"
                       value={patientData.prenom}
-                      onChange={(e) => setPatientData(prev => ({ ...prev, prenom: e.target.value }))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const capitalized = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+                        setPatientData(prev => ({ ...prev, prenom: capitalized }));
+                      }}
+                      placeholder="Marie"
                       required
                     />
                   </div>
