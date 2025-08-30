@@ -448,6 +448,14 @@ const PatientsList = () => {
                       <FileDown className="w-4 h-4 mr-2" />
                       Lettre au médecin
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleDeletePatient(selectedPatient.id, `${selectedPatient.prenom} ${selectedPatient.nom}`)}
+                      className="justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Supprimer le patient
+                    </Button>
                   </div>
                 </div>
               </div>
