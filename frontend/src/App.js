@@ -958,7 +958,7 @@ const ExercicesPage = () => {
                   <SelectValue placeholder="Tous les types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les types</SelectItem>
+                  <SelectItem value="all-types">Tous les types</SelectItem>
                   <SelectItem value="renforcement">Renforcement</SelectItem>
                   <SelectItem value="mobilite">Mobilité</SelectItem>
                   <SelectItem value="etirement">Étirement</SelectItem>
