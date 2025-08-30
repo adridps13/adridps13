@@ -1008,6 +1008,7 @@ const ExercicesPage = () => {
                   <SelectItem value="dos">Dos</SelectItem>
                   <SelectItem value="cheville">Cheville</SelectItem>
                   <SelectItem value="cuisse">Cuisse</SelectItem>
+                  <SelectItem value="cervicales">Cervicales</SelectItem>
                 </SelectContent>
               </Select>
             </div>
