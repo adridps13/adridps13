@@ -988,7 +988,22 @@ const ExercicesPage = () => {
       filtered = filtered.filter(exercice => exercice.zone_corporelle === zoneFilter);
     }
 
+    // Filtrage par zone corporelle depuis le schéma
+    if (selectedBodyZone) {
+      filtered = filtered.filter(exercice => exercice.zone_corporelle === selectedBodyZone);
+    }
+
     setFilteredExercices(filtered);
+  };
+
+  const handleBodyZoneClick = (zone) => {
+    setSelectedBodyZone(zone);
+    // Reset autres filtres quand on utilise le schéma corporel
+    if (zone) {
+      setZoneFilter(undefined);
+      setTypeFilter(undefined);
+      setSearchTerm('');
+    }
   };
 
   const handleNewExercice = async (e) => {
