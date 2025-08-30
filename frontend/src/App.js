@@ -517,6 +517,159 @@ const PatientsList = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Document Editor Dialog */}
+      <Dialog open={showDocumentEditor} onOpenChange={setShowDocumentEditor}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <FileText className="w-5 h-5 text-emerald-600" />
+              <span>Éditeur de Document - {currentDocument?.titre}</span>
+            </DialogTitle>
+            <DialogDescription>
+              Modifiez le document ou donnez des instructions à l'IA pour le régénérer
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[70vh]">
+            {/* Zone d'édition principale */}
+            <div className="lg:col-span-2 flex flex-col">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium text-gray-900">Contenu du Document</h3>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDocumentContent(currentDocument?.contenu || '')}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    Réinitialiser
+                  </Button>
+                </div>
+              </div>
+              
+              <Textarea
+                value={documentContent}
+                onChange={(e) => setDocumentContent(e.target.value)}
+                className="flex-1 font-mono text-sm resize-none"
+                placeholder="Le contenu du document apparaîtra ici..."
+              />
+            </div>
+
+            {/* Panel de modification IA */}
+            <div className="lg:col-span-1 flex flex-col">
+              <div className="bg-gradient-to-br from-emerald-50 to-blue-50 p-4 rounded-lg border border-emerald-200 flex-1">
+                <div className="flex items-center mb-4">
+                  <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-white text-sm font-bold">IA</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Assistant de Modification</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="ai-instructions" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Instructions de modification
+                    </Label>
+                    <Textarea
+                      id="ai-instructions"
+                      value={aiInstructions}
+                      onChange={(e) => setAiInstructions(e.target.value)}
+                      placeholder="Ex: Rends le ton plus formel, ajoute une section sur les recommandations à domicile, utilise un vocabulaire plus accessible au patient..."
+                      className="resize-none h-32"
+                    />
+                  </div>
+                  
+                  <Button
+                    onClick={regenerateWithInstructions}
+                    disabled={isRegenerating || !aiInstructions.trim()}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    {isRegenerating ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Modification en cours...
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Modifier avec IA
+                      </div>
+                    )}
+                  </Button>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-gray-700">Suggestions rapides :</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        "Plus formel",
+                        "Plus accessible",
+                        "Ajouter recommandations",
+                        "Ton empathique",
+                        "Plus détaillé",
+                        "Plus concis"
+                      ].map((suggestion) => (
+                        <Button
+                          key={suggestion}
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7"
+                          onClick={() => setAiInstructions(suggestion)}
+                        >
+                          {suggestion}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Statistiques du document */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-sm text-gray-700 mb-2">Statistiques</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                  <div>Caractères: {documentContent.length}</div>
+                  <div>Mots: {documentContent.split(/\s+/).filter(w => w.length > 0).length}</div>
+                  <div>Lignes: {documentContent.split('\n').length}</div>
+                  <div>Paragraphes: {documentContent.split('\n\n').length}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-between pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowDocumentEditor(false)}
+            >
+              Annuler
+            </Button>
+            
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(documentContent);
+                  alert('Contenu copié dans le presse-papiers !');
+                }}
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copier
+              </Button>
+              
+              <Button
+                onClick={saveAndExportDocument}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Sauvegarder & Télécharger PDF
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
