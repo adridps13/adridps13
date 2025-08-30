@@ -1048,6 +1048,60 @@ async def export_pdf(document_id: str):
         "content_type": "application/pdf"
     }
 
+# Route pour modifier un document avec l'IA
+@api_router.post("/modify-document/{document_id}")
+async def modify_document_with_ai(document_id: str, request: Dict[str, Any]):
+    document = await db.documents.find_one({"id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document non trouvé")
+    
+    instructions = request.get('instructions', '')
+    contenu_actuel = request.get('contenu_actuel', document.get('contenu', ''))
+    
+    if not instructions:
+        raise HTTPException(status_code=400, detail="Instructions de modification requises")
+    
+    # Générer le contenu modifié avec l'IA
+    chat = await get_llm_chat()
+    prompt = f"""
+    Tu es un expert en rédaction médicale. Modifie le document médical suivant selon les instructions données.
+    
+    DOCUMENT ACTUEL :
+    {contenu_actuel}
+    
+    INSTRUCTIONS DE MODIFICATION :
+    {instructions}
+    
+    CONSIGNES :
+    - Conserve la structure et le professionnalisme du document
+    - Applique uniquement les modifications demandées
+    - Garde le vocabulaire médical approprié
+    - Maintiens la cohérence avec les données patient
+    - Retourne le document complet modifié
+    """
+    
+    user_message = UserMessage(text=prompt)
+    response = await chat.send_message(user_message)
+    
+    return {"contenu_modifie": response, "instructions_appliquees": instructions}
+
+# Route pour mettre à jour un document
+@api_router.put("/documents/{document_id}")
+async def update_document(document_id: str, request: Dict[str, Any]):
+    document = await db.documents.find_one({"id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document non trouvé")
+    
+    update_data = {
+        "contenu": request.get('contenu', document.get('contenu')),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    await db.documents.update_one({"id": document_id}, {"$set": update_data})
+    
+    updated_document = await db.documents.find_one({"id": document_id})
+    return DocumentGenere(**updated_document)
+
 # Routes Documents
 @api_router.get("/documents/patient/{patient_id}", response_model=List[DocumentGenere])
 async def get_documents_by_patient(patient_id: str):
