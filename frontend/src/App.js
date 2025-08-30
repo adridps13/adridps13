@@ -3095,6 +3095,7 @@ function App() {
           <Route path="/nouveau-patient" element={<NewPatientForm />} />
           <Route path="/exercices" element={<ExercicesPage />} />
           <Route path="/programmes" element={<ProgrammesPage />} />
+          <Route path="/messagerie" element={<MessagingPage />} />
           <Route path="/suggestions" element={<SuggestionsPage />} />
         </Routes>
       </BrowserRouter>
