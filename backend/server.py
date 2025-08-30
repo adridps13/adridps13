@@ -1131,6 +1131,48 @@ async def update_document(document_id: str, request: Dict[str, Any]):
     updated_document = await db.documents.find_one({"id": document_id})
     return DocumentGenere(**updated_document)
 
+# Routes Suggestions
+@api_router.post("/suggestions", response_model=Suggestion)
+async def create_suggestion(suggestion: SuggestionCreate):
+    suggestion_dict = suggestion.dict()
+    suggestion_obj = Suggestion(**suggestion_dict)
+    await db.suggestions.insert_one(suggestion_obj.dict())
+    return suggestion_obj
+
+@api_router.get("/suggestions", response_model=List[Suggestion])
+async def get_suggestions():
+    suggestions = await db.suggestions.find().sort("created_at", -1).to_list(1000)
+    return [Suggestion(**suggestion) for suggestion in suggestions]
+
+@api_router.get("/suggestions/{suggestion_id}", response_model=Suggestion)
+async def get_suggestion(suggestion_id: str):
+    suggestion = await db.suggestions.find_one({"id": suggestion_id})
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion non trouvée")
+    return Suggestion(**suggestion)
+
+@api_router.put("/suggestions/{suggestion_id}/status")
+async def update_suggestion_status(suggestion_id: str, status_update: Dict[str, str]):
+    suggestion = await db.suggestions.find_one({"id": suggestion_id})
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion non trouvée")
+    
+    new_status = status_update.get('statut')
+    if new_status not in ['en_attente', 'approuve', 'en_cours', 'termine', 'rejete']:
+        raise HTTPException(status_code=400, detail="Statut invalide")
+    
+    update_data = {'statut': new_status}
+    
+    if new_status == 'approuve':
+        update_data['date_approbation'] = datetime.now(timezone.utc)
+    elif new_status == 'termine':
+        update_data['date_completion'] = datetime.now(timezone.utc)
+    
+    await db.suggestions.update_one({"id": suggestion_id}, {"$set": update_data})
+    
+    updated_suggestion = await db.suggestions.find_one({"id": suggestion_id})
+    return Suggestion(**updated_suggestion)
+
 # Routes Documents
 @api_router.get("/documents/patient/{patient_id}", response_model=List[DocumentGenere])
 async def get_documents_by_patient(patient_id: str):
