@@ -1251,63 +1251,7 @@ const ExercicesPage = () => {
           )}
         </div>
       </div>
-        {filteredExercices.map((exercice) => (
-          <Card key={exercice.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg">{exercice.nom}</CardTitle>
-                <Badge className={getDifficultyColor(exercice.difficulte)}>
-                  Niveau {exercice.difficulte}
-                </Badge>
-              </div>
-              <div className="flex space-x-2">
-                <Badge className={getTypeColor(exercice.type_exercice)}>
-                  {exercice.type_exercice}
-                </Badge>
-                <Badge variant="outline">
-                  {exercice.zone_corporelle}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 mb-4">{exercice.description}</p>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                  {exercice.duree_minutes} minutes
-                </div>
-                {exercice.repetitions && (
-                  <div className="flex items-center">
-                    <Target className="w-4 h-4 mr-2 text-gray-400" />
-                    {exercice.repetitions}
-                  </div>
-                )}
-                {exercice.materiel_requis && (
-                  <div className="flex items-center">
-                    <Dumbbell className="w-4 h-4 mr-2 text-gray-400" />
-                    {exercice.materiel_requis}
-                  </div>
-                )}
-              </div>
-              
-              {exercice.url_video && (
-                <div className="mt-4">
-                  <a
-                    href={exercice.url_video}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-emerald-600 hover:text-emerald-700 text-sm flex items-center"
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    Voir la vidéo
-                  </a>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+
 
 
 
