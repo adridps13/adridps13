@@ -696,7 +696,11 @@ const NewPatientForm = () => {
     antecedents_medicaux: '',
     traitements_actuels: '',
     objectifs_patient: '',
-    notes_supplementaires: ''
+    notes_supplementaires: '',
+    pain_areas: {},
+    red_flags: [],
+    yellow_flags: [],
+    blue_flags: []
   });
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
