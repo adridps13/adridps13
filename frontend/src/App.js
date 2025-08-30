@@ -841,16 +841,16 @@ const NewPatientForm = () => {
 // Body Diagram Component
 const BodyDiagram = ({ onZoneClick, selectedZone }) => {
   const zones = [
-    { id: 'cervicales', name: 'Cervicales', x: 150, y: 45, width: 60, height: 30 },
-    { id: 'epaule', name: 'Épaules', x: 90, y: 75, width: 180, height: 50 },
-    { id: 'bras', name: 'Bras', x: 70, y: 125, width: 60, height: 90 },
-    { id: 'coude', name: 'Coudes', x: 75, y: 215, width: 50, height: 30 },
-    { id: 'poignet', name: 'Poignets', x: 80, y: 245, width: 40, height: 25 },
-    { id: 'main', name: 'Mains', x: 75, y: 270, width: 50, height: 40 },
-    { id: 'dos', name: 'Dos', x: 125, y: 125, width: 110, height: 140 },
-    { id: 'cuisse', name: 'Cuisses', x: 115, y: 265, width: 130, height: 80 },
-    { id: 'genou', name: 'Genoux', x: 125, y: 345, width: 110, height: 50 },
-    { id: 'cheville', name: 'Chevilles', x: 130, y: 395, width: 100, height: 40 }
+    { id: 'cervicales', name: 'Cervicales', x: 160, y: 75, width: 40, height: 20 },
+    { id: 'epaule', name: 'Épaules', x: 85, y: 100, width: 190, height: 40 },
+    { id: 'bras', name: 'Bras', x: 70, y: 135, width: 60, height: 75 },
+    { id: 'coude', name: 'Coudes', x: 75, y: 205, width: 50, height: 25 },
+    { id: 'poignet', name: 'Poignets', x: 80, y: 240, width: 40, height: 20 },
+    { id: 'main', name: 'Mains', x: 75, y: 270, width: 50, height: 35 },
+    { id: 'dos', name: 'Dos', x: 135, y: 140, width: 90, height: 100 },
+    { id: 'cuisse', name: 'Cuisses', x: 135, y: 240, width: 90, height: 70 },
+    { id: 'genou', name: 'Genoux', x: 140, y: 310, width: 80, height: 40 },
+    { id: 'cheville', name: 'Chevilles', x: 145, y: 395, width: 70, height: 30 }
   ];
 
   return (
@@ -870,55 +870,55 @@ const BodyDiagram = ({ onZoneClick, selectedZone }) => {
           </defs>
           
           {/* Tête */}
-          <circle cx="180" cy="60" r="30" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" filter="url(#shadow)"/>
+          <circle cx="180" cy="60" r="25" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" filter="url(#shadow)"/>
           
-          {/* Cou/Cervicales */}
-          <rect x="165" y="90" width="30" height="20" rx="5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          {/* Cou/Cervicales - Zone anatomiquement correcte */}
+          <rect x="170" y="85" width="20" height="15" rx="3" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
           
-          {/* Épaules */}
-          <ellipse cx="120" cy="120" rx="25" ry="15" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
-          <ellipse cx="240" cy="120" rx="25" ry="15" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          {/* Épaules - Positionnées anatomiquement aux épaules */}
+          <ellipse cx="125" cy="110" rx="20" ry="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="235" cy="110" rx="20" ry="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Bras gauche */}
-          <rect x="85" y="135" width="20" height="60" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="85" y="140" width="18" height="55" rx="9" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
           {/* Coude gauche */}
-          <circle cx="95" cy="210" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <circle cx="94" cy="210" r="10" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           {/* Avant-bras gauche */}
-          <rect x="85" y="222" width="20" height="50" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="85" y="220" width="18" height="45" rx="9" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
           {/* Main gauche */}
-          <ellipse cx="95" cy="285" rx="15" ry="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="94" cy="280" rx="12" ry="10" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Bras droit */}
-          <rect x="255" y="135" width="20" height="60" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="257" y="140" width="18" height="55" rx="9" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
           {/* Coude droit */}
-          <circle cx="265" cy="210" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <circle cx="266" cy="210" r="10" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           {/* Avant-bras droit */}
-          <rect x="255" y="222" width="20" height="50" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="257" y="220" width="18" height="45" rx="9" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
           {/* Main droite */}
-          <ellipse cx="265" cy="285" rx="15" ry="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="266" cy="280" rx="12" ry="10" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Tronc */}
-          <rect x="135" y="110" width="90" height="130" rx="25" fill="url(#bodyGrad)" stroke="#cbd5e1" strokeWidth="2" filter="url(#shadow)"/>
+          <rect x="145" y="110" width="70" height="130" rx="20" fill="url(#bodyGrad)" stroke="#cbd5e1" strokeWidth="2" filter="url(#shadow)"/>
           
           {/* Cuisses */}
-          <rect x="145" y="240" width="25" height="70" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
-          <rect x="190" y="240" width="25" height="70" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="155" y="240" width="20" height="70" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="185" y="240" width="20" height="70" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Genoux */}
-          <circle cx="157" cy="325" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
-          <circle cx="203" cy="325" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <circle cx="165" cy="325" r="10" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <circle cx="195" cy="325" r="10" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Jambes */}
-          <rect x="145" y="337" width="25" height="55" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
-          <rect x="190" y="337" width="25" height="55" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="155" y="335" width="20" height="50" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="185" y="335" width="20" height="50" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Chevilles */}
-          <circle cx="157" cy="405" r="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
-          <circle cx="203" cy="405" r="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <circle cx="165" cy="400" r="6" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <circle cx="195" cy="400" r="6" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Pieds */}
-          <ellipse cx="157" cy="425" rx="18" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
-          <ellipse cx="203" cy="425" rx="18" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="165" cy="420" rx="15" ry="7" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="195" cy="420" rx="15" ry="7" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Zones cliquables avec hover effects */}
           {zones.map((zone) => (
@@ -942,7 +942,7 @@ const BodyDiagram = ({ onZoneClick, selectedZone }) => {
                 className={`text-xs font-medium pointer-events-none transition-colors ${
                   selectedZone === zone.id ? 'fill-emerald-800' : 'fill-gray-600'
                 }`}
-                style={{fontSize: '10px'}}
+                style={{fontSize: '9px'}}
               >
                 {zone.name}
               </text>
