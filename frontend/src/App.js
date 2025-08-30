@@ -937,6 +937,7 @@ const ExercicesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState(undefined);
   const [zoneFilter, setZoneFilter] = useState(undefined);
+  const [selectedBodyZone, setSelectedBodyZone] = useState(null);
   const [showNewExerciceForm, setShowNewExerciceForm] = useState(false);
   const [newExercice, setNewExercice] = useState({
     nom: '',
