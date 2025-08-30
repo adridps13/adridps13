@@ -698,10 +698,10 @@ async def get_exercices_by_zone(zone_corporelle: str):
     return [Exercice(**exercice) for exercice in exercices]
 
 # Routes Programmes d'exercices
-@api_router.post("/programmes", response_model=ProgrammeExercices)
-async def create_programme(programme: ProgrammeExercicesCreate):
+@api_router.post("/programmes", response_model=Programme)
+async def create_programme(programme: ProgrammeCreate):
     programme_dict = programme.dict()
-    programme_obj = ProgrammeExercices(**programme_dict)
+    programme_obj = Programme(**programme_dict)
     await db.programmes.insert_one(programme_obj.dict())
     return programme_obj
 
