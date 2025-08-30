@@ -222,6 +222,11 @@ const PatientsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
+  const [showDocumentEditor, setShowDocumentEditor] = useState(false);
+  const [currentDocument, setCurrentDocument] = useState(null);
+  const [documentContent, setDocumentContent] = useState('');
+  const [aiInstructions, setAiInstructions] = useState('');
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   useEffect(() => {
     fetchPatients();
