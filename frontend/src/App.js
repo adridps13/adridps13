@@ -245,6 +245,19 @@ const PatientsList = () => {
     setShowPatientDetails(true);
   };
 
+  const handleDeletePatient = async (patientId, patientName) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le patient ${patientName} ? Cette action est irréversible.`)) {
+      try {
+        await axios.delete(`${API}/patients/${patientId}`);
+        alert('Patient supprimé avec succès !');
+        fetchPatients(); // Recharge la liste
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        alert('Erreur lors de la suppression du patient');
+      }
+    }
+  };
+
   const generateDocuments = async (patientId, type) => {
     try {
       const endpoint = type === 'anamnese' ? 'compte-rendu-anamnese' : 'lettre-medecin';
