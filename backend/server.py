@@ -116,6 +116,59 @@ class Suggestion(BaseModel):
     notes_admin: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class Notification(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    patient_nom: str
+    type: str  # exercice_complete, commentaire, douleur_elevee, seance_manquee, etc.
+    titre: str
+    message: str
+    lu: bool = False
+    data: Optional[Dict[str, Any]] = None  # Données contextuelles
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class NotificationCreate(BaseModel):
+    patient_id: str
+    patient_nom: str
+    type: str
+    titre: str
+    message: str
+    data: Optional[Dict[str, Any]] = None
+
+class Conversation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    patient_nom: str
+    therapeute_id: str = "default"  # Pour l'instant un seul thérapeute
+    statut: str = "active"  # active, archived
+    dernier_message: Optional[str] = None
+    dernier_message_date: Optional[datetime] = None
+    messages_non_lus_therapeute: int = 0
+    messages_non_lus_patient: int = 0
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ConversationCreate(BaseModel):
+    patient_id: str
+    patient_nom: str
+    therapeute_id: str = "default"
+
+class Message(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conversation_id: str
+    expediteur: str  # 'therapeute' ou 'patient'
+    contenu: str
+    lu: bool = False
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    type_message: str = "text"  # text, image, file, audio
+    metadata: Optional[Dict[str, Any]] = None
+
+class MessageCreate(BaseModel):
+    conversation_id: str
+    expediteur: str
+    contenu: str
+    type_message: str = "text"
+    metadata: Optional[Dict[str, Any]] = None
+
 class SuggestionCreate(BaseModel):
     titre: str
     description: str
