@@ -871,7 +871,7 @@ const ExercicesPage = () => {
       setNewExercice({
         nom: '',
         description: '',
-        type_exercice: '',
+        type_exercice: undefined,
         zone_corporelle: '',
         difficulte: 1,
         duree_minutes: 10,
