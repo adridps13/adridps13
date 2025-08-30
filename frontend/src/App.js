@@ -851,11 +851,11 @@ const ExercicesPage = () => {
       );
     }
 
-    if (typeFilter) {
+    if (typeFilter && typeFilter !== 'all-types') {
       filtered = filtered.filter(exercice => exercice.type_exercice === typeFilter);
     }
 
-    if (zoneFilter) {
+    if (zoneFilter && zoneFilter !== 'all-zones') {
       filtered = filtered.filter(exercice => exercice.zone_corporelle === zoneFilter);
     }
 
