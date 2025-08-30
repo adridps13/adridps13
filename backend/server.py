@@ -705,10 +705,10 @@ async def create_programme(programme: ProgrammeCreate):
     await db.programmes.insert_one(programme_obj.dict())
     return programme_obj
 
-@api_router.get("/programmes/patient/{patient_id}", response_model=List[ProgrammeExercices])
+@api_router.get("/programmes/patient/{patient_id}", response_model=List[Programme])
 async def get_programmes_by_patient(patient_id: str):
     programmes = await db.programmes.find({"patient_id": patient_id}).to_list(1000)
-    return [ProgrammeExercices(**programme) for programme in programmes]
+    return [Programme(**programme) for programme in programmes]
 
 # Routes Séances
 @api_router.post("/seances", response_model=Seance)
