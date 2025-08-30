@@ -1034,7 +1034,135 @@ async def initialize_database():
                 "created_at": datetime.now(timezone.utc)
             },
             
-            # Exercices Cervicales
+            # Exercices Bras
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Flexion/Extension biceps",
+                "description": "Exercice de renforcement des biceps avec haltères ou élastique",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "bras",
+                "difficulte": 2,
+                "duree_minutes": 12,
+                "repetitions": "3 séries de 12",
+                "series": 3,
+                "materiel_requis": "Haltères ou élastique",
+                "url_video": "https://www.youtube.com/watch?v=biceps-curl",
+                "consignes_specifiques": "Mouvement contrôlé, coude fixe contre le corps",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Extension triceps",
+                "description": "Renforcement des triceps en extension au-dessus de la tête",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "bras",
+                "difficulte": 3,
+                "duree_minutes": 10,
+                "repetitions": "3 séries de 10",
+                "series": 3,
+                "materiel_requis": "Haltère",
+                "url_video": "https://www.youtube.com/watch?v=triceps-extension",
+                "consignes_specifiques": "Garder le coude stable, descente lente",
+                "created_at": datetime.now(timezone.utc)
+            },
+            
+            # Exercices Coude
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Mobilisation du coude",
+                "description": "Mouvements de flexion-extension passive et active du coude",
+                "type_exercice": "mobilite",
+                "zone_corporelle": "coude",
+                "difficulte": 1,
+                "duree_minutes": 8,
+                "repetitions": "3 séries de 15",
+                "series": 3,
+                "materiel_requis": "Aucun",
+                "url_video": "https://www.youtube.com/watch?v=elbow-mobility",
+                "consignes_specifiques": "Amplitude maximale sans douleur, mouvement lent",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Étirement épicondyliens",
+                "description": "Étirement des muscles épicondyliens (tennis elbow)",
+                "type_exercice": "etirement",
+                "zone_corporelle": "coude",
+                "difficulte": 2,
+                "duree_minutes": 8,
+                "repetitions": "3 fois 30 secondes",
+                "series": 3,
+                "materiel_requis": "Aucun",
+                "url_video": "https://www.youtube.com/watch?v=tennis-elbow-stretch",
+                "consignes_specifiques": "Étirement doux, maintenir sans rebond",
+                "created_at": datetime.now(timezone.utc)
+            },
+            
+            # Exercices Poignet
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Flexion/Extension poignet",
+                "description": "Mobilisation active du poignet en flexion et extension",
+                "type_exercice": "mobilite",
+                "zone_corporelle": "poignet",
+                "difficulte": 1,
+                "duree_minutes": 6,
+                "repetitions": "3 séries de 20",
+                "series": 3,
+                "materiel_requis": "Aucun",
+                "url_video": "https://www.youtube.com/watch?v=wrist-mobility",
+                "consignes_specifiques": "Mouvements amples, lents et contrôlés",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Renforcement préhension",
+                "description": "Exercices de serrage pour renforcer la préhension",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "poignet",
+                "difficulte": 2,
+                "duree_minutes": 10,
+                "repetitions": "3 séries de 15",
+                "series": 3,
+                "materiel_requis": "Balle de préhension",
+                "url_video": "https://www.youtube.com/watch?v=grip-strength",
+                "consignes_specifiques": "Serrage maximal 3 secondes, relâchement complet",
+                "created_at": datetime.now(timezone.utc)
+            },
+            
+            # Exercices Main
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Mobilisation des doigts",
+                "description": "Exercices de flexion-extension des articulations des doigts",
+                "type_exercice": "mobilite",
+                "zone_corporelle": "main",
+                "difficulte": 1,
+                "duree_minutes": 8,
+                "repetitions": "10 répétitions par doigt",
+                "series": 2,
+                "materiel_requis": "Aucun",
+                "url_video": "https://www.youtube.com/watch?v=finger-mobility",
+                "consignes_specifiques": "Mobiliser chaque doigt individuellement",
+                "created_at": datetime.now(timezone.utc)
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "nom": "Exercices de pincement",
+                "description": "Renforcement de la pince pouce-index et autres pincements",
+                "type_exercice": "renforcement",
+                "zone_corporelle": "main",
+                "difficulte": 2,
+                "duree_minutes": 12,
+                "repetitions": "3 séries de 10 par type",
+                "series": 3,
+                "materiel_requis": "Petits objets, pâte thérapeutique",
+                "url_video": "https://www.youtube.com/watch?v=pinch-strength",
+                "consignes_specifiques": "Varier les types de pincement : pulpe, latéral, tri-digital",
+                "created_at": datetime.now(timezone.utc)
+            },
+            
+            # Exercices Cervicales (déjà existants, je les laisse)
             {
                 "id": str(uuid.uuid4()),
                 "nom": "Mobilisation cervicale douce",
