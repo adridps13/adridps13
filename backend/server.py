@@ -1184,6 +1184,150 @@ async def update_document(document_id: str, request: Dict[str, Any]):
     updated_document = await db.documents.find_one({"id": document_id})
     return DocumentGenere(**updated_document)
 
+# Routes Notifications
+@api_router.post("/notifications", response_model=Notification)
+async def create_notification(notification: NotificationCreate):
+    notification_dict = notification.dict()
+    notification_obj = Notification(**notification_dict)
+    await db.notifications.insert_one(notification_obj.dict())
+    return notification_obj
+
+@api_router.get("/notifications", response_model=List[Notification])
+async def get_notifications():
+    notifications = await db.notifications.find().sort("created_at", -1).to_list(1000)
+    return [Notification(**notification) for notification in notifications]
+
+@api_router.put("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str):
+    result = await db.notifications.update_one(
+        {"id": notification_id}, 
+        {"$set": {"lu": True}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Notification non trouvée")
+    return {"message": "Notification marquée comme lue"}
+
+# Routes Conversations
+@api_router.post("/conversations", response_model=Conversation)
+async def create_conversation(conversation: ConversationCreate):
+    # Vérifier si une conversation existe déjà
+    existing = await db.conversations.find_one({
+        "patient_id": conversation.patient_id,
+        "therapeute_id": conversation.therapeute_id
+    })
+    
+    if existing:
+        return Conversation(**existing)
+    
+    conversation_dict = conversation.dict()
+    conversation_obj = Conversation(**conversation_dict)
+    await db.conversations.insert_one(conversation_obj.dict())
+    return conversation_obj
+
+@api_router.get("/conversations", response_model=List[Conversation])
+async def get_conversations():
+    conversations = await db.conversations.find().sort("dernier_message_date", -1).to_list(1000)
+    return [Conversation(**conversation) for conversation in conversations]
+
+@api_router.get("/conversations/{conversation_id}", response_model=Conversation)
+async def get_conversation(conversation_id: str):
+    conversation = await db.conversations.find_one({"id": conversation_id})
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation non trouvée")
+    return Conversation(**conversation)
+
+# Routes Messages
+@api_router.post("/messages", response_model=Message)
+async def create_message(message: MessageCreate):
+    message_dict = message.dict()
+    message_obj = Message(**message_dict)
+    await db.messages.insert_one(message_obj.dict())
+    
+    # Mettre à jour la conversation
+    conversation_update = {
+        "dernier_message": message.contenu,
+        "dernier_message_date": datetime.now(timezone.utc)
+    }
+    
+    # Incrémenter les messages non lus selon l'expéditeur
+    if message.expediteur == "patient":
+        conversation_update["messages_non_lus_therapeute"] = 1
+        await db.conversations.update_one(
+            {"id": message.conversation_id},
+            {"$set": conversation_update, "$inc": {"messages_non_lus_therapeute": 1}}
+        )
+    else:
+        conversation_update["messages_non_lus_patient"] = 1
+        await db.conversations.update_one(
+            {"id": message.conversation_id},
+            {"$set": conversation_update, "$inc": {"messages_non_lus_patient": 1}}
+        )
+    
+    return message_obj
+
+@api_router.get("/conversations/{conversation_id}/messages", response_model=List[Message])
+async def get_messages(conversation_id: str):
+    messages = await db.messages.find({"conversation_id": conversation_id}).sort("timestamp", 1).to_list(1000)
+    return [Message(**message) for message in messages]
+
+# Fonction utilitaire pour créer des notifications automatiques
+async def create_auto_notification(patient_id: str, patient_nom: str, notification_type: str, details: Dict[str, Any]):
+    """Crée automatiquement une notification basée sur l'activité du patient"""
+    
+    notification_templates = {
+        "exercice_complete": {
+            "titre": "Exercice terminé",
+            "message": f"{patient_nom} a terminé {details.get('exercice_nom', 'un exercice')}"
+        },
+        "douleur_elevee": {
+            "titre": "Douleur élevée signalée",
+            "message": f"{patient_nom} a signalé une douleur de {details.get('niveau_douleur', 'N/A')}/10"
+        },
+        "seance_manquee": {
+            "titre": "Séance manquée",
+            "message": f"{patient_nom} a manqué sa séance prévue"
+        },
+        "commentaire": {
+            "titre": "Nouveau commentaire",
+            "message": f"{patient_nom} a ajouté un commentaire"
+        },
+        "objectif_atteint": {
+            "titre": "Objectif atteint",
+            "message": f"{patient_nom} a atteint un objectif de son programme"
+        }
+    }
+    
+    template = notification_templates.get(notification_type, {
+        "titre": "Nouvelle activité",
+        "message": f"Nouvelle activité de {patient_nom}"
+    })
+    
+    notification = Notification(
+        patient_id=patient_id,
+        patient_nom=patient_nom,
+        type=notification_type,
+        titre=template["titre"],
+        message=template["message"],
+        data=details
+    )
+    
+    await db.notifications.insert_one(notification.dict())
+    return notification
+
+# Endpoint pour créer des notifications de test
+@api_router.post("/notifications/test/{patient_id}")
+async def create_test_notification(patient_id: str, notification_data: Dict[str, Any]):
+    patient = await db.patients.find_one({"id": patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient non trouvé")
+    
+    patient_nom = f"{patient['prenom']} {patient['nom']}"
+    notification_type = notification_data.get('type', 'exercice_complete')
+    details = notification_data.get('details', {})
+    
+    notification = await create_auto_notification(patient_id, patient_nom, notification_type, details)
+    return notification
+
 # Routes Suggestions
 @api_router.post("/suggestions", response_model=Suggestion)
 async def create_suggestion(suggestion: SuggestionCreate):
