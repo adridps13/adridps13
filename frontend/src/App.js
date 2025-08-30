@@ -1032,6 +1032,116 @@ const NewPatientForm = () => {
                   </div>
                 </div>
 
+                {/* Pain Drawing */}
+                <div className="col-span-2">
+                  <PainDrawing 
+                    painAreas={anamneseData.pain_areas}
+                    onPainAreaClick={handlePainAreaClick}
+                  />
+                </div>
+
+                {/* Drapeaux (Red/Yellow/Blue Flags) */}
+                <div className="col-span-2">
+                  <Card className="p-4">
+                    <h3 className="font-medium text-gray-900 mb-4">Signaux d'Alarme (Flags)</h3>
+                    
+                    <Tabs defaultValue="red" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="red" className="text-red-600">Red Flags</TabsTrigger>
+                        <TabsTrigger value="yellow" className="text-yellow-600">Yellow Flags</TabsTrigger>
+                        <TabsTrigger value="blue" className="text-blue-600">Blue Flags</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="red" className="mt-4">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-red-700">Drapeaux Rouges (Urgences médicales)</h4>
+                          <div className="grid grid-cols-1 gap-2">
+                            {[
+                              'Fièvre inexpliquée',
+                              'Perte de poids non intentionnelle',
+                              'Antécédents de cancer',
+                              'Douleurs nocturnes intenses',
+                              'Troubles sphinctériens',
+                              'Déficit neurologique progressif',
+                              'Syndrome de la queue de cheval',
+                              'Fracture récente',
+                              'Infection systémique'
+                            ].map((flag) => (
+                              <label key={flag} className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={anamneseData.red_flags.includes(flag)}
+                                  onChange={(e) => handleFlagChange('red_flags', flag, e.target.checked)}
+                                  className="rounded border-red-300 text-red-600 focus:ring-red-500"
+                                />
+                                <span className="text-sm">{flag}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="yellow" className="mt-4">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-yellow-700">Drapeaux Jaunes (Facteurs psychosociaux)</h4>
+                          <div className="grid grid-cols-1 gap-2">
+                            {[
+                              'Stress au travail',
+                              'Anxiété liée à la douleur',
+                              'Dépression',
+                              'Catastrophisme',
+                              'Peur du mouvement (kinésiophobie)',
+                              'Évitement des activités',
+                              'Croyances négatives sur la douleur',
+                              'Mauvaise qualité de sommeil',
+                              'Isolement social'
+                            ].map((flag) => (
+                              <label key={flag} className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={anamneseData.yellow_flags.includes(flag)}
+                                  onChange={(e) => handleFlagChange('yellow_flags', flag, e.target.checked)}
+                                  className="rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500"
+                                />
+                                <span className="text-sm">{flag}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="blue" className="mt-4">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-blue-700">Drapeaux Bleus (Facteurs professionnels)</h4>
+                          <div className="grid grid-cols-1 gap-2">
+                            {[
+                              'Insatisfaction au travail',
+                              'Mauvaise ambiance de travail',
+                              'Manque de soutien des collègues',
+                              'Pression temporelle excessive',
+                              'Monotonie des tâches',
+                              'Absence d\'autonomie',
+                              'Perception d\'injustice',
+                              'Conflit avec la hiérarchie',
+                              'Surcharge de travail'
+                            ].map((flag) => (
+                              <label key={flag} className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={anamneseData.blue_flags.includes(flag)}
+                                  onChange={(e) => handleFlagChange('blue_flags', flag, e.target.checked)}
+                                  className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm">{flag}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </Card>
+                </div>
+
                 <div>
                   <Label htmlFor="antecedents">Antécédents médicaux</Label>
                   <Textarea
