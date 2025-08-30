@@ -840,57 +840,86 @@ const NewPatientForm = () => {
 // Body Diagram Component
 const BodyDiagram = ({ onZoneClick, selectedZone }) => {
   const zones = [
-    { id: 'cervicales', name: 'Cervicales', x: 150, y: 50, width: 60, height: 40 },
-    { id: 'epaule', name: 'Épaules', x: 100, y: 90, width: 160, height: 60 },
-    { id: 'dos', name: 'Dos', x: 130, y: 150, width: 100, height: 120 },
-    { id: 'cuisse', name: 'Cuisses', x: 120, y: 270, width: 120, height: 80 },
-    { id: 'genou', name: 'Genoux', x: 130, y: 350, width: 100, height: 60 },
-    { id: 'cheville', name: 'Chevilles', x: 135, y: 410, width: 90, height: 50 }
+    { id: 'cervicales', name: 'Cervicales', x: 150, y: 45, width: 60, height: 30 },
+    { id: 'epaule', name: 'Épaules', x: 90, y: 75, width: 180, height: 50 },
+    { id: 'bras', name: 'Bras', x: 70, y: 125, width: 60, height: 90 },
+    { id: 'coude', name: 'Coudes', x: 75, y: 215, width: 50, height: 30 },
+    { id: 'poignet', name: 'Poignets', x: 80, y: 245, width: 40, height: 25 },
+    { id: 'main', name: 'Mains', x: 75, y: 270, width: 50, height: 40 },
+    { id: 'dos', name: 'Dos', x: 125, y: 125, width: 110, height: 140 },
+    { id: 'cuisse', name: 'Cuisses', x: 115, y: 265, width: 130, height: 80 },
+    { id: 'genou', name: 'Genoux', x: 125, y: 345, width: 110, height: 50 },
+    { id: 'cheville', name: 'Chevilles', x: 130, y: 395, width: 100, height: 40 }
   ];
 
   return (
     <div className="bg-white p-4 rounded-lg border shadow-sm">
       <h3 className="font-medium text-gray-900 mb-4 text-center">Schéma Corporel</h3>
       <div className="flex justify-center">
-        <svg width="360" height="480" viewBox="0 0 360 480" className="border rounded">
-          {/* Corps humain simple */}
+        <svg width="360" height="450" viewBox="0 0 360 450" className="border rounded">
+          {/* Corps humain amélioré */}
           <defs>
             <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style={{stopColor:'#f3f4f6', stopOpacity:1}} />
-              <stop offset="100%" style={{stopColor:'#e5e7eb', stopOpacity:1}} />
+              <stop offset="0%" style={{stopColor:'#f8fafc', stopOpacity:1}} />
+              <stop offset="100%" style={{stopColor:'#e2e8f0', stopOpacity:1}} />
             </linearGradient>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="#00000020"/>
+            </filter>
           </defs>
           
           {/* Tête */}
-          <circle cx="180" cy="70" r="35" fill="#f9fafb" stroke="#d1d5db" strokeWidth="2"/>
+          <circle cx="180" cy="60" r="30" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2" filter="url(#shadow)"/>
           
-          {/* Cou */}
-          <rect x="165" y="105" width="30" height="25" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          {/* Cou/Cervicales */}
+          <rect x="165" y="90" width="30" height="20" rx="5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Épaules */}
+          <ellipse cx="120" cy="120" rx="25" ry="15" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="240" cy="120" rx="25" ry="15" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Bras gauche */}
+          <rect x="85" y="135" width="20" height="60" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          {/* Coude gauche */}
+          <circle cx="95" cy="210" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          {/* Avant-bras gauche */}
+          <rect x="85" y="222" width="20" height="50" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          {/* Main gauche */}
+          <ellipse cx="95" cy="285" rx="15" ry="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Bras droit */}
+          <rect x="255" y="135" width="20" height="60" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          {/* Coude droit */}
+          <circle cx="265" cy="210" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          {/* Avant-bras droit */}
+          <rect x="255" y="222" width="20" height="50" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          {/* Main droite */}
+          <ellipse cx="265" cy="285" rx="15" ry="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Tronc */}
-          <rect x="140" y="130" width="80" height="140" rx="20" fill="url(#bodyGrad)" stroke="#d1d5db" strokeWidth="2"/>
-          
-          {/* Bras */}
-          <rect x="90" y="140" width="50" height="20" rx="10" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
-          <rect x="220" y="140" width="50" height="20" rx="10" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          <rect x="135" y="110" width="90" height="130" rx="25" fill="url(#bodyGrad)" stroke="#cbd5e1" strokeWidth="2" filter="url(#shadow)"/>
           
           {/* Cuisses */}
-          <rect x="150" y="270" width="25" height="80" rx="12" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
-          <rect x="185" y="270" width="25" height="80" rx="12" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          <rect x="145" y="240" width="25" height="70" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="190" y="240" width="25" height="70" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Genoux */}
-          <circle cx="162" cy="365" r="15" fill="#f3f4f6" stroke="#d1d5db" strokeWidth="1"/>
-          <circle cx="198" cy="365" r="15" fill="#f3f4f6" stroke="#d1d5db" strokeWidth="1"/>
+          <circle cx="157" cy="325" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <circle cx="203" cy="325" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Jambes */}
-          <rect x="150" y="380" width="25" height="70" rx="12" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
-          <rect x="185" y="380" width="25" height="70" rx="12" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          <rect x="145" y="337" width="25" height="55" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="190" y="337" width="25" height="55" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Chevilles */}
+          <circle cx="157" cy="405" r="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <circle cx="203" cy="405" r="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
           {/* Pieds */}
-          <ellipse cx="162" cy="465" rx="20" ry="10" fill="#f3f4f6" stroke="#d1d5db" strokeWidth="1"/>
-          <ellipse cx="198" cy="465" rx="20" ry="10" fill="#f3f4f6" stroke="#d1d5db" strokeWidth="1"/>
+          <ellipse cx="157" cy="425" rx="18" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="203" cy="425" rx="18" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
           
-          {/* Zones cliquables */}
+          {/* Zones cliquables avec hover effects */}
           {zones.map((zone) => (
             <g key={zone.id}>
               <rect
@@ -898,19 +927,21 @@ const BodyDiagram = ({ onZoneClick, selectedZone }) => {
                 y={zone.y}
                 width={zone.width}
                 height={zone.height}
-                fill={selectedZone === zone.id ? "rgba(16, 185, 129, 0.3)" : "transparent"}
+                fill={selectedZone === zone.id ? "rgba(16, 185, 129, 0.4)" : "transparent"}
                 stroke={selectedZone === zone.id ? "#10b981" : "transparent"}
                 strokeWidth="2"
                 rx="8"
-                className="cursor-pointer hover:fill-emerald-100 transition-all"
+                className="cursor-pointer hover:fill-emerald-100 transition-all duration-200"
                 onClick={() => onZoneClick(zone.id)}
               />
               <text
                 x={zone.x + zone.width/2}
-                y={zone.y + zone.height/2 + 4}
+                y={zone.y + zone.height/2 + 3}
                 textAnchor="middle"
-                className="text-xs font-medium fill-gray-700 pointer-events-none"
-                style={{fontSize: '11px'}}
+                className={`text-xs font-medium pointer-events-none transition-colors ${
+                  selectedZone === zone.id ? 'fill-emerald-800' : 'fill-gray-600'
+                }`}
+                style={{fontSize: '10px'}}
               >
                 {zone.name}
               </text>
