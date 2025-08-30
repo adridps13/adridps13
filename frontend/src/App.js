@@ -1252,9 +1252,6 @@ const ExercicesPage = () => {
         </div>
       </div>
 
-
-
-
       {/* New Exercise Dialog */}
       <Dialog open={showNewExerciceForm} onOpenChange={setShowNewExerciceForm}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
