@@ -44,7 +44,14 @@ import {
   CheckCircle,
   Copy,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  MessageCircle,
+  Bell,
+  Send,
+  Check,
+  CheckCheck,
+  Circle,
+  AlertCircle
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
