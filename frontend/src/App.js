@@ -1457,7 +1457,302 @@ const ExercicesPage = () => {
   );
 };
 
-// Main App Component
+// Programmes Page Component
+const ProgrammesPage = () => {
+  const [programmes, setProgrammes] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newProgramme, setNewProgramme] = useState({
+    patient_id: '',
+    nom_programme: '',
+    objectif_principal: '',
+    duree_semaines: 8,
+    frequence_hebdomadaire: 3,
+    phases: [],
+    notes_kine: '',
+    adaptation_auto: true
+  });
+
+  useEffect(() => {
+    fetchProgrammes();
+    fetchPatients();
+  }, []);
+
+  const fetchProgrammes = async () => {
+    try {
+      // Pour l'instant, récupérer tous les programmes de tous les patients
+      const patientsRes = await axios.get(`${API}/patients`);
+      let allProgrammes = [];
+      
+      for (const patient of patientsRes.data) {
+        try {
+          const programmesRes = await axios.get(`${API}/programmes/patient/${patient.id}`);
+          const programmesWithPatient = programmesRes.data.map(prog => ({
+            ...prog,
+            patient_nom: `${patient.prenom} ${patient.nom}`,
+            patient_pathologie: patient.pathologie
+          }));
+          allProgrammes = [...allProgrammes, ...programmesWithPatient];
+        } catch (error) {
+          console.log(`Pas de programmes pour ${patient.prenom} ${patient.nom}`);
+        }
+      }
+      
+      setProgrammes(allProgrammes);
+    } catch (error) {
+      console.error('Erreur lors du chargement des programmes:', error);
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      const response = await axios.get(`${API}/patients`);
+      setPatients(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des patients:', error);
+    }
+  };
+
+  const createExampleProgramme = async (patientId) => {
+    try {
+      const exampleProgramme = {
+        patient_id: patientId,
+        nom_programme: "Programme de Rééducation Standard",
+        objectif_principal: "Récupération fonctionnelle et réduction de la douleur",
+        duree_semaines: 8,
+        frequence_hebdomadaire: 3,
+        phases: [
+          {
+            nom: "Phase 1 - Récupération",
+            semaines: [1, 2],
+            objectif: "Réduction douleur et mobilisation douce",
+            exercices: [
+              {
+                type: "mobilite",
+                intensite: 3,
+                volume_base: { repetitions: 10, series: 2, duree: 8 }
+              }
+            ]
+          },
+          {
+            nom: "Phase 2 - Renforcement",
+            semaines: [3, 4, 5, 6],
+            objectif: "Renforcement musculaire progressif",
+            exercices: [
+              {
+                type: "renforcement",
+                intensite: 4,
+                volume_base: { repetitions: 12, series: 3, duree: 15 }
+              }
+            ]
+          },
+          {
+            nom: "Phase 3 - Fonctionnel",
+            semaines: [7, 8],
+            objectif: "Retour aux activités fonctionnelles",
+            exercices: [
+              {
+                type: "proprioception",
+                intensite: 4,
+                volume_base: { repetitions: 15, series: 3, duree: 20 }
+              }
+            ]
+          }
+        ],
+        notes_kine: "Programme adaptatif basé sur la douleur et la compliance patient",
+        adaptation_auto: true
+      };
+
+      await axios.post(`${API}/programmes`, exampleProgramme);
+      alert('Programme créé avec succès !');
+      fetchProgrammes();
+    } catch (error) {
+      console.error('Erreur lors de la création du programme:', error);
+      alert('Erreur lors de la création du programme');
+    }
+  };
+
+  const getStatutColor = (statut) => {
+    switch (statut) {
+      case 'actif':
+        return 'bg-green-100 text-green-800';
+      case 'suspendu':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'termine':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Programmes de Rééducation</h1>
+          <p className="text-gray-600">Gestion des programmes personnalisés avec suivi automatique</p>
+        </div>
+        <Button
+          onClick={() => setShowCreateForm(true)}
+          className="bg-emerald-600 hover:bg-emerald-700"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Nouveau Programme
+        </Button>
+      </div>
+
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="border-l-4 border-l-emerald-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Programmes Actifs</CardTitle>
+            <Calendar className="h-5 w-5 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">
+              {programmes.filter(p => p.statut === 'actif').length}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">En cours d'exécution</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Programmes</CardTitle>
+            <Target className="h-5 w-5 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">{programmes.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Tous statuts confondus</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-orange-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Patients Suivis</CardTitle>
+            <Users className="h-5 w-5 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">
+              {new Set(programmes.map(p => p.patient_id)).size}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Avec programmes actifs</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Liste des Programmes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {programmes.map((programme) => (
+          <Card key={programme.id} className="hover:shadow-md transition-shadow">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-lg">{programme.nom_programme}</CardTitle>
+                  <CardDescription className="mt-1">
+                    Patient: <span className="font-medium">{programme.patient_nom}</span>
+                  </CardDescription>
+                  <Badge variant="outline" className="mt-2 text-emerald-700 border-emerald-200">
+                    {programme.patient_pathologie}
+                  </Badge>
+                </div>
+                <Badge className={getStatutColor(programme.statut)}>
+                  {programme.statut}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Target className="w-4 h-4 mr-2" />
+                  {programme.objectif_principal}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                    {programme.duree_semaines} semaines
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                    {programme.frequence_hebdomadaire}x/semaine
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">Progression</span>
+                    <span className="text-sm text-gray-500">
+                      Phase {programme.phase_actuelle}/{programme.phases.length}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(programme.phase_actuelle / programme.phases.length) * 100} 
+                    className="h-2"
+                  />
+                </div>
+
+                {programme.adaptation_auto && (
+                  <div className="flex items-center text-sm text-emerald-700">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Adaptation automatique activée
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex space-x-2 mt-6">
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Eye className="w-4 h-4 mr-1" />
+                  Voir Détails
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Edit className="w-4 h-4 mr-1" />
+                  Modifier
+                </Button>
+                <Button variant="outline" size="sm">
+                  <TrendingUp className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {programmes.length === 0 && (
+        <Card className="mt-8">
+          <CardContent className="text-center py-12">
+            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Aucun programme créé
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Commencez par créer des programmes personnalisés pour vos patients
+            </p>
+            
+            {/* Actions rapides pour créer des programmes d'exemple */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-gray-700">Créer un programme d'exemple :</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {patients.slice(0, 6).map((patient) => (
+                  <Button
+                    key={patient.id}
+                    variant="outline"
+                    onClick={() => createExampleProgramme(patient.id)}
+                    className="justify-start"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {patient.prenom} {patient.nom}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
 function App() {
   return (
     <div className="App min-h-screen bg-gray-50">
