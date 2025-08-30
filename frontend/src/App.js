@@ -56,6 +56,7 @@ const Navigation = () => {
     { path: '/patients', label: 'Patients', icon: Users },
     { path: '/nouveau-patient', label: 'Nouveau Patient', icon: UserPlus },
     { path: '/exercices', label: 'Exercices', icon: Dumbbell },
+    { path: '/programmes', label: 'Programmes', icon: Calendar },
   ];
 
   return (
