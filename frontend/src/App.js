@@ -837,7 +837,100 @@ const NewPatientForm = () => {
   );
 };
 
-// Exercises Component
+// Body Diagram Component
+const BodyDiagram = ({ onZoneClick, selectedZone }) => {
+  const zones = [
+    { id: 'cervicales', name: 'Cervicales', x: 150, y: 50, width: 60, height: 40 },
+    { id: 'epaule', name: 'Épaules', x: 100, y: 90, width: 160, height: 60 },
+    { id: 'dos', name: 'Dos', x: 130, y: 150, width: 100, height: 120 },
+    { id: 'cuisse', name: 'Cuisses', x: 120, y: 270, width: 120, height: 80 },
+    { id: 'genou', name: 'Genoux', x: 130, y: 350, width: 100, height: 60 },
+    { id: 'cheville', name: 'Chevilles', x: 135, y: 410, width: 90, height: 50 }
+  ];
+
+  return (
+    <div className="bg-white p-4 rounded-lg border shadow-sm">
+      <h3 className="font-medium text-gray-900 mb-4 text-center">Schéma Corporel</h3>
+      <div className="flex justify-center">
+        <svg width="360" height="480" viewBox="0 0 360 480" className="border rounded">
+          {/* Corps humain simple */}
+          <defs>
+            <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style={{stopColor:'#f3f4f6', stopOpacity:1}} />
+              <stop offset="100%" style={{stopColor:'#e5e7eb', stopOpacity:1}} />
+            </linearGradient>
+          </defs>
+          
+          {/* Tête */}
+          <circle cx="180" cy="70" r="35" fill="#f9fafb" stroke="#d1d5db" strokeWidth="2"/>
+          
+          {/* Cou */}
+          <rect x="165" y="105" width="30" height="25" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          
+          {/* Tronc */}
+          <rect x="140" y="130" width="80" height="140" rx="20" fill="url(#bodyGrad)" stroke="#d1d5db" strokeWidth="2"/>
+          
+          {/* Bras */}
+          <rect x="90" y="140" width="50" height="20" rx="10" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          <rect x="220" y="140" width="50" height="20" rx="10" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          
+          {/* Cuisses */}
+          <rect x="150" y="270" width="25" height="80" rx="12" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          <rect x="185" y="270" width="25" height="80" rx="12" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          
+          {/* Genoux */}
+          <circle cx="162" cy="365" r="15" fill="#f3f4f6" stroke="#d1d5db" strokeWidth="1"/>
+          <circle cx="198" cy="365" r="15" fill="#f3f4f6" stroke="#d1d5db" strokeWidth="1"/>
+          
+          {/* Jambes */}
+          <rect x="150" y="380" width="25" height="70" rx="12" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          <rect x="185" y="380" width="25" height="70" rx="12" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1"/>
+          
+          {/* Pieds */}
+          <ellipse cx="162" cy="465" rx="20" ry="10" fill="#f3f4f6" stroke="#d1d5db" strokeWidth="1"/>
+          <ellipse cx="198" cy="465" rx="20" ry="10" fill="#f3f4f6" stroke="#d1d5db" strokeWidth="1"/>
+          
+          {/* Zones cliquables */}
+          {zones.map((zone) => (
+            <g key={zone.id}>
+              <rect
+                x={zone.x}
+                y={zone.y}
+                width={zone.width}
+                height={zone.height}
+                fill={selectedZone === zone.id ? "rgba(16, 185, 129, 0.3)" : "transparent"}
+                stroke={selectedZone === zone.id ? "#10b981" : "transparent"}
+                strokeWidth="2"
+                rx="8"
+                className="cursor-pointer hover:fill-emerald-100 transition-all"
+                onClick={() => onZoneClick(zone.id)}
+              />
+              <text
+                x={zone.x + zone.width/2}
+                y={zone.y + zone.height/2 + 4}
+                textAnchor="middle"
+                className="text-xs font-medium fill-gray-700 pointer-events-none"
+                style={{fontSize: '11px'}}
+              >
+                {zone.name}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </div>
+      <div className="mt-3 text-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onZoneClick(null)}
+          className="text-xs"
+        >
+          Voir tout
+        </Button>
+      </div>
+    </div>
+  );
+};
 const ExercicesPage = () => {
   const [exercices, setExercices] = useState([]);
   const [filteredExercices, setFilteredExercices] = useState([]);
