@@ -973,7 +973,7 @@ const ExercicesPage = () => {
                   <SelectValue placeholder="Toutes les zones" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes les zones</SelectItem>
+                  <SelectItem value="all-zones">Toutes les zones</SelectItem>
                   <SelectItem value="genou">Genou</SelectItem>
                   <SelectItem value="epaule">Épaule</SelectItem>
                   <SelectItem value="dos">Dos</SelectItem>
