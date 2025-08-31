@@ -4116,12 +4116,30 @@ const AgendaPage = () => {
             
             <div className="flex space-x-3">
               <Button 
+                onClick={() => setShowWorkingHoursModal(true)}
+                variant="outline"
+                className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                Horaires
+              </Button>
+              <Button 
                 onClick={() => setShowCategoriesModal(true)}
                 variant="outline"
                 className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Catégories
+              </Button>
+              <Button 
+                onClick={() => handleCreateSeries(null)}
+                variant="outline"
+                className={`border-blue-600 text-blue-600 hover:bg-blue-50 ${
+                  seriesSelection.isSelecting ? 'bg-blue-100' : ''
+                }`}
+              >
+                <Target className="w-4 h-4 mr-2" />
+                {seriesSelection.isSelecting ? 'Sélection...' : 'Créer Série'}
               </Button>
               <Button 
                 onClick={() => setShowNewRdvModal(true)}
