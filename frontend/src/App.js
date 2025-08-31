@@ -3528,6 +3528,9 @@ const CoachingPanel = ({ patient, onClose }) => {
     </div>
   );
 };
+
+// Main App Component
+const App = () => {
   return (
     <div className="App min-h-screen bg-gray-50">
       <BrowserRouter>
