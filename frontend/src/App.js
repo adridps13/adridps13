@@ -3832,6 +3832,40 @@ const AgendaPage = () => {
     setContextMenu(null);
   };
 
+  const createRdvSeries = async (seriesData) => {
+    const { rdv, numberOfSessions, frequency, startDate } = seriesData;
+    const newRdvs = [];
+
+    for (let i = 0; i < numberOfSessions; i++) {
+      const sessionDate = new Date(startDate);
+      sessionDate.setDate(sessionDate.getDate() + (i * frequency));
+      
+      const dateDebut = new Date(sessionDate);
+      dateDebut.setHours(new Date(rdv.date_debut).getHours());
+      dateDebut.setMinutes(new Date(rdv.date_debut).getMinutes());
+      
+      const dateFin = new Date(dateDebut.getTime() + rdv.duree_minutes * 60000);
+
+      const newRdvData = {
+        ...rdv,
+        id: undefined,
+        date_debut: dateDebut.toISOString(),
+        date_fin: dateFin.toISOString(),
+        created_at: undefined,
+        updated_at: undefined
+      };
+
+      try {
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous`, newRdvData);
+        newRdvs.push(response.data);
+      } catch (error) {
+        console.error('Erreur création série:', error);
+      }
+    }
+
+    setRendezVous([...rendezVous, ...newRdvs]);
+  };
+
   const handleDragStart = (rdv, e) => {
     setDraggedRdv(rdv);
     setIsDragging(true);
