@@ -1794,3 +1794,278 @@ async def initialize_database():
         
         await db.exercices.insert_many(sample_exercises)
         logger.info("Base d'exercices initialisée avec succès")
+
+# Agenda System Models
+class CategorieSeance(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    nom: str  # Bilan, Suivi, Consultation, Hors nomenclature, etc.
+    duree_defaut: int  # durée en minutes (15, 20, 30, 45, 60)
+    couleur: str  # couleur hex pour l'affichage
+    prix: Optional[float] = None
+    description: Optional[str] = None
+    praticien_id: Optional[str] = None  # si spécifique à un praticien
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RendezVous(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    patient_nom: str  # dénormalisé pour faciliter les affichages
+    praticien_id: str = "default"  # pour l'instant un seul praticien
+    categorie_id: str
+    categorie_nom: str  # dénormalisé
+    date_debut: datetime
+    date_fin: datetime
+    duree_minutes: int
+    statut: str = "planifie"  # planifie, confirme, termine, annule
+    notes: Optional[str] = None
+    rappel_envoye: bool = False
+    rappel_date: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CreneauDisponible(BaseModel):
+    jour_semaine: int  # 0=lundi, 6=dimanche
+    heure_debut: str  # format HH:MM
+    heure_fin: str  # format HH:MM
+    praticien_id: str = "default"
+
+class ConfigurationRappel(BaseModel):
+    actif: bool = True
+    delai_heures: int = 24  # délai avant RDV pour envoyer le rappel
+    via_email: bool = True
+    via_sms: bool = False
+    message_template: str = "Rappel : Vous avez un rendez-vous {categorie} le {date} à {heure}."
+
+# Agenda endpoints
+@api_router.get("/categories-seances")
+async def get_categories_seances():
+    """Récupère toutes les catégories de séances"""
+    categories = await db.categories_seances.find({}).to_list(None)
+    return categories
+
+@api_router.post("/categories-seances")
+async def create_categorie_seance(categorie: CategorieSeance):
+    """Crée une nouvelle catégorie de séance"""
+    categorie_dict = categorie.dict()
+    await db.categories_seances.insert_one(categorie_dict)
+    return categorie_dict
+
+@api_router.put("/categories-seances/{categorie_id}")
+async def update_categorie_seance(categorie_id: str, categorie: CategorieSeance):
+    """Met à jour une catégorie de séance"""
+    categorie_dict = categorie.dict()
+    categorie_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    result = await db.categories_seances.update_one(
+        {"id": categorie_id},
+        {"$set": categorie_dict}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Catégorie non trouvée")
+    
+    return categorie_dict
+
+@api_router.delete("/categories-seances/{categorie_id}")
+async def delete_categorie_seance(categorie_id: str):
+    """Supprime une catégorie de séance"""
+    # Vérifier qu'il n'y a pas de RDV avec cette catégorie
+    rdv_count = await db.rendez_vous.count_documents({"categorie_id": categorie_id})
+    if rdv_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Impossible de supprimer : {rdv_count} rendez-vous utilisent cette catégorie"
+        )
+    
+    result = await db.categories_seances.delete_one({"id": categorie_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Catégorie non trouvée")
+    
+    return {"message": "Catégorie supprimée"}
+
+@api_router.get("/rendez-vous")
+async def get_rendez_vous(
+    date_debut: Optional[str] = None,
+    date_fin: Optional[str] = None,
+    patient_id: Optional[str] = None,
+    statut: Optional[str] = None
+):
+    """Récupère les rendez-vous avec filtres optionnels"""
+    filters = {}
+    
+    if date_debut and date_fin:
+        filters["date_debut"] = {
+            "$gte": datetime.fromisoformat(date_debut.replace('Z', '+00:00')),
+            "$lte": datetime.fromisoformat(date_fin.replace('Z', '+00:00'))
+        }
+    
+    if patient_id:
+        filters["patient_id"] = patient_id
+    
+    if statut:
+        filters["statut"] = statut
+    
+    rendez_vous = await db.rendez_vous.find(filters).sort("date_debut", 1).to_list(None)
+    return rendez_vous
+
+@api_router.post("/rendez-vous")
+async def create_rendez_vous(rdv: RendezVous):
+    """Crée un nouveau rendez-vous"""
+    # Vérifier les conflits d'horaire
+    overlap_filter = {
+        "$and": [
+            {"date_debut": {"$lt": rdv.date_fin}},
+            {"date_fin": {"$gt": rdv.date_debut}},
+            {"statut": {"$in": ["planifie", "confirme"]}},
+            {"praticien_id": rdv.praticien_id}
+        ]
+    }
+    
+    existing_rdv = await db.rendez_vous.find_one(overlap_filter)
+    if existing_rdv:
+        raise HTTPException(
+            status_code=400,
+            detail="Conflit d'horaire avec un autre rendez-vous"
+        )
+    
+    rdv_dict = rdv.dict()
+    await db.rendez_vous.insert_one(rdv_dict)
+    return rdv_dict
+
+@api_router.put("/rendez-vous/{rdv_id}")
+async def update_rendez_vous(rdv_id: str, rdv: RendezVous):
+    """Met à jour un rendez-vous"""
+    rdv_dict = rdv.dict()
+    rdv_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    result = await db.rendez_vous.update_one(
+        {"id": rdv_id},
+        {"$set": rdv_dict}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Rendez-vous non trouvé")
+    
+    return rdv_dict
+
+@api_router.delete("/rendez-vous/{rdv_id}")
+async def delete_rendez_vous(rdv_id: str):
+    """Supprime un rendez-vous"""
+    result = await db.rendez_vous.delete_one({"id": rdv_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Rendez-vous non trouvé")
+    
+    return {"message": "Rendez-vous supprimé"}
+
+@api_router.post("/agenda/init-categories-defaut")
+async def init_categories_defaut():
+    """Initialise les catégories de séances par défaut"""
+    categories_defaut = [
+        {
+            "id": str(uuid.uuid4()),
+            "nom": "Bilan",
+            "duree_defaut": 45,
+            "couleur": "#3B82F6",  # bleu
+            "prix": 35.0,
+            "description": "Bilan initial kinésithérapique",
+            "created_at": datetime.now(timezone.utc)
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nom": "Suivi",
+            "duree_defaut": 30,
+            "couleur": "#10B981",  # vert
+            "prix": 25.0,
+            "description": "Séance de suivi standard",
+            "created_at": datetime.now(timezone.utc)
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nom": "Consultation",
+            "duree_defaut": 20,
+            "couleur": "#F59E0B",  # orange
+            "prix": 20.0,
+            "description": "Consultation courte",
+            "created_at": datetime.now(timezone.utc)
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nom": "Hors nomenclature",
+            "duree_defaut": 60,
+            "couleur": "#8B5CF6",  # violet
+            "prix": 50.0,
+            "description": "Séance hors nomenclature",
+            "created_at": datetime.now(timezone.utc)
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nom": "Uro-gynécologie",
+            "duree_defaut": 45,
+            "couleur": "#EC4899",  # rose
+            "prix": 40.0,
+            "description": "Séance uro-gynécologique",
+            "created_at": datetime.now(timezone.utc)
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nom": "Remise en forme",
+            "duree_defaut": 60,
+            "couleur": "#06B6D4",  # cyan
+            "prix": 45.0,
+            "description": "Séance de remise en forme",
+            "created_at": datetime.now(timezone.utc)
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nom": "Drainage",
+            "duree_defaut": 30,
+            "couleur": "#84CC16",  # lime
+            "prix": 30.0,
+            "description": "Drainage lymphatique",
+            "created_at": datetime.now(timezone.utc)
+        }
+    ]
+    
+    # Vérifier si des catégories existent déjà
+    existing_count = await db.categories_seances.count_documents({})
+    if existing_count == 0:
+        await db.categories_seances.insert_many(categories_defaut)
+        return {"message": f"{len(categories_defaut)} catégories initialisées"}
+    else:
+        return {"message": f"{existing_count} catégories déjà présentes"}
+
+@api_router.get("/agenda/statistiques")
+async def get_statistiques_agenda():
+    """Récupère les statistiques de l'agenda"""
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today - timedelta(days=today.weekday())
+    
+    # Rendez-vous du jour
+    rdv_aujourd_hui = await db.rendez_vous.count_documents({
+        "date_debut": {
+            "$gte": today,
+            "$lt": today + timedelta(days=1)
+        },
+        "statut": {"$in": ["planifie", "confirme"]}
+    })
+    
+    # Rendez-vous de la semaine
+    rdv_semaine = await db.rendez_vous.count_documents({
+        "date_debut": {
+            "$gte": week_start,
+            "$lt": week_start + timedelta(days=7)
+        },
+        "statut": {"$in": ["planifie", "confirme"]}
+    })
+    
+    # Prochains rendez-vous
+    prochains_rdv = await db.rendez_vous.find({
+        "date_debut": {"$gte": datetime.now(timezone.utc)},
+        "statut": {"$in": ["planifie", "confirme"]}
+    }).sort("date_debut", 1).limit(3).to_list(None)
+    
+    return {
+        "rdv_aujourd_hui": rdv_aujourd_hui,
+        "rdv_semaine": rdv_semaine,
+        "prochains_rdv": prochains_rdv
+    }
