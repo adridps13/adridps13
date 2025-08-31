@@ -5417,6 +5417,142 @@ const ComparisonModal = ({ comparison, onClose }) => {
   );
 };
 
+// Context Menu Component
+const ContextMenu = ({ x, y, rdv, onCopy, onDuplicate, onCreateSeries, onClose }) => {
+  return (
+    <div 
+      className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-2 min-w-48"
+      style={{ left: x, top: y }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={onCopy}
+        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center"
+      >
+        <Copy className="w-4 h-4 mr-3" />
+        Copier le rendez-vous
+      </button>
+      <button
+        onClick={onDuplicate}
+        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center"
+      >
+        <Calendar className="w-4 h-4 mr-3" />
+        Dupliquer (semaine suivante)
+      </button>
+      <button
+        onClick={onCreateSeries}
+        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center"
+      >
+        <RotateCcw className="w-4 h-4 mr-3" />
+        Créer une série
+      </button>
+      <div className="border-t border-gray-200 my-1"></div>
+      <div className="px-4 py-2 text-xs text-gray-500">
+        Ctrl+C pour copier • Ctrl+V pour coller
+      </div>
+    </div>
+  );
+};
+
+// Series Creation Modal Component
+const SeriesModal = ({ rdv, onSave, onClose }) => {
+  const [formData, setFormData] = useState({
+    numberOfSessions: 4,
+    frequency: 7, // days
+    startDate: new Date(rdv.date_debut).toISOString().split('T')[0]
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({ rdv, ...formData });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Créer une série de rendez-vous</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <h4 className="font-medium text-gray-900 mb-2">Modèle de rendez-vous</h4>
+            <div className="text-sm text-gray-600">
+              <p><strong>Patient:</strong> {rdv.patient_nom}</p>
+              <p><strong>Type:</strong> {rdv.categorie_nom}</p>
+              <p><strong>Durée:</strong> {rdv.duree_minutes} minutes</p>
+              <p><strong>Heure:</strong> {new Date(rdv.date_debut).toLocaleTimeString('fr-FR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}</p>
+            </div>
+          </div>
+
+          <div>
+            <Label>Nombre de séances</Label>
+            <Input
+              type="number"
+              value={formData.numberOfSessions}
+              onChange={(e) => setFormData({...formData, numberOfSessions: parseInt(e.target.value)})}
+              min="1"
+              max="20"
+            />
+          </div>
+
+          <div>
+            <Label>Fréquence</Label>
+            <Select 
+              value={formData.frequency.toString()}
+              onValueChange={(value) => setFormData({...formData, frequency: parseInt(value)})}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Chaque semaine</SelectItem>
+                <SelectItem value="14">Toutes les 2 semaines</SelectItem>
+                <SelectItem value="1">Tous les jours</SelectItem>
+                <SelectItem value="3">Tous les 3 jours</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Date de début</Label>
+            <Input
+              type="date"
+              value={formData.startDate}
+              onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+              min={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+
+          <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+            <strong>Aperçu:</strong> {formData.numberOfSessions} séances programmées, 
+            une tous les {formData.frequency === 7 ? '7 jours' : 
+                        formData.frequency === 14 ? '14 jours' : 
+                        formData.frequency === 1 ? 'jour' : 
+                        `${formData.frequency} jours`}, 
+            à partir du {new Date(formData.startDate).toLocaleDateString('fr-FR')}
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Annuler
+            </Button>
+            <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+              Créer la série
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
