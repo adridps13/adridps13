@@ -3773,6 +3773,143 @@ const AgendaPage = () => {
     }
   };
 
+  // Advanced RDV management functions
+  const handleCopyRdv = (rdv) => {
+    setCopiedRdv(rdv);
+    setContextMenu(null);
+  };
+
+  const handlePasteRdv = async (targetDay, targetTime) => {
+    if (!copiedRdv) return;
+
+    const [hour, minute] = targetTime.split(':').map(Number);
+    const dateDebut = new Date(targetDay);
+    dateDebut.setHours(hour, minute, 0, 0);
+    const dateFin = new Date(dateDebut.getTime() + copiedRdv.duree_minutes * 60000);
+
+    const newRdvData = {
+      ...copiedRdv,
+      id: undefined,
+      date_debut: dateDebut.toISOString(),
+      date_fin: dateFin.toISOString(),
+      created_at: undefined,
+      updated_at: undefined
+    };
+
+    try {
+      await createNewRdv(newRdvData);
+    } catch (error) {
+      alert('Erreur lors du collage du rendez-vous');
+    }
+  };
+
+  const handleDuplicateRdv = async (rdv) => {
+    const nextWeek = new Date(rdv.date_debut);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    const dateFin = new Date(nextWeek.getTime() + rdv.duree_minutes * 60000);
+
+    const duplicatedRdv = {
+      ...rdv,
+      id: undefined,
+      date_debut: nextWeek.toISOString(),
+      date_fin: dateFin.toISOString(),
+      created_at: undefined,
+      updated_at: undefined
+    };
+
+    try {
+      await createNewRdv(duplicatedRdv);
+      setContextMenu(null);
+    } catch (error) {
+      alert('Erreur lors de la duplication du rendez-vous');
+    }
+  };
+
+  const handleCreateSeries = (rdv) => {
+    // Open series creation modal
+    setShowSeriesModal({ rdv, isOpen: true });
+    setContextMenu(null);
+  };
+
+  const handleDragStart = (rdv, e) => {
+    setDraggedRdv(rdv);
+    setIsDragging(true);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setDraggedRdv(null);
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (targetDay, targetTime, e) => {
+    e.preventDefault();
+    
+    if (!draggedRdv) return;
+
+    const [hour, minute] = targetTime.split(':').map(Number);
+    const dateDebut = new Date(targetDay);
+    dateDebut.setHours(hour, minute, 0, 0);
+    const dateFin = new Date(dateDebut.getTime() + draggedRdv.duree_minutes * 60000);
+
+    const updatedRdvData = {
+      ...draggedRdv,
+      date_debut: dateDebut.toISOString(),
+      date_fin: dateFin.toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous/${draggedRdv.id}`, updatedRdvData);
+      setRendezVous(rendezVous.map(r => r.id === draggedRdv.id ? response.data : r));
+    } catch (error) {
+      console.error('Erreur lors du déplacement:', error);
+      alert('Erreur lors du déplacement du rendez-vous');
+    }
+
+    setDraggedRdv(null);
+    setIsDragging(false);
+  };
+
+  const handleContextMenu = (e, rdv) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      rdv: rdv
+    });
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedRdv) {
+        e.preventDefault();
+        handleCopyRdv(selectedRdv);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && copiedRdv && quickInputVisible) {
+        e.preventDefault();
+        handlePasteRdv(quickInputVisible.day, quickInputVisible.time);
+      }
+      if (e.key === 'Escape') {
+        setContextMenu(null);
+        setQuickInputVisible(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedRdv, copiedRdv, quickInputVisible]);
+
+  // Close context menu on click outside
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu(null);
+    if (contextMenu) {
+      window.addEventListener('click', handleClickOutside);
+      return () => window.removeEventListener('click', handleClickOutside);
+    }
+  }, [contextMenu]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
