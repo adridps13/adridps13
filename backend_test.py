@@ -463,6 +463,213 @@ class KineTrackAPITester:
         
         return self.log_test("Delete Category Protection", success, f"- Protection working: {success}")
 
+    # ===== MEDIA MANAGEMENT TESTS =====
+    
+    def test_get_patient_media_empty(self):
+        """Test getting media for patient with no media files"""
+        if not self.created_patient_id:
+            return self.log_test("Get Patient Media (Empty)", False, "- No patient ID available")
+        
+        success, response = self.make_request('GET', f'patients/{self.created_patient_id}/media')
+        if success and response:
+            data = response.json()
+            success = isinstance(data, list) and len(data) == 0
+        
+        return self.log_test("Get Patient Media (Empty)", success, f"- Found {len(data) if success and response else 'N/A'} media files")
+
+    def test_upload_patient_media_photo(self):
+        """Test uploading a photo for a patient"""
+        if not self.created_patient_id:
+            return self.log_test("Upload Patient Photo", False, "- No patient ID available")
+        
+        # Create a mock image file
+        import io
+        from PIL import Image
+        
+        # Create a simple test image
+        img = Image.new('RGB', (100, 100), color='red')
+        img_bytes = io.BytesIO()
+        img.save(img_bytes, format='JPEG')
+        img_bytes.seek(0)
+        
+        # Prepare multipart form data
+        files = {
+            'file': ('test_photo.jpg', img_bytes, 'image/jpeg')
+        }
+        data = {
+            'type': 'photo',
+            'category': 'evaluation'
+        }
+        
+        url = f"{self.api_url}/patients/{self.created_patient_id}/media"
+        
+        try:
+            response = requests.post(url, files=files, data=data, timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                response_data = response.json()
+                success = (response_data.get('type') == 'photo' and 
+                          response_data.get('category') == 'evaluation' and
+                          response_data.get('patient_id') == self.created_patient_id)
+                self.created_media_id = response_data.get('id')
+        except Exception as e:
+            success = False
+            print(f"Upload error: {str(e)}")
+        
+        return self.log_test("Upload Patient Photo", success, f"- Media ID: {getattr(self, 'created_media_id', 'None')}")
+
+    def test_upload_invalid_file_type(self):
+        """Test uploading invalid file type for photo"""
+        if not self.created_patient_id:
+            return self.log_test("Upload Invalid File Type", False, "- No patient ID available")
+        
+        # Create a mock text file
+        import io
+        text_content = io.BytesIO(b"This is not an image")
+        
+        files = {
+            'file': ('test.txt', text_content, 'text/plain')
+        }
+        data = {
+            'type': 'photo',
+            'category': 'evaluation'
+        }
+        
+        url = f"{self.api_url}/patients/{self.created_patient_id}/media"
+        
+        try:
+            response = requests.post(url, files=files, data=data, timeout=30)
+            success = response.status_code == 400
+            
+            if success:
+                response_data = response.json()
+                success = 'non supporté' in response_data.get('detail', '').lower()
+        except Exception as e:
+            success = False
+            print(f"Upload error: {str(e)}")
+        
+        return self.log_test("Upload Invalid File Type", success, "- Validation working correctly")
+
+    def test_filename_generation(self):
+        """Test automatic filename generation with timestamp"""
+        if not self.created_patient_id:
+            return self.log_test("Test Filename Generation", False, "- No patient ID available")
+        
+        # Create another mock image
+        import io
+        from PIL import Image
+        
+        img = Image.new('RGB', (50, 50), color='blue')
+        img_bytes = io.BytesIO()
+        img.save(img_bytes, format='PNG')
+        img_bytes.seek(0)
+        
+        files = {
+            'file': ('exercise_photo.png', img_bytes, 'image/png')
+        }
+        data = {
+            'type': 'photo',
+            'category': 'exercice'
+        }
+        
+        url = f"{self.api_url}/patients/{self.created_patient_id}/media"
+        
+        try:
+            response = requests.post(url, files=files, data=data, timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                response_data = response.json()
+                filename = response_data.get('filename', '')
+                # Check filename format: {patient_id}_{category}_{timestamp}.{extension}
+                expected_parts = [self.created_patient_id, 'exercice']
+                success = (all(part in filename for part in expected_parts) and 
+                          filename.endswith('.png') and
+                          len(filename.split('_')) >= 3)  # patient_id_category_timestamp.ext
+                self.created_media_id_2 = response_data.get('id')
+        except Exception as e:
+            success = False
+            print(f"Upload error: {str(e)}")
+        
+        return self.log_test("Test Filename Generation", success, f"- Generated filename format correct")
+
+    def test_get_patient_media_with_files(self):
+        """Test getting media files after uploading"""
+        if not self.created_patient_id:
+            return self.log_test("Get Patient Media (With Files)", False, "- No patient ID available")
+        
+        success, response = self.make_request('GET', f'patients/{self.created_patient_id}/media')
+        if success and response:
+            data = response.json()
+            success = (isinstance(data, list) and len(data) >= 2 and  # Should have at least 2 uploaded files
+                      all('id' in item and 'category' in item and 'type' in item for item in data))
+        
+        return self.log_test("Get Patient Media (With Files)", success, f"- Found {len(data) if success and response else 0} media files")
+
+    def test_media_categories(self):
+        """Test all three media categories: evaluation, exercice, resultat"""
+        if not self.created_patient_id:
+            return self.log_test("Test Media Categories", False, "- No patient ID available")
+        
+        # Test 'resultat' category
+        import io
+        from PIL import Image
+        
+        img = Image.new('RGB', (75, 75), color='green')
+        img_bytes = io.BytesIO()
+        img.save(img_bytes, format='JPEG')
+        img_bytes.seek(0)
+        
+        files = {
+            'file': ('result_photo.jpg', img_bytes, 'image/jpeg')
+        }
+        data = {
+            'type': 'photo',
+            'category': 'resultat'
+        }
+        
+        url = f"{self.api_url}/patients/{self.created_patient_id}/media"
+        
+        try:
+            response = requests.post(url, files=files, data=data, timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                response_data = response.json()
+                success = response_data.get('category') == 'resultat'
+                self.created_media_id_3 = response_data.get('id')
+        except Exception as e:
+            success = False
+            print(f"Upload error: {str(e)}")
+        
+        return self.log_test("Test Media Categories", success, "- All categories (evaluation, exercice, resultat) working")
+
+    def test_delete_patient_media(self):
+        """Test deleting a media file"""
+        if not self.created_patient_id or not hasattr(self, 'created_media_id'):
+            return self.log_test("Delete Patient Media", False, "- No patient ID or media ID available")
+        
+        success, response = self.make_request('DELETE', f'patients/{self.created_patient_id}/media/{self.created_media_id}')
+        if success and response:
+            data = response.json()
+            success = 'supprimé' in data.get('message', '').lower()
+        
+        return self.log_test("Delete Patient Media", success, f"- Deletion: {data.get('message', '') if success and response else 'Failed'}")
+
+    def test_delete_nonexistent_media(self):
+        """Test deleting non-existent media file"""
+        if not self.created_patient_id:
+            return self.log_test("Delete Non-existent Media", False, "- No patient ID available")
+        
+        fake_media_id = "non-existent-media-id"
+        success, response = self.make_request('DELETE', f'patients/{self.created_patient_id}/media/{fake_media_id}', expected_status=404)
+        if success and response:
+            data = response.json()
+            success = 'non trouvé' in data.get('detail', '').lower()
+        
+        return self.log_test("Delete Non-existent Media", success, "- 404 error properly returned")
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting KineTrack Backend API Tests")
