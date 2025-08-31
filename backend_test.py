@@ -9,6 +9,8 @@ import sys
 import json
 from datetime import datetime
 import time
+from PIL import Image
+import io
 
 class KineTrackAPITester:
     def __init__(self, base_url="https://kinetrack-1.preview.emergentagent.com"):
