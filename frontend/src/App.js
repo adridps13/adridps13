@@ -4085,7 +4085,19 @@ const AgendaPage = () => {
                   <div className="h-10 border-b flex items-center justify-center bg-white">
                     <span className="text-xs font-medium text-gray-500">Heure</span>
                   </div>
-                  <div className="overflow-y-auto" style={{ height: 'calc(100vh - 230px)' }} id="time-column">
+                  <div 
+                    className="overflow-y-auto" 
+                    style={{ height: 'calc(100vh - 230px)' }} 
+                    id="time-column"
+                    onScroll={(e) => {
+                      // Synchronize scroll to all day columns
+                      const scrollTop = e.target.scrollTop;
+                      getViewDays().forEach((_, i) => {
+                        const dayColumn = document.getElementById(`day-column-${i}`);
+                        if (dayColumn) dayColumn.scrollTop = scrollTop;
+                      });
+                    }}
+                  >
                     {generateTimeSlots().map((time) => (
                       <div key={time} className="h-8 border-b flex items-center justify-center">
                         <span className="text-xs text-gray-600">{time}</span>
@@ -4094,7 +4106,7 @@ const AgendaPage = () => {
                   </div>
                 </div>
 
-                {/* Days Columns - Synchronized Scrolling */}
+                {/* Days Columns - All with synchronized scrolling */}
                 <div className="flex-1 flex overflow-hidden">
                   {getViewDays().map((day, dayIndex) => {
                     const dayRdvs = getRdvForDay(day);
@@ -4119,20 +4131,29 @@ const AgendaPage = () => {
 
                         {/* Time Slots with synchronized scrolling */}
                         <div 
-                          className="relative"
-                          style={{ height: 'calc(100vh - 230px)', overflowY: dayIndex === 0 ? 'auto' : 'hidden' }}
-                          onScroll={dayIndex === 0 ? (e) => {
-                            // Synchronize scroll across all day columns
+                          className="relative overflow-y-auto"
+                          style={{ height: 'calc(100vh - 230px)' }}
+                          id={`day-column-${dayIndex}`}
+                          onScroll={(e) => {
+                            // Synchronize scroll across all columns including time column
                             const scrollTop = e.target.scrollTop;
-                            document.getElementById('time-column').scrollTop = scrollTop;
+                            
+                            // Sync time column
+                            const timeColumn = document.getElementById('time-column');
+                            if (timeColumn && timeColumn.scrollTop !== scrollTop) {
+                              timeColumn.scrollTop = scrollTop;
+                            }
+                            
+                            // Sync all other day columns
                             getViewDays().forEach((_, i) => {
-                              if (i !== 0) {
-                                const dayColumn = document.getElementById(`day-column-${i}`);
-                                if (dayColumn) dayColumn.scrollTop = scrollTop;
+                              if (i !== dayIndex) {
+                                const otherDayColumn = document.getElementById(`day-column-${i}`);
+                                if (otherDayColumn && otherDayColumn.scrollTop !== scrollTop) {
+                                  otherDayColumn.scrollTop = scrollTop;
+                                }
                               }
                             });
-                          } : undefined}
-                          id={`day-column-${dayIndex}`}
+                          }}
                         >
                           {generateTimeSlots().map((time, timeIndex) => {
                             const hasQuickInput = quickInputVisible && 
