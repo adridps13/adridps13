@@ -3568,14 +3568,20 @@ const AgendaPage = () => {
   const [showSeriesModal, setShowSeriesModal] = useState(null);
   const [showWorkingHoursModal, setShowWorkingHoursModal] = useState(false);
   const [workingHours, setWorkingHours] = useState({
-    lundi: { active: true, start: '08:00', end: '18:00', pauseStart: '12:00', pauseEnd: '14:00' },
-    mardi: { active: true, start: '08:00', end: '18:00', pauseStart: '12:00', pauseEnd: '14:00' },
-    mercredi: { active: true, start: '08:00', end: '18:00', pauseStart: '12:00', pauseEnd: '14:00' },
-    jeudi: { active: true, start: '08:00', end: '18:00', pauseStart: '12:00', pauseEnd: '14:00' },
-    vendredi: { active: true, start: '08:00', end: '18:00', pauseStart: '12:00', pauseEnd: '14:00' },
+    lundi: { active: true, start: '08:00', end: '20:00', pauseStart: '12:00', pauseEnd: '14:00' },
+    mardi: { active: true, start: '08:00', end: '20:00', pauseStart: '12:00', pauseEnd: '14:00' },
+    mercredi: { active: true, start: '08:00', end: '20:00', pauseStart: '12:00', pauseEnd: '14:00' },
+    jeudi: { active: true, start: '08:00', end: '20:00', pauseStart: '12:00', pauseEnd: '14:00' },
+    vendredi: { active: true, start: '08:00', end: '20:00', pauseStart: '12:00', pauseEnd: '14:00' },
     samedi: { active: false, start: '09:00', end: '12:00', pauseStart: '', pauseEnd: '' },
     dimanche: { active: false, start: '09:00', end: '12:00', pauseStart: '', pauseEnd: '' }
   });
+  const [practitioners, setPractitioners] = useState([
+    { id: 'default', nom: 'Dr. Principal', actif: true, couleur: '#3B82F6' }
+  ]);
+  const [selectedPractitioner, setSelectedPractitioner] = useState('default');
+  const [showPractitionersModal, setShowPractitionersModal] = useState(false);
+  const [blockedSlots, setBlockedSlots] = useState({});
   const [seriesSelection, setSeriesSelection] = useState({
     isSelecting: false,
     selectedSlots: [],
