@@ -3565,6 +3565,7 @@ const AgendaPage = () => {
   const [showNewRdvModal, setShowNewRdvModal] = useState(false);
   const [selectedRdv, setSelectedRdv] = useState(null);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [showSeriesModal, setShowSeriesModal] = useState(null);
   const [loading, setLoading] = useState(true);
   
   // Advanced features state
