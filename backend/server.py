@@ -1433,6 +1433,9 @@ async def create_categorie_seance(categorie: CategorieSeance):
     """Crée une nouvelle catégorie de séance"""
     categorie_dict = categorie.dict()
     await db.categories_seances.insert_one(categorie_dict)
+    # Remove _id field if it exists
+    if '_id' in categorie_dict:
+        del categorie_dict['_id']
     return categorie_dict
 
 @api_router.put("/categories-seances/{categorie_id}")
