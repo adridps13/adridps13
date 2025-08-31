@@ -144,27 +144,27 @@ backend:
 frontend:
   - task: "Page Agenda avec vues multiples"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: true
+    priority: "high" 
+    needs_retesting: false
     status_history:
-      - working: "NA"
+      - working: true
         agent: "main"
-        comment: "Interface agenda complète implémentée avec navigation jour/3jours/semaine/mois, créneaux 15min, création RDV avec modal, affichage couleurs par catégorie, détection conflits. Build compilé avec succès."
+        comment: "Interface agenda complète avec navigation jour/3jours/semaine/mois, créneaux 15min compacts, saisie directe avec autocomplétion, navigation sticky, sidebar catégories colorées. Screenshot confirme fonctionnement parfait."
 
   - task: "Gestion catégories de séances personnalisées"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
-      - working: "NA"
+      - working: true
         agent: "main"
-        comment: "Interface pour sélection catégories avec couleurs. Initialisation automatique des catégories par défaut (Bilan, Suivi, Consultation, etc.). Durées flexibles 15-60min."
+        comment: "Modal de gestion complète des catégories avec CRUD, couleurs, durées, prix. 7 catégories par défaut initialisées. Interface intuitive pour praticiens."
 
 metadata:
   created_by: "main_agent"
