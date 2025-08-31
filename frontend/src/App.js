@@ -4370,6 +4370,295 @@ const RdvDetailsModal = ({ rdv, categories, onClose, onUpdate, onDelete }) => {
   );
 };
 
+// Categories Management Modal Component
+const CategoriesModal = ({ categories, onSave, onClose }) => {
+  const [categoriesList, setCategoriesList] = useState(categories);
+  const [newCategory, setNewCategory] = useState({
+    nom: '',
+    duree_defaut: 30,
+    couleur: '#3B82F6',
+    prix: 0,
+    description: ''
+  });
+  const [isAddingNew, setIsAddingNew] = useState(false);
+
+  const colors = [
+    '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', 
+    '#06B6D4', '#84CC16', '#EF4444', '#6B7280', '#14B8A6'
+  ];
+
+  const handleSaveCategory = async () => {
+    if (!newCategory.nom.trim()) {
+      alert('Le nom de la catégorie est obligatoire');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/categories-seances`, newCategory);
+      setCategoriesList([...categoriesList, response.data]);
+      setNewCategory({
+        nom: '',
+        duree_defaut: 30,
+        couleur: '#3B82F6',
+        prix: 0,
+        description: ''
+      });
+      setIsAddingNew(false);
+    } catch (error) {
+      console.error('Erreur lors de la création de la catégorie:', error);
+      alert('Erreur lors de la création de la catégorie');
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/categories-seances/${categoryId}`);
+      setCategoriesList(categoriesList.filter(c => c.id !== categoryId));
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert(error.response?.data?.detail || 'Erreur lors de la suppression');
+    }
+  };
+
+  const handleUpdateCategory = async (categoryId, updatedData) => {
+    try {
+      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/categories-seances/${categoryId}`, updatedData);
+      setCategoriesList(categoriesList.map(c => c.id === categoryId ? response.data : c));
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
+      alert('Erreur lors de la mise à jour de la catégorie');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Gestion des Catégories</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {/* Existing Categories */}
+          <div className="space-y-4 mb-6">
+            {categoriesList.map((category) => (
+              <div key={category.id} className="flex items-center p-4 border rounded-lg">
+                <div 
+                  className="w-6 h-6 rounded-full mr-4 flex-shrink-0"
+                  style={{ backgroundColor: category.couleur }}
+                ></div>
+                
+                <div className="flex-1 grid grid-cols-4 gap-4 items-center">
+                  <input
+                    type="text"
+                    value={category.nom}
+                    onChange={(e) => {
+                      const updated = { ...category, nom: e.target.value };
+                      setCategoriesList(categoriesList.map(c => c.id === category.id ? updated : c));
+                    }}
+                    onBlur={() => handleUpdateCategory(category.id, category)}
+                    className="font-medium border rounded px-2 py-1"
+                  />
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      value={category.duree_defaut}
+                      onChange={(e) => {
+                        const updated = { ...category, duree_defaut: parseInt(e.target.value) };
+                        setCategoriesList(categoriesList.map(c => c.id === category.id ? updated : c));
+                      }}
+                      onBlur={() => handleUpdateCategory(category.id, category)}
+                      className="w-16 border rounded px-2 py-1 text-sm"
+                      min="5"
+                      max="120"
+                      step="5"
+                    />
+                    <span className="text-xs text-gray-500">min</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      value={category.prix || 0}
+                      onChange={(e) => {
+                        const updated = { ...category, prix: parseFloat(e.target.value) };
+                        setCategoriesList(categoriesList.map(c => c.id === category.id ? updated : c));
+                      }}
+                      onBlur={() => handleUpdateCategory(category.id, category)}
+                      className="w-16 border rounded px-2 py-1 text-sm"
+                      min="0"
+                      step="0.5"
+                    />
+                    <span className="text-xs text-gray-500">€</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <select
+                      value={category.couleur}
+                      onChange={(e) => {
+                        const updated = { ...category, couleur: e.target.value };
+                        setCategoriesList(categoriesList.map(c => c.id === category.id ? updated : c));
+                        handleUpdateCategory(category.id, updated);
+                      }}
+                      className="border rounded px-2 py-1 text-sm"
+                    >
+                      {colors.map(color => (
+                        <option key={color} value={color} style={{ backgroundColor: color }}>
+                          {color}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteCategory(category.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Add New Category */}
+          {!isAddingNew ? (
+            <Button
+              onClick={() => setIsAddingNew(true)}
+              variant="outline"
+              className="w-full border-dashed border-2 border-emerald-300 text-emerald-600 hover:bg-emerald-50"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Ajouter une catégorie
+            </Button>
+          ) : (
+            <div className="border-2 border-emerald-300 rounded-lg p-4 bg-emerald-50">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <Label>Nom de la catégorie</Label>
+                  <Input
+                    value={newCategory.nom}
+                    onChange={(e) => setNewCategory({...newCategory, nom: e.target.value})}
+                    placeholder="Ex: Ostéopathie"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Durée par défaut (minutes)</Label>
+                  <Select 
+                    value={newCategory.duree_defaut.toString()}
+                    onValueChange={(value) => setNewCategory({...newCategory, duree_defaut: parseInt(value)})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="20">20 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="45">45 minutes</SelectItem>
+                      <SelectItem value="60">60 minutes</SelectItem>
+                      <SelectItem value="90">90 minutes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label>Prix (€)</Label>
+                  <Input
+                    type="number"
+                    value={newCategory.prix}
+                    onChange={(e) => setNewCategory({...newCategory, prix: parseFloat(e.target.value) || 0})}
+                    min="0"
+                    step="0.5"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Couleur</Label>
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className="w-8 h-8 rounded-full border-2 border-gray-300"
+                      style={{ backgroundColor: newCategory.couleur }}
+                    ></div>
+                    <Select 
+                      value={newCategory.couleur}
+                      onValueChange={(value) => setNewCategory({...newCategory, couleur: value})}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colors.map(color => (
+                          <SelectItem key={color} value={color}>
+                            <div className="flex items-center">
+                              <div 
+                                className="w-4 h-4 rounded-full mr-2"
+                                style={{ backgroundColor: color }}
+                              ></div>
+                              {color}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <Label>Description (optionnel)</Label>
+                <Textarea
+                  value={newCategory.description}
+                  onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+                  placeholder="Description de la catégorie..."
+                  rows={2}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsAddingNew(false);
+                    setNewCategory({
+                      nom: '',
+                      duree_defaut: 30,
+                      couleur: '#3B82F6',
+                      prix: 0,
+                      description: ''
+                    });
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button onClick={handleSaveCategory} className="bg-emerald-600 hover:bg-emerald-700">
+                  Sauvegarder
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end p-6 border-t bg-gray-50">
+          <Button onClick={() => onSave(categoriesList)} className="bg-emerald-600 hover:bg-emerald-700">
+            Fermer et sauvegarder
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
