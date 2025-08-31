@@ -3567,6 +3567,12 @@ const AgendaPage = () => {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [loading, setLoading] = useState(true);
   
+  // Advanced features state
+  const [copiedRdv, setCopiedRdv] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
+  const [draggedRdv, setDraggedRdv] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
   // Quick input state
   const [quickInputVisible, setQuickInputVisible] = useState(null); // {day, time}
   const [quickInputValue, setQuickInputValue] = useState('');
