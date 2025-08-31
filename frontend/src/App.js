@@ -3979,6 +3979,40 @@ const AgendaPage = () => {
     handleCancelSeriesSelection();
   };
 
+  const createRdvSeriesFromNewData = async (seriesData) => {
+    const { selectedSlots, patient, category, notes } = seriesData;
+    const newRdvs = [];
+
+    for (const slotKey of selectedSlots) {
+      const [dateStr, time] = slotKey.split('_');
+      const [hour, minute] = time.split(':').map(Number);
+      
+      const dateDebut = new Date(dateStr);
+      dateDebut.setHours(hour, minute, 0, 0);
+      const dateFin = new Date(dateDebut.getTime() + category.duree_defaut * 60000);
+
+      const newRdvData = {
+        patient_id: patient.id,
+        patient_nom: `${patient.nom} ${patient.prenom}`,
+        categorie_id: category.id,
+        categorie_nom: category.nom,
+        date_debut: dateDebut.toISOString(),
+        date_fin: dateFin.toISOString(),
+        duree_minutes: category.duree_defaut,
+        notes: notes || ''
+      };
+
+      try {
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous`, newRdvData);
+        newRdvs.push(response.data);
+      } catch (error) {
+        console.error('Erreur création série:', error);
+      }
+    }
+
+    setRendezVous([...rendezVous, ...newRdvs]);
+  };
+
   const createRdvSeries = async (seriesData) => {
     const { rdv, numberOfSessions, frequency, startDate } = seriesData;
     const newRdvs = [];
