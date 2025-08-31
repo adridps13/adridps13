@@ -3529,6 +3529,680 @@ const CoachingPanel = ({ patient, onClose }) => {
   );
 };
 
+// Agenda Page Component
+const AgendaPage = () => {
+  const [currentView, setCurrentView] = useState('semaine'); // jour, 3jours, semaine, mois
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [rendezVous, setRendezVous] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [showNewRdvModal, setShowNewRdvModal] = useState(false);
+  const [selectedRdv, setSelectedRdv] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        setLoading(true);
+        
+        // Initialize default categories if needed
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/agenda/init-categories-defaut`);
+        
+        // Fetch categories, patients, and appointments
+        const [categoriesRes, patientsRes, rdvRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/categories-seances`),
+          axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`),
+          axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous`)
+        ]);
+        
+        setCategories(categoriesRes.data);
+        setPatients(patientsRes.data);
+        setRendezVous(rdvRes.data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+  // Navigation functions
+  const navigateDate = (direction) => {
+    const newDate = new Date(currentDate);
+    
+    switch (currentView) {
+      case 'jour':
+        newDate.setDate(newDate.getDate() + direction);
+        break;
+      case '3jours':
+        newDate.setDate(newDate.getDate() + (direction * 3));
+        break;
+      case 'semaine':
+        newDate.setDate(newDate.getDate() + (direction * 7));
+        break;
+      case 'mois':
+        newDate.setMonth(newDate.getMonth() + direction);
+        break;
+    }
+    
+    setCurrentDate(newDate);
+  };
+
+  const formatDateTitle = () => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    
+    switch (currentView) {
+      case 'jour':
+        return currentDate.toLocaleDateString('fr-FR', options);
+      case '3jours':
+        const endDate = new Date(currentDate);
+        endDate.setDate(endDate.getDate() + 2);
+        return `${currentDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+      case 'semaine':
+        const startWeek = new Date(currentDate);
+        startWeek.setDate(currentDate.getDate() - currentDate.getDay() + 1);
+        const endWeek = new Date(startWeek);
+        endWeek.setDate(startWeek.getDate() + 6);
+        return `${startWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${endWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+      case 'mois':
+        return currentDate.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
+      default:
+        return '';
+    }
+  };
+
+  const getViewDays = () => {
+    const days = [];
+    
+    switch (currentView) {
+      case 'jour':
+        days.push(new Date(currentDate));
+        break;
+      case '3jours':
+        for (let i = 0; i < 3; i++) {
+          const day = new Date(currentDate);
+          day.setDate(currentDate.getDate() + i);
+          days.push(day);
+        }
+        break;
+      case 'semaine':
+        const startWeek = new Date(currentDate);
+        startWeek.setDate(currentDate.getDate() - currentDate.getDay() + 1);
+        for (let i = 0; i < 7; i++) {
+          const day = new Date(startWeek);
+          day.setDate(startWeek.getDate() + i);
+          days.push(day);
+        }
+        break;
+    }
+    
+    return days;
+  };
+
+  const getRdvForDay = (day) => {
+    const dayStr = day.toISOString().split('T')[0];
+    return rendezVous.filter(rdv => {
+      const rdvDate = new Date(rdv.date_debut).toISOString().split('T')[0];
+      return rdvDate === dayStr;
+    }).sort((a, b) => new Date(a.date_debut) - new Date(b.date_debut));
+  };
+
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 8; hour < 19; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+        slots.push(time);
+      }
+    }
+    return slots;
+  };
+
+  const createNewRdv = async (rdvData) => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous`, rdvData);
+      setRendezVous([...rendezVous, response.data]);
+      setShowNewRdvModal(false);
+    } catch (error) {
+      console.error('Erreur lors de la création du RDV:', error);
+      alert(error.response?.data?.detail || 'Erreur lors de la création du rendez-vous');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement de l'agenda...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Agenda</h1>
+              <p className="text-gray-600 mt-1">Gestion des rendez-vous</p>
+            </div>
+            
+            <Button 
+              onClick={() => setShowNewRdvModal(true)}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nouveau RDV
+            </Button>
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                onClick={() => navigateDate(-1)}
+                className="p-2"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              
+              <h2 className="text-xl font-semibold text-gray-900 min-w-[200px] text-center">
+                {formatDateTitle()}
+              </h2>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => navigateDate(1)}
+                className="p-2"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => setCurrentDate(new Date())}
+              >
+                Aujourd'hui
+              </Button>
+            </div>
+
+            {/* View Selector */}
+            <div className="flex bg-white rounded-lg p-1 shadow-sm border">
+              {[
+                { key: 'jour', label: 'Jour' },
+                { key: '3jours', label: '3 Jours' },
+                { key: 'semaine', label: 'Semaine' },
+                { key: 'mois', label: 'Mois' }
+              ].map((view) => (
+                <button
+                  key={view.key}
+                  onClick={() => setCurrentView(view.key)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentView === view.key
+                      ? 'bg-emerald-600 text-white'
+                      : 'text-gray-600 hover:text-emerald-600'
+                  }`}
+                >
+                  {view.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Calendar Grid */}
+        {currentView !== 'mois' ? (
+          <Card className="overflow-hidden">
+            <div className="flex">
+              {/* Time Column */}
+              <div className="w-20 bg-gray-50 border-r">
+                <div className="h-12 border-b flex items-center justify-center bg-white">
+                  <span className="text-xs font-medium text-gray-500">Heure</span>
+                </div>
+                {generateTimeSlots().map((time) => (
+                  <div key={time} className="h-16 border-b flex items-center justify-center">
+                    <span className="text-xs text-gray-600">{time}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Days Columns */}
+              {getViewDays().map((day, dayIndex) => {
+                const dayRdvs = getRdvForDay(day);
+                
+                return (
+                  <div key={dayIndex} className="flex-1 border-r last:border-r-0">
+                    {/* Day Header */}
+                    <div className="h-12 border-b bg-white flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-xs font-medium text-gray-500 uppercase">
+                          {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
+                        </div>
+                        <div className={`text-lg font-semibold ${
+                          day.toDateString() === new Date().toDateString()
+                            ? 'text-emerald-600'
+                            : 'text-gray-900'
+                        }`}>
+                          {day.getDate()}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Time Slots */}
+                    <div className="relative">
+                      {generateTimeSlots().map((time, timeIndex) => (
+                        <div 
+                          key={time}
+                          className="h-16 border-b hover:bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            const [hour, minute] = time.split(':').map(Number);
+                            const slotDate = new Date(day);
+                            slotDate.setHours(hour, minute, 0, 0);
+                            // TODO: Handle slot click to create appointment
+                          }}
+                        >
+                          {/* Appointments for this time slot */}
+                          {dayRdvs
+                            .filter(rdv => {
+                              const rdvTime = new Date(rdv.date_debut);
+                              const slotTime = new Date(day);
+                              const [hour, minute] = time.split(':').map(Number);
+                              slotTime.setHours(hour, minute, 0, 0);
+                              
+                              return rdvTime.getHours() === hour && 
+                                     Math.floor(rdvTime.getMinutes() / 15) * 15 === minute;
+                            })
+                            .map((rdv) => {
+                              const category = categories.find(c => c.id === rdv.categorie_id);
+                              const duration = rdv.duree_minutes;
+                              const heightInSlots = Math.ceil(duration / 15);
+                              
+                              return (
+                                <div
+                                  key={rdv.id}
+                                  className="absolute left-1 right-1 rounded-md shadow-sm border-l-4 cursor-pointer z-10"
+                                  style={{
+                                    backgroundColor: category?.couleur + '20' || '#3B82F620',
+                                    borderLeftColor: category?.couleur || '#3B82F6',
+                                    height: `${heightInSlots * 4 - 0.25}rem`,
+                                    top: '2px'
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedRdv(rdv);
+                                  }}
+                                >
+                                  <div className="p-2 text-xs">
+                                    <div className="font-semibold text-gray-900 truncate">
+                                      {rdv.patient_nom}
+                                    </div>
+                                    <div className="text-gray-600 truncate">
+                                      {rdv.categorie_nom}
+                                    </div>
+                                    <div className="text-gray-500">
+                                      {new Date(rdv.date_debut).toLocaleTimeString('fr-FR', { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                      })} - {new Date(rdv.date_fin).toLocaleTimeString('fr-FR', { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                      })}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        ) : (
+          // Monthly View
+          <Card className="p-6">
+            <div className="text-center text-gray-600">
+              Vue mensuelle en cours de développement...
+            </div>
+          </Card>
+        )}
+
+        {/* New Appointment Modal */}
+        {showNewRdvModal && (
+          <NewRdvModal
+            categories={categories}
+            patients={patients}
+            onSave={createNewRdv}
+            onClose={() => setShowNewRdvModal(false)}
+            selectedDate={currentDate}
+          />
+        )}
+
+        {/* Appointment Details Modal */}
+        {selectedRdv && (
+          <RdvDetailsModal
+            rdv={selectedRdv}
+            categories={categories}
+            onClose={() => setSelectedRdv(null)}
+            onUpdate={(updatedRdv) => {
+              setRendezVous(rendezVous.map(r => r.id === updatedRdv.id ? updatedRdv : r));
+              setSelectedRdv(null);
+            }}
+            onDelete={(rdvId) => {
+              setRendezVous(rendezVous.filter(r => r.id !== rdvId));
+              setSelectedRdv(null);
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// New Appointment Modal Component
+const NewRdvModal = ({ categories, patients, onSave, onClose, selectedDate }) => {
+  const [formData, setFormData] = useState({
+    patient_id: '',
+    categorie_id: '',
+    date: selectedDate.toISOString().split('T')[0],
+    heure: '09:00',
+    duree_minutes: 30,
+    notes: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const selectedCategory = categories.find(c => c.id === formData.categorie_id);
+    const selectedPatient = patients.find(p => p.id === formData.patient_id);
+    
+    if (!selectedCategory || !selectedPatient) {
+      alert('Veuillez sélectionner un patient et une catégorie');
+      return;
+    }
+
+    const dateDebut = new Date(`${formData.date}T${formData.heure}:00`);
+    const dateFin = new Date(dateDebut.getTime() + formData.duree_minutes * 60000);
+
+    const rdvData = {
+      patient_id: formData.patient_id,
+      patient_nom: `${selectedPatient.nom} ${selectedPatient.prenom}`,
+      categorie_id: formData.categorie_id,
+      categorie_nom: selectedCategory.nom,
+      date_debut: dateDebut.toISOString(),
+      date_fin: dateFin.toISOString(),
+      duree_minutes: formData.duree_minutes,
+      notes: formData.notes
+    };
+
+    onSave(rdvData);
+  };
+
+  const selectedCategory = categories.find(c => c.id === formData.categorie_id);
+
+  useEffect(() => {
+    if (selectedCategory && formData.duree_minutes === 30) {
+      setFormData(prev => ({ ...prev, duree_minutes: selectedCategory.duree_defaut }));
+    }
+  }, [selectedCategory]);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Nouveau Rendez-vous</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <Label>Patient</Label>
+            <Select value={formData.patient_id} onValueChange={(value) => setFormData({...formData, patient_id: value})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un patient" />
+              </SelectTrigger>
+              <SelectContent>
+                {patients.map((patient) => (
+                  <SelectItem key={patient.id} value={patient.id}>
+                    {patient.nom} {patient.prenom}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Catégorie de séance</Label>
+            <Select value={formData.categorie_id} onValueChange={(value) => setFormData({...formData, categorie_id: value})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    <div className="flex items-center">
+                      <div 
+                        className="w-3 h-3 rounded-full mr-2"
+                        style={{ backgroundColor: category.couleur }}
+                      ></div>
+                      {category.nom} ({category.duree_defaut} min)
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Date</Label>
+              <Input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({...formData, date: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label>Heure</Label>
+              <Input
+                type="time"
+                value={formData.heure}
+                onChange={(e) => setFormData({...formData, heure: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label>Durée (minutes)</Label>
+            <Select 
+              value={formData.duree_minutes.toString()} 
+              onValueChange={(value) => setFormData({...formData, duree_minutes: parseInt(value)})}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="15">15 minutes</SelectItem>
+                <SelectItem value="20">20 minutes</SelectItem>
+                <SelectItem value="30">30 minutes</SelectItem>
+                <SelectItem value="45">45 minutes</SelectItem>
+                <SelectItem value="60">60 minutes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Notes (optionnel)</Label>
+            <Textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              placeholder="Notes sur le rendez-vous..."
+              rows={3}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Annuler
+            </Button>
+            <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+              Créer le RDV
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Appointment Details Modal Component
+const RdvDetailsModal = ({ rdv, categories, onClose, onUpdate, onDelete }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const category = categories.find(c => c.id === rdv.categorie_id);
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous/${rdv.id}`);
+      onDelete(rdv.id);
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression du rendez-vous');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Détails du Rendez-vous</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="flex items-center">
+            <div 
+              className="w-4 h-4 rounded-full mr-3"
+              style={{ backgroundColor: category?.couleur || '#3B82F6' }}
+            ></div>
+            <div>
+              <h4 className="font-semibold text-lg">{rdv.patient_nom}</h4>
+              <p className="text-gray-600">{rdv.categorie_nom}</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Date:</span>
+              <span className="font-medium">
+                {new Date(rdv.date_debut).toLocaleDateString('fr-FR', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Heure:</span>
+              <span className="font-medium">
+                {new Date(rdv.date_debut).toLocaleTimeString('fr-FR', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })} - {new Date(rdv.date_fin).toLocaleTimeString('fr-FR', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Durée:</span>
+              <span className="font-medium">{rdv.duree_minutes} minutes</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Statut:</span>
+              <Badge className={`${
+                rdv.statut === 'planifie' ? 'bg-blue-100 text-blue-800' :
+                rdv.statut === 'confirme' ? 'bg-green-100 text-green-800' :
+                rdv.statut === 'termine' ? 'bg-gray-100 text-gray-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {rdv.statut}
+              </Badge>
+            </div>
+          </div>
+
+          {rdv.notes && (
+            <div>
+              <span className="text-gray-600">Notes:</span>
+              <p className="mt-1 text-sm bg-gray-50 p-3 rounded-md">{rdv.notes}</p>
+            </div>
+          )}
+
+          <div className="flex justify-between pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Supprimer
+            </Button>
+            <div className="space-x-3">
+              <Button variant="outline" onClick={onClose}>
+                Fermer
+              </Button>
+              <Button className="bg-emerald-600 hover:bg-emerald-700">
+                <Edit className="w-4 h-4 mr-2" />
+                Modifier
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Delete Confirmation */}
+        {showDeleteConfirm && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+            <div className="bg-white p-6 rounded-lg shadow-xl">
+              <h4 className="text-lg font-semibold mb-2">Confirmer la suppression</h4>
+              <p className="text-gray-600 mb-4">
+                Êtes-vous sûr de vouloir supprimer ce rendez-vous ?
+              </p>
+              <div className="flex justify-end space-x-3">
+                <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                  Annuler
+                </Button>
+                <Button 
+                  onClick={handleDelete}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Supprimer
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
