@@ -2069,8 +2069,6 @@ async def initialize_database():
         
         await db.exercices.insert_many(sample_exercises)
         logger.info("Base d'exercices initialisée avec succès")
-
-# Agenda System Models
 class CategorieSeance(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     nom: str  # Bilan, Suivi, Consultation, Hors nomenclature, etc.
