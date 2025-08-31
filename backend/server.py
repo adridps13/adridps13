@@ -1726,6 +1726,9 @@ async def upload_patient_media(patient_id: str, file: UploadFile = File(...), ty
     }
     
     await db.patient_media.insert_one(media_data)
+    # Remove _id field if it exists to avoid serialization issues
+    if '_id' in media_data:
+        del media_data['_id']
     return media_data
 
 @api_router.delete("/patients/{patient_id}/media/{media_id}")
