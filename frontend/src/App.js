@@ -527,6 +527,9 @@ const PatientsList = () => {
                   <Label className="text-sm font-medium text-gray-600">Prescription médicale</Label>
                   <p className="text-sm bg-gray-50 p-3 rounded-md">{selectedPatient.prescription_medicale}</p>
                 </div>
+
+                {/* Photos/Vidéos Section */}
+                <MediaSection patient={selectedPatient} />
                 
                 <Separator />
                 
