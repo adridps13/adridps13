@@ -141,6 +141,18 @@ backend:
         agent: "main"
         comment: "À implémenter: intégration avec service email/SMS le moins cher (à déterminer via integration_playbook_expert_v2)"
 
+  - task: "Système de gestion des médias patients"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ SYSTÈME MÉDIA COMPLET TESTÉ ET FONCTIONNEL ! Endpoints GET/POST/DELETE /api/patients/{patient_id}/media implémentés. Validation des types de fichiers (images/vidéos), 3 catégories supportées (evaluation, exercice, resultat), génération automatique des noms de fichiers avec timestamp, CRUD complet. Tests: 7/7 réussis - Upload photos ✅, Validation types ✅, Génération noms ✅, Catégories ✅, Récupération ✅, Suppression ✅, Gestion erreurs ✅. Prêt pour capture tablette et documentation clinique."
+
 frontend:
   - task: "Page Agenda avec vues multiples"
     implemented: true
