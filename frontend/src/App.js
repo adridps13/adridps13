@@ -3834,9 +3834,9 @@ const AgendaPage = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto p-6">
-        <div className="flex gap-6 h-[calc(100vh-200px)]">
+        <div className="flex gap-6 h-[calc(100vh-180px)]">
           {/* Categories Sidebar */}
-          <div className="w-64 bg-white rounded-lg shadow-sm border p-4">
+          <div className="w-64 bg-white rounded-lg shadow-sm border p-4 overflow-y-auto">
             <h3 className="font-semibold text-gray-900 mb-4">Types de consultation</h3>
             <div className="space-y-2">
               {categories.map((category) => (
@@ -3872,12 +3872,12 @@ const AgendaPage = () => {
               <div className="flex h-full">
                 {/* Time Column */}
                 <div className="w-16 bg-gray-50 border-r flex-shrink-0">
-                  <div className="h-12 border-b flex items-center justify-center bg-white">
+                  <div className="h-10 border-b flex items-center justify-center bg-white">
                     <span className="text-xs font-medium text-gray-500">Heure</span>
                   </div>
-                  <div className="overflow-y-auto max-h-[calc(100vh-280px)]">
+                  <div className="overflow-y-auto" style={{ height: 'calc(100vh - 230px)' }}>
                     {generateTimeSlots().map((time) => (
-                      <div key={time} className="h-10 border-b flex items-center justify-center">
+                      <div key={time} className="h-8 border-b flex items-center justify-center">
                         <span className="text-xs text-gray-600">{time}</span>
                       </div>
                     ))}
@@ -3892,12 +3892,12 @@ const AgendaPage = () => {
                     return (
                       <div key={dayIndex} className="flex-1 border-r last:border-r-0">
                         {/* Day Header */}
-                        <div className="h-12 border-b bg-white flex items-center justify-center">
+                        <div className="h-10 border-b bg-white flex items-center justify-center">
                           <div className="text-center">
                             <div className="text-xs font-medium text-gray-500 uppercase">
                               {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
                             </div>
-                            <div className={`text-lg font-semibold ${
+                            <div className={`text-sm font-semibold ${
                               day.toDateString() === new Date().toDateString()
                                 ? 'text-emerald-600'
                                 : 'text-gray-900'
@@ -3908,7 +3908,7 @@ const AgendaPage = () => {
                         </div>
 
                         {/* Time Slots */}
-                        <div className="relative overflow-y-auto max-h-[calc(100vh-280px)]">
+                        <div className="relative overflow-y-auto" style={{ height: 'calc(100vh - 230px)' }}>
                           {generateTimeSlots().map((time, timeIndex) => {
                             const hasQuickInput = quickInputVisible && 
                               quickInputVisible.day.toDateString() === day.toDateString() &&
@@ -3917,7 +3917,7 @@ const AgendaPage = () => {
                             return (
                               <div 
                                 key={time}
-                                className="h-10 border-b hover:bg-gray-50 cursor-pointer relative"
+                                className="h-8 border-b hover:bg-gray-50 cursor-pointer relative"
                                 onClick={() => handleQuickInput(day, time)}
                                 onDrop={(e) => {
                                   e.preventDefault();
@@ -3989,8 +3989,8 @@ const AgendaPage = () => {
                                         style={{
                                           backgroundColor: category?.couleur + '20' || '#3B82F620',
                                           borderLeftColor: category?.couleur || '#3B82F6',
-                                          height: `${heightInSlots * 2.5 - 0.25}rem`,
-                                          top: '2px'
+                                          height: `${heightInSlots * 2 - 0.25}rem`,
+                                          top: '1px'
                                         }}
                                         onClick={(e) => {
                                           e.stopPropagation();
