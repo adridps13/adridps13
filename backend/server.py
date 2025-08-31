@@ -1522,6 +1522,9 @@ async def create_rendez_vous(rdv: RendezVous):
     
     rdv_dict = rdv.dict()
     await db.rendez_vous.insert_one(rdv_dict)
+    # Remove _id field if it exists
+    if '_id' in rdv_dict:
+        del rdv_dict['_id']
     return rdv_dict
 
 @api_router.put("/rendez-vous/{rdv_id}")
