@@ -4303,246 +4303,251 @@ const AgendaPage = () => {
                   <div className="h-10 border-b flex items-center justify-center bg-white">
                     <span className="text-xs font-medium text-gray-500">Heure</span>
                   </div>
-                  <div 
-                    className="overflow-y-auto" 
-                    style={{ height: 'calc(100vh - 230px)' }} 
-                    id="time-column"
-                    onScroll={(e) => {
-                      // Synchronize scroll to all day columns
-                      const scrollTop = e.target.scrollTop;
-                      getViewDays().forEach((_, i) => {
-                        const dayColumn = document.getElementById(`day-column-${i}`);
-                        if (dayColumn) dayColumn.scrollTop = scrollTop;
-                      });
-                    }}
-                  >
-                    {generateTimeSlots().map((time) => (
-                      <div key={time} className="h-8 border-b flex items-center justify-center">
-                        <span className="text-xs text-gray-600">{time}</span>
-                      </div>
-                    ))}
+                  <div className="overflow-hidden" style={{ height: 'calc(100vh - 230px)' }}>
+                    <div id="time-slots-container">
+                      {generateTimeSlots().map((time) => (
+                        <div key={time} className="h-8 border-b flex items-center justify-center">
+                          <span className="text-xs text-gray-600">{time}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Days Columns - All with synchronized scrolling */}
-                <div className="flex-1 flex overflow-hidden">
-                  {getViewDays().map((day, dayIndex) => {
-                    const dayRdvs = getRdvForDay(day);
-                    
-                    return (
-                      <div key={dayIndex} className="flex-1 border-r last:border-r-0">
-                        {/* Day Header */}
-                        <div className="h-10 border-b bg-white flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="text-xs font-medium text-gray-500 uppercase">
-                              {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
-                            </div>
-                            <div className={`text-sm font-semibold ${
-                              day.toDateString() === new Date().toDateString()
-                                ? 'text-emerald-600'
-                                : 'text-gray-900'
-                            }`}>
-                              {day.getDate()}
+                {/* Single Scrollable Container for All Days */}
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex">
+                    {/* Day Headers */}
+                    <div className="flex flex-1">
+                      {getViewDays().map((day, dayIndex) => (
+                        <div key={dayIndex} className="flex-1 border-r last:border-r-0">
+                          <div className="h-10 border-b bg-white flex items-center justify-center">
+                            <div className="text-center">
+                              <div className="text-xs font-medium text-gray-500 uppercase">
+                                {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
+                              </div>
+                              <div className={`text-sm font-semibold ${
+                                day.toDateString() === new Date().toDateString()
+                                  ? 'text-emerald-600'
+                                  : 'text-gray-900'
+                              }`}>
+                                {day.getDate()}
+                              </div>
                             </div>
                           </div>
                         </div>
+                      ))}
+                    </div>
+                  </div>
 
-                        {/* Time Slots with synchronized scrolling */}
-                        <div 
-                          className="relative overflow-y-auto"
-                          style={{ height: 'calc(100vh - 230px)' }}
-                          id={`day-column-${dayIndex}`}
-                          onScroll={(e) => {
-                            // Synchronize scroll across all columns including time column
-                            const scrollTop = e.target.scrollTop;
-                            
-                            // Sync time column
-                            const timeColumn = document.getElementById('time-column');
-                            if (timeColumn && timeColumn.scrollTop !== scrollTop) {
-                              timeColumn.scrollTop = scrollTop;
-                            }
-                            
-                            // Sync all other day columns
-                            getViewDays().forEach((_, i) => {
-                              if (i !== dayIndex) {
-                                const otherDayColumn = document.getElementById(`day-column-${i}`);
-                                if (otherDayColumn && otherDayColumn.scrollTop !== scrollTop) {
-                                  otherDayColumn.scrollTop = scrollTop;
-                                }
-                              }
-                            });
-                          }}
-                        >
-                          {generateTimeSlots().map((time, timeIndex) => {
-                            const hasQuickInput = quickInputVisible && 
-                              quickInputVisible.day.toDateString() === day.toDateString() &&
-                              quickInputVisible.time === time;
-                            
-                            const isWorkingTime = isTimeSlotWorking(day, time);
-                            const slotKey = `${day.toISOString().split('T')[0]}_${time}`;
-                            const isSelectedForSeries = seriesSelection.selectedSlots.includes(slotKey);
-                            
-                            return (
-                              <div 
-                                key={time}
-                                className={`h-8 border-b cursor-pointer relative ${
-                                  !isWorkingTime 
-                                    ? 'bg-gray-200 hover:bg-gray-300' 
-                                    : isDragging 
-                                      ? 'hover:bg-emerald-100' 
-                                      : seriesSelection.isSelecting 
-                                        ? isSelectedForSeries 
-                                          ? 'bg-blue-200 hover:bg-blue-300' 
-                                          : 'hover:bg-blue-50'
-                                        : 'hover:bg-gray-50'
-                                }`}
-                                onClick={() => {
-                                  if (!isWorkingTime) return;
-                                  
-                                  if (seriesSelection.isSelecting) {
-                                    handleSlotSelection(day, time);
-                                  } else {
-                                    handleQuickInput(day, time);
-                                  }
-                                }}
-                                onDrop={(e) => handleDrop(day, time, e)}
-                                onDragOver={(e) => {
-                                  e.preventDefault();
-                                  e.dataTransfer.dropEffect = 'move';
-                                }}
-                                onContextMenu={(e) => {
-                                  if (!hasQuickInput && isWorkingTime) {
-                                    e.preventDefault();
-                                    if (copiedRdv) {
-                                      handlePasteRdv(day, time);
+                  {/* Single Scroll Container */}
+                  <div 
+                    className="overflow-y-auto"
+                    style={{ height: 'calc(100vh - 230px)' }}
+                    onScroll={(e) => {
+                      // Synchronize with time column
+                      const timeContainer = document.getElementById('time-slots-container');
+                      if (timeContainer) {
+                        timeContainer.style.transform = `translateY(-${e.target.scrollTop}px)`;
+                      }
+                    }}
+                  >
+                    <div className="flex relative">
+                      {getViewDays().map((day, dayIndex) => {
+                        const dayRdvs = getRdvForDay(day).filter(rdv => 
+                          rdv.praticien_id === selectedPractitioner || rdv.praticien_id === 'default'
+                        );
+                        
+                        return (
+                          <div key={dayIndex} className="flex-1 border-r last:border-r-0">
+                            {generateTimeSlots().map((time, timeIndex) => {
+                              const hasQuickInput = quickInputVisible && 
+                                quickInputVisible.day.toDateString() === day.toDateString() &&
+                                quickInputVisible.time === time;
+                              
+                              const isWorkingTime = isTimeSlotWorking(day, time);
+                              const isBlocked = isSlotBlocked(day, time, selectedPractitioner);
+                              const slotKey = `${day.toISOString().split('T')[0]}_${time}`;
+                              const isSelectedForSeries = seriesSelection.selectedSlots.includes(slotKey);
+                              
+                              return (
+                                <div 
+                                  key={time}
+                                  className={`h-8 border-b cursor-pointer relative ${
+                                    isBlocked
+                                      ? 'bg-red-100 hover:bg-red-200'
+                                      : !isWorkingTime 
+                                        ? 'bg-gray-200 hover:bg-gray-300' 
+                                        : isDragging 
+                                          ? 'hover:bg-emerald-100' 
+                                          : seriesSelection.isSelecting 
+                                            ? isSelectedForSeries 
+                                              ? 'bg-blue-200 hover:bg-blue-300' 
+                                              : 'hover:bg-blue-50'
+                                            : 'hover:bg-gray-50'
+                                  }`}
+                                  onClick={(e) => {
+                                    if (e.altKey) {
+                                      // Alt + Click = Toggle blocked status
+                                      toggleSlotBlocked(day, time, selectedPractitioner);
+                                      return;
                                     }
-                                  }
-                                }}
-                              >
-                                {/* Working time indicator */}
-                                {!isWorkingTime && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-xs text-gray-500">Fermé</span>
-                                  </div>
-                                )}
-                                
-                                {/* Series selection indicator */}
-                                {seriesSelection.isSelecting && isSelectedForSeries && isWorkingTime && (
-                                  <div className="absolute top-1 right-1 w-3 h-3 bg-blue-600 rounded-full"></div>
-                                )}
+                                    
+                                    if (!isWorkingTime || isBlocked) return;
+                                    
+                                    if (seriesSelection.isSelecting) {
+                                      handleSlotSelection(day, time);
+                                    } else {
+                                      handleQuickInput(day, time);
+                                    }
+                                  }}
+                                  onDrop={(e) => handleDrop(day, time, e)}
+                                  onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.dataTransfer.dropEffect = 'move';
+                                  }}
+                                  onContextMenu={(e) => {
+                                    if (!hasQuickInput && (isWorkingTime && !isBlocked)) {
+                                      e.preventDefault();
+                                      if (copiedRdv) {
+                                        handlePasteRdv(day, time);
+                                      }
+                                    }
+                                  }}
+                                  title={isBlocked ? 'Créneau fermé (Alt+Clic pour rouvrir)' : isWorkingTime ? 'Alt+Clic pour fermer ce créneau' : ''}
+                                >
+                                  {/* Blocked indicator */}
+                                  {isBlocked && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <X className="w-3 h-3 text-red-600" />
+                                    </div>
+                                  )}
+                                  
+                                  {/* Working time indicator */}
+                                  {!isWorkingTime && !isBlocked && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <span className="text-xs text-gray-500">Fermé</span>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Series selection indicator */}
+                                  {seriesSelection.isSelecting && isSelectedForSeries && isWorkingTime && !isBlocked && (
+                                    <div className="absolute top-1 right-1 w-3 h-3 bg-blue-600 rounded-full"></div>
+                                  )}
 
-                                {/* Quick Input */}
-                                {hasQuickInput && isWorkingTime && (
-                                  <div className="absolute inset-0 bg-white border-2 border-emerald-500 z-30 p-1">
-                                    <input
-                                      type="text"
-                                      value={quickInputValue}
-                                      onChange={(e) => setQuickInputValue(e.target.value)}
-                                      placeholder="Nom du patient..."
-                                      className="w-full text-xs outline-none"
-                                      autoFocus
-                                      onBlur={() => {
-                                        if (filteredPatients.length === 0) {
-                                          setQuickInputVisible(null);
-                                        }
-                                      }}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && filteredPatients.length > 0) {
-                                          handlePatientSelect(filteredPatients[0]);
-                                        } else if (e.key === 'Escape') {
-                                          setQuickInputVisible(null);
-                                        }
-                                      }}
-                                    />
-                                    
-                                    {/* Patient Suggestions */}
-                                    {filteredPatients.length > 0 && (
-                                      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-40 max-h-32 overflow-y-auto">
-                                        {filteredPatients.map((patient) => (
-                                          <div
-                                            key={patient.id}
-                                            className="p-2 text-xs hover:bg-emerald-50 cursor-pointer border-b last:border-b-0"
-                                            onClick={() => handlePatientSelect(patient)}
-                                          >
-                                            <div className="font-medium">{patient.nom} {patient.prenom}</div>
-                                            <div className="text-gray-500">{patient.pathologie}</div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-
-                                {/* Appointments for this time slot */}
-                                {dayRdvs
-                                  .filter(rdv => {
-                                    const rdvTime = new Date(rdv.date_debut);
-                                    const [hour, minute] = time.split(':').map(Number);
-                                    
-                                    return rdvTime.getHours() === hour && 
-                                           Math.floor(rdvTime.getMinutes() / 15) * 15 === minute;
-                                  })
-                                  .map((rdv) => {
-                                    const category = categories.find(c => c.id === rdv.categorie_id);
-                                    const duration = rdv.duree_minutes;
-                                    const heightInSlots = Math.ceil(duration / 15);
-                                    
-                                    return (
-                                      <div
-                                        key={rdv.id}
-                                        className={`absolute left-1 right-1 rounded-md shadow-sm border-l-4 cursor-move z-10 ${
-                                          draggedRdv?.id === rdv.id ? 'opacity-50' : ''
-                                        }`}
-                                        style={{
-                                          backgroundColor: category?.couleur + '20' || '#3B82F620',
-                                          borderLeftColor: category?.couleur || '#3B82F6',
-                                          height: `${heightInSlots * 2 - 0.25}rem`,
-                                          top: '1px'
-                                        }}
-                                        draggable
-                                        onDragStart={(e) => handleDragStart(rdv, e)}
-                                        onDragEnd={handleDragEnd}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (!seriesSelection.isSelecting) {
-                                            setSelectedRdv(rdv);
+                                  {/* Quick Input */}
+                                  {hasQuickInput && isWorkingTime && !isBlocked && (
+                                    <div className="absolute inset-0 bg-white border-2 border-emerald-500 z-30 p-1">
+                                      <input
+                                        type="text"
+                                        value={quickInputValue}
+                                        onChange={(e) => setQuickInputValue(e.target.value)}
+                                        placeholder="Nom du patient..."
+                                        className="w-full text-xs outline-none"
+                                        autoFocus
+                                        onBlur={() => {
+                                          if (filteredPatients.length === 0) {
+                                            setQuickInputVisible(null);
                                           }
                                         }}
-                                        onContextMenu={(e) => handleContextMenu(e, rdv)}
-                                      >
-                                        <div className="p-1 text-xs">
-                                          <div 
-                                            className="font-semibold text-gray-900 truncate hover:text-emerald-600 cursor-pointer"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              if (!seriesSelection.isSelecting) {
-                                                window.location.href = `/patients?id=${rdv.patient_id}`;
-                                              }
-                                            }}
-                                          >
-                                            {rdv.patient_nom}
-                                          </div>
-                                          <div className="text-gray-600 truncate">
-                                            {rdv.categorie_nom}
-                                          </div>
-                                          <div className="text-gray-500 text-xs">
-                                            {new Date(rdv.date_debut).toLocaleTimeString('fr-FR', { 
-                                              hour: '2-digit', 
-                                              minute: '2-digit' 
-                                            })}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter' && filteredPatients.length > 0) {
+                                            handlePatientSelect(filteredPatients[0]);
+                                          } else if (e.key === 'Escape') {
+                                            setQuickInputVisible(null);
+                                          }
+                                        }}
+                                      />
+                                      
+                                      {/* Patient Suggestions */}
+                                      {filteredPatients.length > 0 && (
+                                        <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-40 max-h-32 overflow-y-auto">
+                                          {filteredPatients.map((patient) => (
+                                            <div
+                                              key={patient.id}
+                                              className="p-2 text-xs hover:bg-emerald-50 cursor-pointer border-b last:border-b-0"
+                                              onClick={() => handlePatientSelect(patient)}
+                                            >
+                                              <div className="font-medium">{patient.nom} {patient.prenom}</div>
+                                              <div className="text-gray-500">{patient.pathologie}</div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Appointments for this time slot */}
+                                  {dayRdvs
+                                    .filter(rdv => {
+                                      const rdvTime = new Date(rdv.date_debut);
+                                      const [hour, minute] = time.split(':').map(Number);
+                                      
+                                      return rdvTime.getHours() === hour && 
+                                             Math.floor(rdvTime.getMinutes() / 15) * 15 === minute;
+                                    })
+                                    .map((rdv) => {
+                                      const category = categories.find(c => c.id === rdv.categorie_id);
+                                      const duration = rdv.duree_minutes;
+                                      const heightInSlots = Math.ceil(duration / 15);
+                                      
+                                      return (
+                                        <div
+                                          key={rdv.id}
+                                          className={`absolute left-1 right-1 rounded-md shadow-sm border-l-4 cursor-move z-10 ${
+                                            draggedRdv?.id === rdv.id ? 'opacity-50' : ''
+                                          }`}
+                                          style={{
+                                            backgroundColor: category?.couleur + '20' || '#3B82F620',
+                                            borderLeftColor: category?.couleur || '#3B82F6',
+                                            height: `${heightInSlots * 2 - 0.25}rem`,
+                                            top: '1px'
+                                          }}
+                                          draggable
+                                          onDragStart={(e) => handleDragStart(rdv, e)}
+                                          onDragEnd={handleDragEnd}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!seriesSelection.isSelecting) {
+                                              setSelectedRdv(rdv);
+                                            }
+                                          }}
+                                          onContextMenu={(e) => handleContextMenu(e, rdv)}
+                                        >
+                                          <div className="p-1 text-xs">
+                                            <div 
+                                              className="font-semibold text-gray-900 truncate hover:text-emerald-600 cursor-pointer"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (!seriesSelection.isSelecting) {
+                                                  window.location.href = `/patients?id=${rdv.patient_id}`;
+                                                }
+                                              }}
+                                            >
+                                              {rdv.patient_nom}
+                                            </div>
+                                            <div className="text-gray-600 truncate">
+                                              {rdv.categorie_nom}
+                                            </div>
+                                            <div className="text-gray-500 text-xs">
+                                              {new Date(rdv.date_debut).toLocaleTimeString('fr-FR', { 
+                                                hour: '2-digit', 
+                                                minute: '2-digit' 
+                                              })}
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    );
-                                  })
-                                }
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
+                                      );
+                                    })
+                                  }
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
