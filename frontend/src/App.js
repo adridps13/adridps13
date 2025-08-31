@@ -3691,6 +3691,7 @@ const AgendaPage = () => {
 
   const getViewDays = () => {
     const days = [];
+    const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
     
     switch (currentView) {
       case 'jour':
@@ -3706,15 +3707,53 @@ const AgendaPage = () => {
       case 'semaine':
         const startWeek = new Date(currentDate);
         startWeek.setDate(currentDate.getDate() - currentDate.getDay() + 1);
+        
+        // Filter days based on working hours settings
         for (let i = 0; i < 7; i++) {
           const day = new Date(startWeek);
           day.setDate(startWeek.getDate() + i);
-          days.push(day);
+          const dayName = dayNames[day.getDay()];
+          
+          // Only include days that are marked as active in working hours
+          if (workingHours[dayName]?.active) {
+            days.push(day);
+          }
         }
         break;
     }
     
     return days;
+  };
+
+  const isTimeSlotWorking = (day, time) => {
+    const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+    const dayName = dayNames[day.getDay()];
+    const daySettings = workingHours[dayName];
+    
+    if (!daySettings?.active) return false;
+    
+    const [hour, minute] = time.split(':').map(Number);
+    const timeValue = hour * 60 + minute;
+    
+    // Check if within working hours
+    const [startHour, startMinute] = daySettings.start.split(':').map(Number);
+    const [endHour, endMinute] = daySettings.end.split(':').map(Number);
+    const startValue = startHour * 60 + startMinute;
+    const endValue = endHour * 60 + endMinute;
+    
+    if (timeValue < startValue || timeValue >= endValue) return false;
+    
+    // Check if during pause
+    if (daySettings.pauseStart && daySettings.pauseEnd) {
+      const [pauseStartHour, pauseStartMinute] = daySettings.pauseStart.split(':').map(Number);
+      const [pauseEndHour, pauseEndMinute] = daySettings.pauseEnd.split(':').map(Number);
+      const pauseStartValue = pauseStartHour * 60 + pauseStartMinute;
+      const pauseEndValue = pauseEndHour * 60 + pauseEndMinute;
+      
+      if (timeValue >= pauseStartValue && timeValue < pauseEndValue) return false;
+    }
+    
+    return true;
   };
 
   const getRdvForDay = (day) => {
