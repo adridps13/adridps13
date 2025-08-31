@@ -4168,6 +4168,32 @@ const AgendaPage = () => {
             </div>
             
             <div className="flex space-x-3">
+              <Select value={selectedPractitioner} onValueChange={setSelectedPractitioner}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {practitioners.map((practitioner) => (
+                    <SelectItem key={practitioner.id} value={practitioner.id}>
+                      <div className="flex items-center">
+                        <div 
+                          className="w-3 h-3 rounded-full mr-2"
+                          style={{ backgroundColor: practitioner.couleur }}
+                        ></div>
+                        {practitioner.nom}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                onClick={() => setShowPractitionersModal(true)}
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Praticiens
+              </Button>
               <Button 
                 onClick={() => setShowWorkingHoursModal(true)}
                 variant="outline"
