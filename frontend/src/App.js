@@ -3540,7 +3540,13 @@ const AgendaPage = () => {
   const [patients, setPatients] = useState([]);
   const [showNewRdvModal, setShowNewRdvModal] = useState(false);
   const [selectedRdv, setSelectedRdv] = useState(null);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // Quick input state
+  const [quickInputVisible, setQuickInputVisible] = useState(null); // {day, time}
+  const [quickInputValue, setQuickInputValue] = useState('');
+  const [filteredPatients, setFilteredPatients] = useState([]);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -3570,6 +3576,18 @@ const AgendaPage = () => {
 
     fetchInitialData();
   }, []);
+
+  // Filter patients based on input
+  useEffect(() => {
+    if (quickInputValue.length > 0) {
+      const filtered = patients.filter(patient => 
+        `${patient.nom} ${patient.prenom}`.toLowerCase().includes(quickInputValue.toLowerCase())
+      ).slice(0, 5); // Limit to 5 suggestions
+      setFilteredPatients(filtered);
+    } else {
+      setFilteredPatients([]);
+    }
+  }, [quickInputValue, patients]);
 
   // Navigation functions
   const navigateDate = (direction) => {
@@ -3663,6 +3681,48 @@ const AgendaPage = () => {
     return slots;
   };
 
+  const handleQuickInput = (day, time) => {
+    setQuickInputVisible({ day, time });
+    setQuickInputValue('');
+    setFilteredPatients([]);
+  };
+
+  const handlePatientSelect = async (patient, selectedCategory) => {
+    if (!quickInputVisible) return;
+
+    const { day, time } = quickInputVisible;
+    const [hour, minute] = time.split(':').map(Number);
+    const dateDebut = new Date(day);
+    dateDebut.setHours(hour, minute, 0, 0);
+    
+    // Use first category as default if none selected
+    const category = selectedCategory || categories[0];
+    if (!category) return;
+
+    const dateFin = new Date(dateDebut.getTime() + category.duree_defaut * 60000);
+
+    const rdvData = {
+      patient_id: patient.id,
+      patient_nom: `${patient.nom} ${patient.prenom}`,
+      categorie_id: category.id,
+      categorie_nom: category.nom,
+      date_debut: dateDebut.toISOString(),
+      date_fin: dateFin.toISOString(),
+      duree_minutes: category.duree_defaut,
+      notes: ''
+    };
+
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous`, rdvData);
+      setRendezVous([...rendezVous, response.data]);
+      setQuickInputVisible(null);
+      setQuickInputValue('');
+    } catch (error) {
+      console.error('Erreur lors de la création du RDV:', error);
+      alert(error.response?.data?.detail || 'Erreur lors de la création du rendez-vous');
+    }
+  };
+
   const createNewRdv = async (rdvData) => {
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous`, rdvData);
@@ -3686,23 +3746,33 @@ const AgendaPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="flex justify-between items-center mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Agenda</h1>
               <p className="text-gray-600 mt-1">Gestion des rendez-vous</p>
             </div>
             
-            <Button 
-              onClick={() => setShowNewRdvModal(true)}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nouveau RDV
-            </Button>
+            <div className="flex space-x-3">
+              <Button 
+                onClick={() => setShowCategoriesModal(true)}
+                variant="outline"
+                className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Catégories
+              </Button>
+              <Button 
+                onClick={() => setShowNewRdvModal(true)}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nouveau RDV
+              </Button>
+            </div>
           </div>
 
           {/* Navigation Controls */}
@@ -3759,155 +3829,249 @@ const AgendaPage = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Calendar Grid */}
-        {currentView !== 'mois' ? (
-          <Card className="overflow-hidden">
-            <div className="flex">
-              {/* Time Column */}
-              <div className="w-20 bg-gray-50 border-r">
-                <div className="h-12 border-b flex items-center justify-center bg-white">
-                  <span className="text-xs font-medium text-gray-500">Heure</span>
-                </div>
-                {generateTimeSlots().map((time) => (
-                  <div key={time} className="h-16 border-b flex items-center justify-center">
-                    <span className="text-xs text-gray-600">{time}</span>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex gap-6 h-[calc(100vh-200px)]">
+          {/* Categories Sidebar */}
+          <div className="w-64 bg-white rounded-lg shadow-sm border p-4">
+            <h3 className="font-semibold text-gray-900 mb-4">Types de consultation</h3>
+            <div className="space-y-2">
+              {categories.map((category) => (
+                <div 
+                  key={category.id}
+                  className="flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors"
+                  style={{ borderLeftColor: category.couleur, borderLeftWidth: '4px' }}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('category', JSON.stringify(category));
+                  }}
+                >
+                  <div 
+                    className="w-4 h-4 rounded-full mr-3 flex-shrink-0"
+                    style={{ backgroundColor: category.couleur }}
+                  ></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-gray-900 truncate">
+                      {category.nom}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {category.duree_defaut} min • {category.prix}€
+                    </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-              {/* Days Columns */}
-              {getViewDays().map((day, dayIndex) => {
-                const dayRdvs = getRdvForDay(day);
-                
-                return (
-                  <div key={dayIndex} className="flex-1 border-r last:border-r-0">
-                    {/* Day Header */}
-                    <div className="h-12 border-b bg-white flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-xs font-medium text-gray-500 uppercase">
-                          {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
+          {/* Calendar Grid */}
+          {currentView !== 'mois' ? (
+            <Card className="flex-1 overflow-hidden">
+              <div className="flex h-full">
+                {/* Time Column */}
+                <div className="w-16 bg-gray-50 border-r flex-shrink-0">
+                  <div className="h-12 border-b flex items-center justify-center bg-white">
+                    <span className="text-xs font-medium text-gray-500">Heure</span>
+                  </div>
+                  <div className="overflow-y-auto max-h-[calc(100vh-280px)]">
+                    {generateTimeSlots().map((time) => (
+                      <div key={time} className="h-10 border-b flex items-center justify-center">
+                        <span className="text-xs text-gray-600">{time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Days Columns */}
+                <div className="flex-1 flex">
+                  {getViewDays().map((day, dayIndex) => {
+                    const dayRdvs = getRdvForDay(day);
+                    
+                    return (
+                      <div key={dayIndex} className="flex-1 border-r last:border-r-0">
+                        {/* Day Header */}
+                        <div className="h-12 border-b bg-white flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-xs font-medium text-gray-500 uppercase">
+                              {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
+                            </div>
+                            <div className={`text-lg font-semibold ${
+                              day.toDateString() === new Date().toDateString()
+                                ? 'text-emerald-600'
+                                : 'text-gray-900'
+                            }`}>
+                              {day.getDate()}
+                            </div>
+                          </div>
                         </div>
-                        <div className={`text-lg font-semibold ${
-                          day.toDateString() === new Date().toDateString()
-                            ? 'text-emerald-600'
-                            : 'text-gray-900'
-                        }`}>
-                          {day.getDate()}
+
+                        {/* Time Slots */}
+                        <div className="relative overflow-y-auto max-h-[calc(100vh-280px)]">
+                          {generateTimeSlots().map((time, timeIndex) => {
+                            const hasQuickInput = quickInputVisible && 
+                              quickInputVisible.day.toDateString() === day.toDateString() &&
+                              quickInputVisible.time === time;
+                            
+                            return (
+                              <div 
+                                key={time}
+                                className="h-10 border-b hover:bg-gray-50 cursor-pointer relative"
+                                onClick={() => handleQuickInput(day, time)}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  const categoryData = JSON.parse(e.dataTransfer.getData('category'));
+                                  // Handle category drop - could open quick patient selection
+                                }}
+                                onDragOver={(e) => e.preventDefault()}
+                              >
+                                {/* Quick Input */}
+                                {hasQuickInput && (
+                                  <div className="absolute inset-0 bg-white border-2 border-emerald-500 z-30 p-1">
+                                    <input
+                                      type="text"
+                                      value={quickInputValue}
+                                      onChange={(e) => setQuickInputValue(e.target.value)}
+                                      placeholder="Nom du patient..."
+                                      className="w-full text-xs outline-none"
+                                      autoFocus
+                                      onBlur={() => {
+                                        if (filteredPatients.length === 0) {
+                                          setQuickInputVisible(null);
+                                        }
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && filteredPatients.length > 0) {
+                                          handlePatientSelect(filteredPatients[0]);
+                                        } else if (e.key === 'Escape') {
+                                          setQuickInputVisible(null);
+                                        }
+                                      }}
+                                    />
+                                    
+                                    {/* Patient Suggestions */}
+                                    {filteredPatients.length > 0 && (
+                                      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-40 max-h-32 overflow-y-auto">
+                                        {filteredPatients.map((patient) => (
+                                          <div
+                                            key={patient.id}
+                                            className="p-2 text-xs hover:bg-emerald-50 cursor-pointer border-b last:border-b-0"
+                                            onClick={() => handlePatientSelect(patient)}
+                                          >
+                                            <div className="font-medium">{patient.nom} {patient.prenom}</div>
+                                            <div className="text-gray-500">{patient.pathologie}</div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Appointments for this time slot */}
+                                {dayRdvs
+                                  .filter(rdv => {
+                                    const rdvTime = new Date(rdv.date_debut);
+                                    const [hour, minute] = time.split(':').map(Number);
+                                    
+                                    return rdvTime.getHours() === hour && 
+                                           Math.floor(rdvTime.getMinutes() / 15) * 15 === minute;
+                                  })
+                                  .map((rdv) => {
+                                    const category = categories.find(c => c.id === rdv.categorie_id);
+                                    const duration = rdv.duree_minutes;
+                                    const heightInSlots = Math.ceil(duration / 15);
+                                    
+                                    return (
+                                      <div
+                                        key={rdv.id}
+                                        className="absolute left-1 right-1 rounded-md shadow-sm border-l-4 cursor-pointer z-10"
+                                        style={{
+                                          backgroundColor: category?.couleur + '20' || '#3B82F620',
+                                          borderLeftColor: category?.couleur || '#3B82F6',
+                                          height: `${heightInSlots * 2.5 - 0.25}rem`,
+                                          top: '2px'
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedRdv(rdv);
+                                        }}
+                                      >
+                                        <div className="p-1 text-xs">
+                                          <div className="font-semibold text-gray-900 truncate">
+                                            {rdv.patient_nom}
+                                          </div>
+                                          <div className="text-gray-600 truncate">
+                                            {rdv.categorie_nom}
+                                          </div>
+                                          <div className="text-gray-500 text-xs">
+                                            {new Date(rdv.date_debut).toLocaleTimeString('fr-FR', { 
+                                              hour: '2-digit', 
+                                              minute: '2-digit' 
+                                            })}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                }
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Time Slots */}
-                    <div className="relative">
-                      {generateTimeSlots().map((time, timeIndex) => (
-                        <div 
-                          key={time}
-                          className="h-16 border-b hover:bg-gray-50 cursor-pointer"
-                          onClick={() => {
-                            const [hour, minute] = time.split(':').map(Number);
-                            const slotDate = new Date(day);
-                            slotDate.setHours(hour, minute, 0, 0);
-                            // TODO: Handle slot click to create appointment
-                          }}
-                        >
-                          {/* Appointments for this time slot */}
-                          {dayRdvs
-                            .filter(rdv => {
-                              const rdvTime = new Date(rdv.date_debut);
-                              const slotTime = new Date(day);
-                              const [hour, minute] = time.split(':').map(Number);
-                              slotTime.setHours(hour, minute, 0, 0);
-                              
-                              return rdvTime.getHours() === hour && 
-                                     Math.floor(rdvTime.getMinutes() / 15) * 15 === minute;
-                            })
-                            .map((rdv) => {
-                              const category = categories.find(c => c.id === rdv.categorie_id);
-                              const duration = rdv.duree_minutes;
-                              const heightInSlots = Math.ceil(duration / 15);
-                              
-                              return (
-                                <div
-                                  key={rdv.id}
-                                  className="absolute left-1 right-1 rounded-md shadow-sm border-l-4 cursor-pointer z-10"
-                                  style={{
-                                    backgroundColor: category?.couleur + '20' || '#3B82F620',
-                                    borderLeftColor: category?.couleur || '#3B82F6',
-                                    height: `${heightInSlots * 4 - 0.25}rem`,
-                                    top: '2px'
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedRdv(rdv);
-                                  }}
-                                >
-                                  <div className="p-2 text-xs">
-                                    <div className="font-semibold text-gray-900 truncate">
-                                      {rdv.patient_nom}
-                                    </div>
-                                    <div className="text-gray-600 truncate">
-                                      {rdv.categorie_nom}
-                                    </div>
-                                    <div className="text-gray-500">
-                                      {new Date(rdv.date_debut).toLocaleTimeString('fr-FR', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                      })} - {new Date(rdv.date_fin).toLocaleTimeString('fr-FR', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                      })}
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })
-                          }
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        ) : (
-          // Monthly View
-          <Card className="p-6">
-            <div className="text-center text-gray-600">
-              Vue mensuelle en cours de développement...
-            </div>
-          </Card>
-        )}
-
-        {/* New Appointment Modal */}
-        {showNewRdvModal && (
-          <NewRdvModal
-            categories={categories}
-            patients={patients}
-            onSave={createNewRdv}
-            onClose={() => setShowNewRdvModal(false)}
-            selectedDate={currentDate}
-          />
-        )}
-
-        {/* Appointment Details Modal */}
-        {selectedRdv && (
-          <RdvDetailsModal
-            rdv={selectedRdv}
-            categories={categories}
-            onClose={() => setSelectedRdv(null)}
-            onUpdate={(updatedRdv) => {
-              setRendezVous(rendezVous.map(r => r.id === updatedRdv.id ? updatedRdv : r));
-              setSelectedRdv(null);
-            }}
-            onDelete={(rdvId) => {
-              setRendezVous(rendezVous.filter(r => r.id !== rdvId));
-              setSelectedRdv(null);
-            }}
-          />
-        )}
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+          ) : (
+            // Monthly View
+            <Card className="flex-1 p-6">
+              <div className="text-center text-gray-600">
+                Vue mensuelle en cours de développement...
+              </div>
+            </Card>
+          )}
+        </div>
       </div>
+
+      {/* Modals */}
+      {showNewRdvModal && (
+        <NewRdvModal
+          categories={categories}
+          patients={patients}
+          onSave={createNewRdv}
+          onClose={() => setShowNewRdvModal(false)}
+          selectedDate={currentDate}
+        />
+      )}
+
+      {showCategoriesModal && (
+        <CategoriesModal
+          categories={categories}
+          onSave={(updatedCategories) => {
+            setCategories(updatedCategories);
+            setShowCategoriesModal(false);
+          }}
+          onClose={() => setShowCategoriesModal(false)}
+        />
+      )}
+
+      {selectedRdv && (
+        <RdvDetailsModal
+          rdv={selectedRdv}
+          categories={categories}
+          onClose={() => setSelectedRdv(null)}
+          onUpdate={(updatedRdv) => {
+            setRendezVous(rendezVous.map(r => r.id === updatedRdv.id ? updatedRdv : r));
+            setSelectedRdv(null);
+          }}
+          onDelete={(rdvId) => {
+            setRendezVous(rendezVous.filter(r => r.id !== rdvId));
+            setSelectedRdv(null);
+          }}
+        />
+      )}
     </div>
   );
 };
