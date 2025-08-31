@@ -1491,6 +1491,10 @@ async def get_rendez_vous(
         filters["statut"] = statut
     
     rendez_vous = await db.rendez_vous.find(filters).sort("date_debut", 1).to_list(None)
+    # Convert ObjectId to string and remove _id field
+    for rdv in rendez_vous:
+        if '_id' in rdv:
+            del rdv['_id']
     return rendez_vous
 
 @api_router.post("/rendez-vous")
