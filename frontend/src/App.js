@@ -3098,7 +3098,435 @@ const MessagingPage = () => {
   );
 };
 
-function App() {
+// Coaching Panel Component
+const CoachingPanel = ({ patient, onClose }) => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [cycles, setCycles] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [coachingProfile, setCoachingProfile] = useState({
+    sport_principal: '',
+    niveau: 'debutant',
+    objectifs: [],
+    contraintes: [],
+    disponibilites: {}
+  });
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+
+  useEffect(() => {
+    if (patient) {
+      fetchCoachingData();
+      generateAISuggestions();
+    }
+  }, [patient]);
+
+  const fetchCoachingData = async () => {
+    try {
+      // Récupérer les cycles existants
+      const cyclesRes = await axios.get(`${API}/coaching/cycles/patient/${patient.id}`);
+      setCycles(cyclesRes.data);
+      
+      // Récupérer les séances
+      const sessionsRes = await axios.get(`${API}/coaching/sessions/patient/${patient.id}`);  
+      setSessions(sessionsRes.data);
+      
+      // Récupérer le profil coaching
+      const profileRes = await axios.get(`${API}/coaching/profile/patient/${patient.id}`);
+      setCoachingProfile(profileRes.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données de coaching:', error);
+      // Données factices pour démonstration
+      setCycles([
+        {
+          id: '1',
+          nom: 'Cycle Récupération Post-Blessure',
+          type: 'macro',
+          duree_semaines: 8,
+          phase_actuelle: 2,
+          phases: [
+            { nom: 'Récupération', semaines: 2, objectif: 'Réduction douleur' },
+            { nom: 'Renforcement', semaines: 4, objectif: 'Renforcement progressif' },
+            { nom: 'Retour activité', semaines: 2, objectif: 'Retour au sport' }
+          ],
+          statut: 'actif',
+          progression: 35
+        }
+      ]);
+      
+      setSessions([
+        { id: '1', date: '2024-01-15', type: 'evaluation', statut: 'termine', douleur: 6 },
+        { id: '2', date: '2024-01-17', type: 'renforcement', statut: 'termine', douleur: 5 },
+        { id: '3', date: '2024-01-19', type: 'renforcement', statut: 'planifie', douleur: null },
+        { id: '4', date: '2024-01-22', type: 'proprioception', statut: 'planifie', douleur: null }
+      ]);
+      
+      setCoachingProfile({
+        sport_principal: 'Course à pied',
+        niveau: 'intermediaire',
+        objectifs: ['Retour au sport', 'Prévention des blessures'],
+        contraintes: ['Disponibilité limitée en semaine'],
+        disponibilites: { lundi: true, mercredi: true, vendredi: true }
+      });
+    }
+  };
+
+  const generateAISuggestions = async () => {
+    try {
+      const response = await axios.post(`${API}/coaching/ai-suggestions/${patient.id}`);
+      setAiSuggestions(response.data.suggestions);
+    } catch (error) {
+      console.error('Erreur lors de la génération des suggestions IA:', error);
+      // Suggestions factices pour démonstration
+      setAiSuggestions([
+        {
+          type: 'progression',
+          titre: 'Augmenter l\'intensité',
+          description: 'Le patient montre une bonne évolution. Vous pouvez augmenter l\'intensité de 10-15%.',
+          priorite: 'moyenne',
+          icone: 'TrendingUp'
+        },
+        {
+          type: 'exercice',
+          titre: 'Ajouter proprioception', 
+          description: 'Intégrer des exercices de proprioception pour améliorer la stabilité.',
+          priorite: 'haute',
+          icone: 'Target'
+        },
+        {
+          type: 'planning',
+          titre: 'Optimiser les créneaux',
+          description: 'Programmer les séances intenses en début de semaine selon ses disponibilités.',
+          priorite: 'basse',
+          icone: 'Calendar'
+        }
+      ]);
+    }
+  };
+
+  const getSuggestionIcon = (iconName) => {
+    switch (iconName) {
+      case 'TrendingUp': return <TrendingUp className="w-5 h-5" />;
+      case 'Target': return <Target className="w-5 h-5" />;
+      case 'Calendar': return <Calendar className="w-5 h-5" />;
+      default: return <CheckCircle className="w-5 h-5" />;
+    }
+  };
+
+  const getPriorityColor = (priorite) => {
+    switch (priorite) {
+      case 'haute': return 'border-l-red-500 bg-red-50';
+      case 'moyenne': return 'border-l-yellow-500 bg-yellow-50';
+      case 'basse': return 'border-l-green-500 bg-green-50';
+      default: return 'border-l-gray-500 bg-gray-50';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-[95vw] h-[90vh] max-w-7xl overflow-hidden">
+        <div className="flex h-full">
+          {/* Sidebar Patient */}
+          <div className="w-80 bg-gradient-to-b from-emerald-50 to-blue-50 border-r border-emerald-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Coaching Panel</h2>
+              <Button variant="outline" size="sm" onClick={onClose}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* Profil Patient */}
+            <div className="bg-white rounded-lg p-4 mb-6 shadow-sm">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">
+                    {patient.prenom?.[0]}{patient.nom?.[0]}
+                  </span>
+                </div>
+                <div className="ml-3">
+                  <h3 className="font-semibold text-gray-900">
+                    {patient.prenom} {patient.nom}
+                  </h3>
+                  <p className="text-sm text-gray-600">{patient.age} ans</p>
+                </div>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Pathologie:</span>
+                  <span className="font-medium">{patient.pathologie}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Sport:</span>
+                  <span className="font-medium">{coachingProfile.sport_principal || 'Non défini'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Niveau:</span>
+                  <Badge variant="outline" className="capitalize">
+                    {coachingProfile.niveau}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Coaching */}
+            <div className="space-y-2">
+              {[
+                { id: 'overview', label: 'Vue d\'ensemble', icon: Activity },
+                { id: 'cycles', label: 'Cycles & Phases', icon: Calendar },
+                { id: 'planning', label: 'Planning', icon: Clock },
+                { id: 'ai-coach', label: 'Assistant IA', icon: Sparkles },
+                { id: 'analytics', label: 'Analyses', icon: TrendingUp }
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-gray-700 hover:bg-white hover:shadow-sm'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 mr-3" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Contenu Principal */}
+          <div className="flex-1 overflow-auto">
+            <div className="p-8">
+              {activeTab === 'overview' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-bold text-gray-900">Vue d'ensemble</h3>
+                    <Badge className="bg-emerald-100 text-emerald-800">
+                      Cycle actif
+                    </Badge>
+                  </div>
+
+                  {/* Métriques rapides */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center">
+                          <Calendar className="w-8 h-8 text-emerald-600" />
+                          <div className="ml-4">
+                            <p className="text-2xl font-bold text-gray-900">8</p>
+                            <p className="text-sm text-gray-600">Séances total</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center">
+                          <TrendingUp className="w-8 h-8 text-blue-600" />
+                          <div className="ml-4">
+                            <p className="text-2xl font-bold text-gray-900">35%</p>
+                            <p className="text-sm text-gray-600">Progression</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center">
+                          <Target className="w-8 h-8 text-orange-600" />
+                          <div className="ml-4">
+                            <p className="text-2xl font-bold text-gray-900">6→4</p>
+                            <p className="text-sm text-gray-600">Douleur (/10)</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-8 h-8 text-green-600" />
+                          <div className="ml-4">
+                            <p className="text-2xl font-bold text-gray-900">92%</p>
+                            <p className="text-sm text-gray-600">Compliance</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Cycle actuel */}
+                  {cycles.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Cycle Actuel</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">{cycles[0].nom}</h4>
+                            <Badge className="bg-blue-100 text-blue-800">
+                              Semaine {cycles[0].phase_actuelle}/{cycles[0].duree_semaines}
+                            </Badge>
+                          </div>
+                          
+                          <Progress value={cycles[0].progression} className="h-3" />
+                          
+                          <div className="grid grid-cols-3 gap-4">
+                            {cycles[0].phases.map((phase, index) => (
+                              <div
+                                key={index}
+                                className={`p-3 rounded-lg border ${
+                                  index + 1 === cycles[0].phase_actuelle
+                                    ? 'bg-emerald-50 border-emerald-200'
+                                    : index + 1 < cycles[0].phase_actuelle
+                                    ? 'bg-gray-50 border-gray-200'
+                                    : 'bg-white border-gray-200'
+                                }`}
+                              >
+                                <div className="flex items-center mb-2">
+                                  {index + 1 < cycles[0].phase_actuelle ? (
+                                    <CheckCircle className="w-4 h-4 text-green-600" />
+                                  ) : index + 1 === cycles[0].phase_actuelle ? (
+                                    <Clock className="w-4 h-4 text-emerald-600" />
+                                  ) : (
+                                    <Circle className="w-4 h-4 text-gray-400" />
+                                  )}
+                                  <span className="ml-2 font-medium text-sm">{phase.nom}</span>
+                                </div>
+                                <p className="text-xs text-gray-600">{phase.objectif}</p>
+                                <p className="text-xs text-gray-500 mt-1">{phase.semaines} semaines</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'ai-coach' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-bold text-gray-900">Assistant Coaching IA</h3>
+                    <Button className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Nouvelles suggestions
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {aiSuggestions.map((suggestion, index) => (
+                      <Card key={index} className={`border-l-4 ${getPriorityColor(suggestion.priorite)}`}>
+                        <CardContent className="p-6">
+                          <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                              {getSuggestionIcon(suggestion.icone)}
+                            </div>
+                            <div className="ml-4 flex-1">
+                              <h4 className="font-semibold text-gray-900 mb-2">
+                                {suggestion.titre}
+                              </h4>
+                              <p className="text-gray-600 text-sm mb-4">
+                                {suggestion.description}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <Badge 
+                                  className={`${
+                                    suggestion.priorite === 'haute' ? 'bg-red-100 text-red-800' :
+                                    suggestion.priorite === 'moyenne' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-green-100 text-green-800'
+                                  }`}
+                                >
+                                  {suggestion.priorite}
+                                </Badge>
+                                <div className="space-x-2">
+                                  <Button variant="outline" size="sm">
+                                    Ignorer
+                                  </Button>
+                                  <Button size="sm" className="bg-emerald-600">
+                                    Appliquer
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'planning' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-bold text-gray-900">Planning des Séances</h3>
+                    <Button className="bg-emerald-600">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Planifier séance
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Séances à venir</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {sessions.filter(s => s.statut === 'planifie').map((session) => (
+                            <div key={session.id} className="flex items-center p-3 bg-blue-50 rounded-lg">
+                              <Calendar className="w-5 h-5 text-blue-600 mr-3" />
+                              <div className="flex-1">
+                                <div className="font-medium">{session.type}</div>
+                                <div className="text-sm text-gray-600">
+                                  {new Date(session.date).toLocaleDateString('fr-FR')}
+                                </div>
+                              </div>
+                              <Badge variant="outline">Planifiée</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Historique</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {sessions.filter(s => s.statut === 'termine').map((session) => (
+                            <div key={session.id} className="flex items-center p-3 bg-green-50 rounded-lg">
+                              <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                              <div className="flex-1">
+                                <div className="font-medium">{session.type}</div>
+                                <div className="text-sm text-gray-600">
+                                  {new Date(session.date).toLocaleDateString('fr-FR')}
+                                  {session.douleur && ` • Douleur: ${session.douleur}/10`}
+                                </div>
+                              </div>
+                              <Badge className="bg-green-100 text-green-800">Terminée</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
   return (
     <div className="App min-h-screen bg-gray-50">
       <BrowserRouter>
