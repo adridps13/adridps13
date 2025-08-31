@@ -3656,12 +3656,21 @@ const AgendaPage = () => {
         startWeek.setDate(currentDate.getDate() - currentDate.getDay() + 1);
         const endWeek = new Date(startWeek);
         endWeek.setDate(startWeek.getDate() + 6);
-        return `${startWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${endWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+        const weekNumber = getWeekNumber(startWeek);
+        return `Semaine ${weekNumber} • ${startWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${endWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
       case 'mois':
         return currentDate.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
       default:
         return '';
     }
+  };
+
+  const getWeekNumber = (date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
   };
 
   const getViewDays = () => {
