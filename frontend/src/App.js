@@ -55,7 +55,11 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Settings
+  Settings,
+  Camera,
+  Video,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
