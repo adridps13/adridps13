@@ -4715,6 +4715,14 @@ const AgendaPage = () => {
           </div>
         </div>
       )}
+
+      {/* Alt+Click help */}
+      <div className="fixed bottom-4 left-4 bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg z-40 text-xs">
+        <div className="space-y-1">
+          <div>Alt+Clic : Fermer/Ouvrir créneau</div>
+          <div>Clic droit : Menu contextuel</div>
+        </div>
+      </div>
     </div>
   );
 };
