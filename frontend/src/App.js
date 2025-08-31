@@ -59,8 +59,7 @@ import {
   Camera,
   Video,
   Upload,
-  Image as ImageIcon,
-  Target
+  Image as ImageIcon
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
