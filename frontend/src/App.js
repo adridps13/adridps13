@@ -4689,6 +4689,483 @@ const CategoriesModal = ({ categories, onSave, onClose }) => {
   );
 };
 
+// Media Section Component for Photos/Videos
+const MediaSection = ({ patient }) => {
+  const [mediaFiles, setMediaFiles] = useState([]);
+  const [showMediaModal, setShowMediaModal] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [captureMode, setCaptureMode] = useState('photo'); // 'photo' or 'video'
+  const [selectedComparison, setSelectedComparison] = useState(null);
+
+  useEffect(() => {
+    loadPatientMedia();
+  }, [patient.id]);
+
+  const loadPatientMedia = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patient.id}/media`);
+      setMediaFiles(response.data);
+    } catch (error) {
+      console.error('Erreur chargement média:', error);
+      // Initialize empty if no media found
+      setMediaFiles([]);
+    }
+  };
+
+  const handleFileCapture = async (file, type, category = 'evaluation') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('patient_id', patient.id);
+    formData.append('type', type); // 'photo' or 'video'
+    formData.append('category', category); // 'evaluation', 'exercice', 'resultat'
+    formData.append('date', new Date().toISOString());
+
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patient.id}/media`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setMediaFiles([...mediaFiles, response.data]);
+      setIsCapturing(false);
+    } catch (error) {
+      console.error('Erreur upload média:', error);
+      alert('Erreur lors de l\'upload du fichier');
+    }
+  };
+
+  const groupedMedia = mediaFiles.reduce((acc, media) => {
+    const category = media.category || 'evaluation';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(media);
+    return acc;
+  }, {});
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-3">
+        <Label className="text-sm font-medium text-gray-600">Documentation Visuelle</Label>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowMediaModal(true)}
+          className="text-emerald-600 hover:bg-emerald-50"
+        >
+          <Camera className="w-4 h-4 mr-2" />
+          Photos/Vidéos
+        </Button>
+      </div>
+
+      {/* Media Preview */}
+      <div className="bg-gray-50 p-3 rounded-md">
+        {Object.keys(groupedMedia).length > 0 ? (
+          <div className="grid grid-cols-3 gap-2">
+            {Object.entries(groupedMedia).map(([category, files]) => (
+              <div key={category} className="text-center">
+                <div className="text-xs font-medium text-gray-600 mb-1 capitalize">
+                  {category}
+                </div>
+                <div className="grid grid-cols-2 gap-1">
+                  {files.slice(-2).map((file, index) => (
+                    <div key={index} className="relative group">
+                      {file.type === 'photo' ? (
+                        <img
+                          src={file.url}
+                          alt={`${category} ${index + 1}`}
+                          className="w-full h-16 object-cover rounded cursor-pointer hover:opacity-80"
+                          onClick={() => setSelectedComparison({ category, files })}
+                        />
+                      ) : (
+                        <div className="w-full h-16 bg-gray-200 rounded flex items-center justify-center cursor-pointer hover:bg-gray-300">
+                          <Video className="w-6 h-6 text-gray-500" />
+                        </div>
+                      )}
+                      <div className="absolute top-0 right-0 bg-black bg-opacity-50 text-white text-xs px-1 rounded-bl">
+                        {files.length}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-gray-500 text-sm py-4">
+            <ImageIcon className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            Aucune photo ou vidéo disponible
+          </div>
+        )}
+      </div>
+
+      {/* Media Modal */}
+      {showMediaModal && (
+        <MediaModal
+          patient={patient}
+          mediaFiles={mediaFiles}
+          onClose={() => setShowMediaModal(false)}
+          onMediaAdded={loadPatientMedia}
+        />
+      )}
+
+      {/* Comparison Modal */}
+      {selectedComparison && (
+        <ComparisonModal
+          comparison={selectedComparison}
+          onClose={() => setSelectedComparison(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Media Modal Component
+const MediaModal = ({ patient, mediaFiles, onClose, onMediaAdded }) => {
+  const [activeTab, setActiveTab] = useState('capture');
+  const [selectedCategory, setSelectedCategory] = useState('evaluation');
+  const [isUploading, setIsUploading] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [stream, setStream] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const categories = [
+    { key: 'evaluation', label: 'Évaluation initiale', color: '#3B82F6' },
+    { key: 'exercice', label: 'Exercices', color: '#10B981' },
+    { key: 'resultat', label: 'Résultats', color: '#F59E0B' }
+  ];
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: true, 
+        audio: false 
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      console.error('Erreur accès caméra:', error);
+      alert('Impossible d\'accéder à la caméra');
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      
+      canvas.toBlob((blob) => {
+        const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        handleFileUpload(file, 'photo');
+      }, 'image/jpeg', 0.8);
+    }
+  };
+
+  const handleFileUpload = async (file, type) => {
+    setIsUploading(true);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('patient_id', patient.id);
+    formData.append('type', type);
+    formData.append('category', selectedCategory);
+    formData.append('date', new Date().toISOString());
+
+    try {
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patient.id}/media`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      onMediaAdded();
+      alert('Fichier ajouté avec succès !');
+    } catch (error) {
+      console.error('Erreur upload:', error);
+      alert('Erreur lors de l\'upload');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'capture') {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    
+    return () => stopCamera();
+  }, [activeTab]);
+
+  const groupedMedia = mediaFiles.reduce((acc, media) => {
+    const category = media.category || 'evaluation';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(media);
+    return acc;
+  }, {});
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Documentation Visuelle - {patient.prenom} {patient.nom}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {/* Tabs */}
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('capture')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'capture'
+                  ? 'bg-white text-emerald-600 shadow-sm'
+                  : 'text-gray-600 hover:text-emerald-600'
+              }`}
+            >
+              <Camera className="w-4 h-4 inline mr-2" />
+              Capturer
+            </button>
+            <button
+              onClick={() => setActiveTab('gallery')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'gallery'
+                  ? 'bg-white text-emerald-600 shadow-sm'
+                  : 'text-gray-600 hover:text-emerald-600'
+              }`}
+            >
+              <ImageIcon className="w-4 h-4 inline mr-2" />
+              Galerie
+            </button>
+            <button
+              onClick={() => setActiveTab('comparison')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'comparison'
+                  ? 'bg-white text-emerald-600 shadow-sm'
+                  : 'text-gray-600 hover:text-emerald-600'
+              }`}
+            >
+              Avant/Après
+            </button>
+          </div>
+
+          {/* Category Selection */}
+          <div className="mb-4">
+            <Label className="text-sm font-medium mb-2 block">Catégorie</Label>
+            <div className="flex gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category.key}
+                  onClick={() => setSelectedCategory(category.key)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    selectedCategory === category.key
+                      ? 'text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  style={{
+                    backgroundColor: selectedCategory === category.key ? category.color : undefined
+                  }}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Content based on active tab */}
+          {activeTab === 'capture' && (
+            <div className="space-y-4">
+              <div className="relative bg-black rounded-lg overflow-hidden" style={{ height: '300px' }}>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
+              
+              <div className="flex justify-center space-x-4">
+                <Button onClick={capturePhoto} disabled={!stream || isUploading}>
+                  <Camera className="w-4 h-4 mr-2" />
+                  {isUploading ? 'Upload...' : 'Prendre Photo'}
+                </Button>
+                
+                <label className="cursor-pointer">
+                  <Button variant="outline" asChild>
+                    <span>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Importer Fichier
+                    </span>
+                  </Button>
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const type = file.type.startsWith('image/') ? 'photo' : 'video';
+                        handleFileUpload(file, type);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'gallery' && (
+            <div className="space-y-4">
+              {Object.entries(groupedMedia).map(([category, files]) => {
+                const categoryInfo = categories.find(c => c.key === category);
+                return (
+                  <div key={category} className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-3" style={{ color: categoryInfo?.color }}>
+                      {categoryInfo?.label} ({files.length})
+                    </h4>
+                    <div className="grid grid-cols-4 gap-3">
+                      {files.map((file, index) => (
+                        <div key={index} className="relative group">
+                          {file.type === 'photo' ? (
+                            <img
+                              src={file.url}
+                              alt={`${category} ${index + 1}`}
+                              className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-80"
+                            />
+                          ) : (
+                            <div className="w-full h-20 bg-gray-200 rounded flex items-center justify-center">
+                              <Video className="w-6 h-6 text-gray-500" />
+                            </div>
+                          )}
+                          <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                            {new Date(file.date).toLocaleDateString('fr-FR')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {activeTab === 'comparison' && (
+            <div className="space-y-4">
+              {Object.entries(groupedMedia).map(([category, files]) => {
+                const categoryInfo = categories.find(c => c.key === category);
+                const photos = files.filter(f => f.type === 'photo');
+                
+                if (photos.length < 2) return null;
+                
+                return (
+                  <div key={category} className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-3" style={{ color: categoryInfo?.color }}>
+                      {categoryInfo?.label} - Évolution
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm text-gray-600 mb-2 block">Avant</Label>
+                        <img
+                          src={photos[0]?.url}
+                          alt="Avant"
+                          className="w-full h-40 object-cover rounded border"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(photos[0]?.date).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-gray-600 mb-2 block">Après</Label>
+                        <img
+                          src={photos[photos.length - 1]?.url}
+                          alt="Après"
+                          className="w-full h-40 object-cover rounded border"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(photos[photos.length - 1]?.date).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Comparison Modal Component
+const ComparisonModal = ({ comparison, onClose }) => {
+  const photos = comparison.files.filter(f => f.type === 'photo');
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Comparaison Avant/Après - {comparison.category}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        
+        <div className="p-6">
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <Label className="text-lg font-medium mb-4 block">Avant</Label>
+              <img
+                src={photos[0]?.url}
+                alt="Avant"
+                className="w-full h-64 object-cover rounded border"
+              />
+              <p className="text-sm text-gray-600 mt-2">
+                {new Date(photos[0]?.date).toLocaleDateString('fr-FR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            </div>
+            <div>
+              <Label className="text-lg font-medium mb-4 block">Après</Label>
+              <img
+                src={photos[photos.length - 1]?.url}
+                alt="Après"
+                className="w-full h-64 object-cover rounded border"
+              />
+              <p className="text-sm text-gray-600 mt-2">
+                {new Date(photos[photos.length - 1]?.date).toLocaleDateString('fr-FR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
