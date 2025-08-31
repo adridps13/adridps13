@@ -3748,8 +3748,8 @@ const AgendaPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto p-6">
           <div className="flex justify-between items-center mb-4">
             <div>
