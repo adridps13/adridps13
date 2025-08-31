@@ -4325,20 +4325,40 @@ const AgendaPage = () => {
                               quickInputVisible.day.toDateString() === day.toDateString() &&
                               quickInputVisible.time === time;
                             
+                            const isWorkingTime = isTimeSlotWorking(day, time);
+                            const slotKey = `${day.toISOString().split('T')[0]}_${time}`;
+                            const isSelectedForSeries = seriesSelection.selectedSlots.includes(slotKey);
+                            
                             return (
                               <div 
                                 key={time}
-                                className={`h-8 border-b hover:bg-gray-50 cursor-pointer relative ${
-                                  isDragging ? 'hover:bg-emerald-100' : ''
+                                className={`h-8 border-b cursor-pointer relative ${
+                                  !isWorkingTime 
+                                    ? 'bg-gray-200 hover:bg-gray-300' 
+                                    : isDragging 
+                                      ? 'hover:bg-emerald-100' 
+                                      : seriesSelection.isSelecting 
+                                        ? isSelectedForSeries 
+                                          ? 'bg-blue-200 hover:bg-blue-300' 
+                                          : 'hover:bg-blue-50'
+                                        : 'hover:bg-gray-50'
                                 }`}
-                                onClick={() => handleQuickInput(day, time)}
+                                onClick={() => {
+                                  if (!isWorkingTime) return;
+                                  
+                                  if (seriesSelection.isSelecting) {
+                                    handleSlotSelection(day, time);
+                                  } else {
+                                    handleQuickInput(day, time);
+                                  }
+                                }}
                                 onDrop={(e) => handleDrop(day, time, e)}
                                 onDragOver={(e) => {
                                   e.preventDefault();
                                   e.dataTransfer.dropEffect = 'move';
                                 }}
                                 onContextMenu={(e) => {
-                                  if (!hasQuickInput) {
+                                  if (!hasQuickInput && isWorkingTime) {
                                     e.preventDefault();
                                     if (copiedRdv) {
                                       handlePasteRdv(day, time);
@@ -4346,8 +4366,20 @@ const AgendaPage = () => {
                                   }
                                 }}
                               >
+                                {/* Working time indicator */}
+                                {!isWorkingTime && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-xs text-gray-500">Fermé</span>
+                                  </div>
+                                )}
+                                
+                                {/* Series selection indicator */}
+                                {seriesSelection.isSelecting && isSelectedForSeries && isWorkingTime && (
+                                  <div className="absolute top-1 right-1 w-3 h-3 bg-blue-600 rounded-full"></div>
+                                )}
+
                                 {/* Quick Input */}
-                                {hasQuickInput && (
+                                {hasQuickInput && isWorkingTime && (
                                   <div className="absolute inset-0 bg-white border-2 border-emerald-500 z-30 p-1">
                                     <input
                                       type="text"
@@ -4419,7 +4451,9 @@ const AgendaPage = () => {
                                         onDragEnd={handleDragEnd}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setSelectedRdv(rdv);
+                                          if (!seriesSelection.isSelecting) {
+                                            setSelectedRdv(rdv);
+                                          }
                                         }}
                                         onContextMenu={(e) => handleContextMenu(e, rdv)}
                                       >
@@ -4428,7 +4462,9 @@ const AgendaPage = () => {
                                             className="font-semibold text-gray-900 truncate hover:text-emerald-600 cursor-pointer"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              window.location.href = `/patients?id=${rdv.patient_id}`;
+                                              if (!seriesSelection.isSelecting) {
+                                                window.location.href = `/patients?id=${rdv.patient_id}`;
+                                              }
                                             }}
                                           >
                                             {rdv.patient_nom}
