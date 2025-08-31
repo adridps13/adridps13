@@ -1675,6 +1675,64 @@ async def get_statistiques_agenda():
         "prochains_rdv": prochains_rdv
     }
 
+# Media Management System
+class MediaFile(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    type: str  # 'photo' or 'video'
+    category: str  # 'evaluation', 'exercice', 'resultat'
+    filename: str
+    url: str
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+@api_router.get("/patients/{patient_id}/media")
+async def get_patient_media(patient_id: str):
+    """Récupère tous les fichiers média d'un patient"""
+    media_files = await db.patient_media.find({"patient_id": patient_id}).sort("date", -1).to_list(None)
+    return media_files
+
+@api_router.post("/patients/{patient_id}/media")
+async def upload_patient_media(patient_id: str, file: UploadFile = File(...), type: str = Form(...), category: str = Form(...)):
+    """Upload un fichier média pour un patient"""
+    # Validate file type
+    if type == 'photo' and not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Type de fichier non supporté pour photo")
+    if type == 'video' and not file.content_type.startswith('video/'):
+        raise HTTPException(status_code=400, detail="Type de fichier non supporté pour vidéo")
+    
+    # Create filename with timestamp
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"{patient_id}_{category}_{timestamp}.{file_extension}"
+    
+    # Save file (in a real implementation, you'd save to disk/cloud storage)
+    # For now, we'll create a mock URL
+    file_url = f"/media/{filename}"
+    
+    media_data = {
+        "id": str(uuid.uuid4()),
+        "patient_id": patient_id,
+        "type": type,
+        "category": category,
+        "filename": filename,
+        "url": file_url,
+        "date": datetime.now(timezone.utc),
+        "created_at": datetime.now(timezone.utc)
+    }
+    
+    await db.patient_media.insert_one(media_data)
+    return media_data
+
+@api_router.delete("/patients/{patient_id}/media/{media_id}")
+async def delete_patient_media(patient_id: str, media_id: str):
+    """Supprime un fichier média"""
+    result = await db.patient_media.delete_one({"id": media_id, "patient_id": patient_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Fichier média non trouvé")
+    
+    return {"message": "Fichier supprimé"}
+
 # Route de base
 @api_router.get("/")
 async def root():
