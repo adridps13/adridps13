@@ -189,8 +189,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Backend API pour système d'agenda - modèles et endpoints"
-    - "Page Agenda avec vues multiples"
+    - "Système de gestion des médias patients"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
