@@ -1422,6 +1422,10 @@ class ConfigurationRappel(BaseModel):
 async def get_categories_seances():
     """Récupère toutes les catégories de séances"""
     categories = await db.categories_seances.find({}).to_list(None)
+    # Convert ObjectId to string and remove _id field
+    for category in categories:
+        if '_id' in category:
+            del category['_id']
     return categories
 
 @api_router.post("/categories-seances")
