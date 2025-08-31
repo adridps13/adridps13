@@ -3998,7 +3998,14 @@ const AgendaPage = () => {
                                         }}
                                       >
                                         <div className="p-1 text-xs">
-                                          <div className="font-semibold text-gray-900 truncate">
+                                          <div 
+                                            className="font-semibold text-gray-900 truncate hover:text-emerald-600 cursor-pointer"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              // Navigate to patient detail
+                                              window.location.href = `/patients?id=${rdv.patient_id}`;
+                                            }}
+                                          >
                                             {rdv.patient_nom}
                                           </div>
                                           <div className="text-gray-600 truncate">
