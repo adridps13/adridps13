@@ -5853,6 +5853,267 @@ const SeriesModal = ({ rdv, onSave, onClose }) => {
   );
 };
 
+// Working Hours Modal Component
+const WorkingHoursModal = ({ workingHours, onSave, onClose }) => {
+  const [settings, setSettings] = useState(workingHours);
+
+  const daysOfWeek = [
+    { key: 'lundi', label: 'Lundi' },
+    { key: 'mardi', label: 'Mardi' },
+    { key: 'mercredi', label: 'Mercredi' },
+    { key: 'jeudi', label: 'Jeudi' },
+    { key: 'vendredi', label: 'Vendredi' },
+    { key: 'samedi', label: 'Samedi' },
+    { key: 'dimanche', label: 'Dimanche' }
+  ];
+
+  const handleDayChange = (day, field, value) => {
+    setSettings({
+      ...settings,
+      [day]: {
+        ...settings[day],
+        [field]: value
+      }
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Configuration des Horaires de Travail</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="space-y-6">
+            {daysOfWeek.map((day) => (
+              <div key={day.key} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-medium text-lg">{day.label}</h4>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings[day.key]?.active || false}
+                      onChange={(e) => handleDayChange(day.key, 'active', e.target.checked)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm">Jour travaillé</span>
+                  </label>
+                </div>
+
+                {settings[day.key]?.active && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <Label className="text-sm">Début</Label>
+                      <Input
+                        type="time"
+                        value={settings[day.key]?.start || '08:00'}
+                        onChange={(e) => handleDayChange(day.key, 'start', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm">Fin</Label>
+                      <Input
+                        type="time"
+                        value={settings[day.key]?.end || '18:00'}
+                        onChange={(e) => handleDayChange(day.key, 'end', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm">Pause début</Label>
+                      <Input
+                        type="time"
+                        value={settings[day.key]?.pauseStart || ''}
+                        onChange={(e) => handleDayChange(day.key, 'pauseStart', e.target.value)}
+                        placeholder="12:00"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm">Pause fin</Label>
+                      <Input
+                        type="time"
+                        value={settings[day.key]?.pauseEnd || ''}
+                        onChange={(e) => handleDayChange(day.key, 'pauseEnd', e.target.value)}
+                        placeholder="14:00"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-medium text-blue-900 mb-2">Informations</h4>
+            <ul className="text-sm text-blue-800 space-y-1">
+              <li>• Les créneaux fermés apparaîtront en gris dans l'agenda</li>
+              <li>• Les pauses déjeuner empêchent la prise de rendez-vous</li>
+              <li>• Laissez les pauses vides si vous n'en avez pas</li>
+              <li>• Les changements nécessitent un rechargement de la page</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="flex justify-end p-6 border-t bg-gray-50 space-x-3">
+          <Button variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button onClick={() => onSave(settings)} className="bg-emerald-600 hover:bg-emerald-700">
+            Sauvegarder
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Series Selection Modal Component
+const SeriesSelectionModal = ({ selectedSlots, categories, patients, onSave, onClose }) => {
+  const [formData, setFormData] = useState({
+    patient_id: '',
+    categorie_id: '',
+    notes: ''
+  });
+
+  const selectedPatient = patients.find(p => p.id === formData.patient_id);
+  const selectedCategory = categories.find(c => c.id === formData.categorie_id);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!selectedPatient || !selectedCategory) {
+      alert('Veuillez sélectionner un patient et une catégorie');
+      return;
+    }
+
+    onSave({
+      selectedSlots,
+      patient: selectedPatient,
+      category: selectedCategory,
+      notes: formData.notes
+    });
+  };
+
+  const formatSlotDisplay = (slotKey) => {
+    const [dateStr, time] = slotKey.split('_');
+    const date = new Date(dateStr);
+    return `${date.toLocaleDateString('fr-FR', { 
+      weekday: 'short', 
+      day: 'numeric', 
+      month: 'short' 
+    })} à ${time}`;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Créer une série de rendez-vous</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="space-y-6">
+            {/* Selected slots preview */}
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-3">
+                Créneaux sélectionnés ({selectedSlots.length})
+              </h4>
+              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                {selectedSlots.map((slot) => (
+                  <div key={slot} className="text-sm text-blue-800 bg-white px-2 py-1 rounded">
+                    {formatSlotDisplay(slot)}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Patient selection */}
+            <div>
+              <Label>Patient</Label>
+              <Select value={formData.patient_id} onValueChange={(value) => setFormData({...formData, patient_id: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un patient" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.nom} {patient.prenom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Category selection */}
+            <div>
+              <Label>Type de séance</Label>
+              <Select value={formData.categorie_id} onValueChange={(value) => setFormData({...formData, categorie_id: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      <div className="flex items-center">
+                        <div 
+                          className="w-3 h-3 rounded-full mr-2"
+                          style={{ backgroundColor: category.couleur }}
+                        ></div>
+                        {category.nom} ({category.duree_defaut} min)
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <Label>Notes (optionnel)</Label>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                placeholder="Notes pour tous les rendez-vous de la série..."
+                rows={3}
+              />
+            </div>
+
+            {/* Summary */}
+            {selectedPatient && selectedCategory && (
+              <div className="bg-emerald-50 p-4 rounded-lg">
+                <h4 className="font-medium text-emerald-900 mb-2">Résumé</h4>
+                <div className="text-sm text-emerald-800">
+                  <p><strong>Patient:</strong> {selectedPatient.nom} {selectedPatient.prenom}</p>
+                  <p><strong>Type:</strong> {selectedCategory.nom} ({selectedCategory.duree_defaut} min)</p>
+                  <p><strong>Nombre de séances:</strong> {selectedSlots.length}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 mt-6 border-t">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Annuler
+            </Button>
+            <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+              Créer les {selectedSlots.length} rendez-vous
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
