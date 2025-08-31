@@ -1648,10 +1648,17 @@ async def get_statistiques_agenda():
     })
     
     # Prochains rendez-vous
-    prochains_rdv = await db.rendez_vous.find({
+    prochains_rdv_raw = await db.rendez_vous.find({
         "date_debut": {"$gte": datetime.now(timezone.utc)},
         "statut": {"$in": ["planifie", "confirme"]}
     }).sort("date_debut", 1).limit(3).to_list(None)
+    
+    # Clean up ObjectId from prochains_rdv
+    prochains_rdv = []
+    for rdv in prochains_rdv_raw:
+        if '_id' in rdv:
+            del rdv['_id']
+        prochains_rdv.append(rdv)
     
     return {
         "rdv_aujourd_hui": rdv_aujourd_hui,
