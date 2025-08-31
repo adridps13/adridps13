@@ -3772,13 +3772,26 @@ const AgendaPage = () => {
 
   const generateTimeSlots = () => {
     const slots = [];
-    for (let hour = 8; hour < 19; hour++) {
+    for (let hour = 8; hour < 20; hour++) { // Extended to 20:00
       for (let min = 0; min < 60; min += 15) {
         const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
         slots.push(time);
       }
     }
     return slots;
+  };
+
+  const isSlotBlocked = (day, time, practitionerId) => {
+    const slotKey = `${practitionerId}_${day.toISOString().split('T')[0]}_${time}`;
+    return blockedSlots[slotKey] || false;
+  };
+
+  const toggleSlotBlocked = (day, time, practitionerId) => {
+    const slotKey = `${practitionerId}_${day.toISOString().split('T')[0]}_${time}`;
+    setBlockedSlots({
+      ...blockedSlots,
+      [slotKey]: !blockedSlots[slotKey]
+    });
   };
 
   const handleQuickInput = (day, time) => {
