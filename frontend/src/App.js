@@ -3881,9 +3881,102 @@ const AgendaPage = () => {
   };
 
   const handleCreateSeries = (rdv) => {
-    // Open series creation modal
-    setShowSeriesModal({ rdv, isOpen: true });
-    setContextMenu(null);
+    if (rdv) {
+      // Start series selection mode with existing RDV
+      setSeriesSelection({
+        isSelecting: true,
+        selectedSlots: [],
+        baseRdv: rdv
+      });
+      setContextMenu(null);
+    } else {
+      // Create new series - this will be handled when a slot is selected
+      setSeriesSelection({
+        isSelecting: true,
+        selectedSlots: [],
+        baseRdv: null
+      });
+    }
+  };
+
+  const handleSlotSelection = (day, time) => {
+    if (!seriesSelection.isSelecting) return;
+    
+    const slotKey = `${day.toISOString().split('T')[0]}_${time}`;
+    const isSelected = seriesSelection.selectedSlots.includes(slotKey);
+    
+    if (isSelected) {
+      // Remove from selection
+      setSeriesSelection({
+        ...seriesSelection,
+        selectedSlots: seriesSelection.selectedSlots.filter(slot => slot !== slotKey)
+      });
+    } else {
+      // Add to selection
+      setSeriesSelection({
+        ...seriesSelection,
+        selectedSlots: [...seriesSelection.selectedSlots, slotKey]
+      });
+    }
+  };
+
+  const handleConfirmSeriesSelection = () => {
+    if (seriesSelection.selectedSlots.length === 0) {
+      alert('Veuillez sélectionner au moins un créneau');
+      return;
+    }
+    
+    if (seriesSelection.baseRdv) {
+      // Create series based on existing RDV
+      createRdvSeriesFromSelection();
+    } else {
+      // Open modal to create new RDV series
+      setShowSeriesModal({
+        isOpen: true,
+        selectedSlots: seriesSelection.selectedSlots
+      });
+    }
+  };
+
+  const handleCancelSeriesSelection = () => {
+    setSeriesSelection({
+      isSelecting: false,
+      selectedSlots: [],
+      baseRdv: null
+    });
+  };
+
+  const createRdvSeriesFromSelection = async () => {
+    const { baseRdv, selectedSlots } = seriesSelection;
+    const newRdvs = [];
+
+    for (const slotKey of selectedSlots) {
+      const [dateStr, time] = slotKey.split('_');
+      const [hour, minute] = time.split(':').map(Number);
+      
+      const dateDebut = new Date(dateStr);
+      dateDebut.setHours(hour, minute, 0, 0);
+      const dateFin = new Date(dateDebut.getTime() + baseRdv.duree_minutes * 60000);
+
+      const newRdvData = {
+        ...baseRdv,
+        id: undefined,
+        date_debut: dateDebut.toISOString(),
+        date_fin: dateFin.toISOString(),
+        created_at: undefined,
+        updated_at: undefined
+      };
+
+      try {
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous`, newRdvData);
+        newRdvs.push(response.data);
+      } catch (error) {
+        console.error('Erreur création série:', error);
+      }
+    }
+
+    setRendezVous([...rendezVous, ...newRdvs]);
+    handleCancelSeriesSelection();
   };
 
   const createRdvSeries = async (seriesData) => {
