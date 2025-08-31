@@ -492,6 +492,32 @@ class KineTrackAPITester:
         self.test_export_pdf()
         self.test_get_documents_by_patient()
         
+        # ===== AGENDA SYSTEM TESTS =====
+        print("\n🗓️  Testing Agenda System...")
+        
+        # Initialize default categories first
+        self.test_init_default_categories()
+        self.test_get_categories_seances()
+        
+        # Test custom category creation
+        self.test_create_custom_category()
+        
+        # Test appointment creation and management
+        self.test_create_rendez_vous()
+        self.test_conflict_detection()
+        self.test_get_rendez_vous()
+        self.test_get_rendez_vous_with_filters()
+        
+        # Test agenda statistics
+        self.test_agenda_statistiques()
+        
+        # Test appointment updates and deletion
+        self.test_update_rendez_vous()
+        self.test_delete_rendez_vous()
+        
+        # Test category protection
+        self.test_delete_category_with_protection()
+        
         # Print results
         print("=" * 50)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
