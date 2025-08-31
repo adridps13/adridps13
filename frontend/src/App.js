@@ -4504,6 +4504,32 @@ const AgendaPage = () => {
         </div>
       </div>
 
+      {/* Series Selection Controls */}
+      {seriesSelection.isSelecting && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-600">
+              Mode Sélection • {seriesSelection.selectedSlots.length} créneaux sélectionnés
+            </div>
+            <Button
+              onClick={handleConfirmSeriesSelection}
+              disabled={seriesSelection.selectedSlots.length === 0}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Check className="w-4 h-4 mr-2" />
+              Confirmer
+            </Button>
+            <Button
+              onClick={handleCancelSeriesSelection}
+              variant="outline"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Annuler
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Modals */}
       {showNewRdvModal && (
         <NewRdvModal
@@ -4512,6 +4538,19 @@ const AgendaPage = () => {
           onSave={createNewRdv}
           onClose={() => setShowNewRdvModal(false)}
           selectedDate={currentDate}
+        />
+      )}
+
+      {showWorkingHoursModal && (
+        <WorkingHoursModal
+          workingHours={workingHours}
+          onSave={(newWorkingHours) => {
+            setWorkingHours(newWorkingHours);
+            setShowWorkingHoursModal(false);
+            // Refresh the view to reflect changes
+            window.location.reload();
+          }}
+          onClose={() => setShowWorkingHoursModal(false)}
         />
       )}
 
@@ -4527,14 +4566,19 @@ const AgendaPage = () => {
       )}
 
       {showSeriesModal && (
-        <SeriesModal
-          rdv={showSeriesModal.rdv}
-          onSave={(seriesData) => {
-            // Handle series creation
-            createRdvSeries(seriesData);
+        <SeriesSelectionModal
+          selectedSlots={showSeriesModal.selectedSlots}
+          categories={categories}
+          patients={patients}
+          onSave={async (seriesData) => {
+            await createRdvSeriesFromNewData(seriesData);
             setShowSeriesModal(null);
+            handleCancelSeriesSelection();
           }}
-          onClose={() => setShowSeriesModal(null)}
+          onClose={() => {
+            setShowSeriesModal(null);
+            handleCancelSeriesSelection();
+          }}
         />
       )}
 
