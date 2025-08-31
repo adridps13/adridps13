@@ -4051,7 +4051,7 @@ const AgendaPage = () => {
                   <div className="h-10 border-b flex items-center justify-center bg-white">
                     <span className="text-xs font-medium text-gray-500">Heure</span>
                   </div>
-                  <div className="overflow-y-auto" style={{ height: 'calc(100vh - 230px)' }}>
+                  <div className="overflow-y-auto" style={{ height: 'calc(100vh - 230px)' }} id="time-column">
                     {generateTimeSlots().map((time) => (
                       <div key={time} className="h-8 border-b flex items-center justify-center">
                         <span className="text-xs text-gray-600">{time}</span>
@@ -4060,8 +4060,8 @@ const AgendaPage = () => {
                   </div>
                 </div>
 
-                {/* Days Columns */}
-                <div className="flex-1 flex">
+                {/* Days Columns - Synchronized Scrolling */}
+                <div className="flex-1 flex overflow-hidden">
                   {getViewDays().map((day, dayIndex) => {
                     const dayRdvs = getRdvForDay(day);
                     
@@ -4083,8 +4083,23 @@ const AgendaPage = () => {
                           </div>
                         </div>
 
-                        {/* Time Slots */}
-                        <div className="relative overflow-y-auto" style={{ height: 'calc(100vh - 230px)' }}>
+                        {/* Time Slots with synchronized scrolling */}
+                        <div 
+                          className="relative"
+                          style={{ height: 'calc(100vh - 230px)', overflowY: dayIndex === 0 ? 'auto' : 'hidden' }}
+                          onScroll={dayIndex === 0 ? (e) => {
+                            // Synchronize scroll across all day columns
+                            const scrollTop = e.target.scrollTop;
+                            document.getElementById('time-column').scrollTop = scrollTop;
+                            getViewDays().forEach((_, i) => {
+                              if (i !== 0) {
+                                const dayColumn = document.getElementById(`day-column-${i}`);
+                                if (dayColumn) dayColumn.scrollTop = scrollTop;
+                              }
+                            });
+                          } : undefined}
+                          id={`day-column-${dayIndex}`}
+                        >
                           {generateTimeSlots().map((time, timeIndex) => {
                             const hasQuickInput = quickInputVisible && 
                               quickInputVisible.day.toDateString() === day.toDateString() &&
@@ -4093,14 +4108,23 @@ const AgendaPage = () => {
                             return (
                               <div 
                                 key={time}
-                                className="h-8 border-b hover:bg-gray-50 cursor-pointer relative"
+                                className={`h-8 border-b hover:bg-gray-50 cursor-pointer relative ${
+                                  isDragging ? 'hover:bg-emerald-100' : ''
+                                }`}
                                 onClick={() => handleQuickInput(day, time)}
-                                onDrop={(e) => {
+                                onDrop={(e) => handleDrop(day, time, e)}
+                                onDragOver={(e) => {
                                   e.preventDefault();
-                                  const categoryData = JSON.parse(e.dataTransfer.getData('category'));
-                                  // Handle category drop - could open quick patient selection
+                                  e.dataTransfer.dropEffect = 'move';
                                 }}
-                                onDragOver={(e) => e.preventDefault()}
+                                onContextMenu={(e) => {
+                                  if (!hasQuickInput) {
+                                    e.preventDefault();
+                                    if (copiedRdv) {
+                                      handlePasteRdv(day, time);
+                                    }
+                                  }
+                                }}
                               >
                                 {/* Quick Input */}
                                 {hasQuickInput && (
@@ -4161,24 +4185,29 @@ const AgendaPage = () => {
                                     return (
                                       <div
                                         key={rdv.id}
-                                        className="absolute left-1 right-1 rounded-md shadow-sm border-l-4 cursor-pointer z-10"
+                                        className={`absolute left-1 right-1 rounded-md shadow-sm border-l-4 cursor-move z-10 ${
+                                          draggedRdv?.id === rdv.id ? 'opacity-50' : ''
+                                        }`}
                                         style={{
                                           backgroundColor: category?.couleur + '20' || '#3B82F620',
                                           borderLeftColor: category?.couleur || '#3B82F6',
                                           height: `${heightInSlots * 2 - 0.25}rem`,
                                           top: '1px'
                                         }}
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(rdv, e)}
+                                        onDragEnd={handleDragEnd}
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setSelectedRdv(rdv);
                                         }}
+                                        onContextMenu={(e) => handleContextMenu(e, rdv)}
                                       >
                                         <div className="p-1 text-xs">
                                           <div 
                                             className="font-semibold text-gray-900 truncate hover:text-emerald-600 cursor-pointer"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              // Navigate to patient detail
                                               window.location.href = `/patients?id=${rdv.patient_id}`;
                                             }}
                                           >
