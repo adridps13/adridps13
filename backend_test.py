@@ -730,6 +730,27 @@ class KineTrackAPITester:
         # Test category protection
         self.test_delete_category_with_protection()
         
+        # ===== MEDIA MANAGEMENT TESTS =====
+        print("\n📸 Testing Media Management System...")
+        
+        # Test media retrieval for empty patient
+        self.test_get_patient_media_empty()
+        
+        # Test media upload with different categories and types
+        self.test_upload_patient_media_photo()
+        self.test_upload_invalid_file_type()
+        self.test_filename_generation()
+        
+        # Test media categories
+        self.test_media_categories()
+        
+        # Test media retrieval with files
+        self.test_get_patient_media_with_files()
+        
+        # Test media deletion
+        self.test_delete_patient_media()
+        self.test_delete_nonexistent_media()
+        
         # Print results
         print("=" * 50)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
