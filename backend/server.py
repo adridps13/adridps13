@@ -1452,6 +1452,9 @@ async def update_categorie_seance(categorie_id: str, categorie: CategorieSeance)
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Catégorie non trouvée")
     
+    # Remove _id field if it exists
+    if '_id' in categorie_dict:
+        del categorie_dict['_id']
     return categorie_dict
 
 @api_router.delete("/categories-seances/{categorie_id}")
