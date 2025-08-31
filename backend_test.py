@@ -251,6 +251,218 @@ class KineTrackAPITester:
         
         return self.log_test("Get Documents by Patient", success, f"- Found {len(data) if success and response else 0} documents")
 
+    # ===== AGENDA SYSTEM TESTS =====
+    
+    def test_init_default_categories(self):
+        """Test initializing default appointment categories"""
+        success, response = self.make_request('POST', 'agenda/init-categories-defaut')
+        if success and response:
+            data = response.json()
+            success = 'catégories' in data.get('message', '')
+        return self.log_test("Initialize Default Categories", success, f"- Response: {data.get('message', '') if success and response else 'Failed'}")
+
+    def test_get_categories_seances(self):
+        """Test getting all appointment categories"""
+        success, response = self.make_request('GET', 'categories-seances')
+        if success and response:
+            data = response.json()
+            success = len(data) >= 7  # Should have 7 default categories
+        return self.log_test("Get Categories Seances", success, f"- Found {len(data) if success and response else 0} categories")
+
+    def test_create_custom_category(self):
+        """Test creating a custom appointment category"""
+        category_data = {
+            "nom": "Test Catégorie",
+            "duree_defaut": 25,
+            "couleur": "#FF5733",
+            "prix": 35.0,
+            "description": "Catégorie de test personnalisée"
+        }
+        
+        success, response = self.make_request('POST', 'categories-seances', category_data)
+        if success and response:
+            data = response.json()
+            self.created_category_id = data.get('id')
+            success = self.created_category_id is not None and data.get('nom') == 'Test Catégorie'
+        
+        return self.log_test("Create Custom Category", success, f"- Category ID: {self.created_category_id}")
+
+    def test_create_rendez_vous(self):
+        """Test creating an appointment"""
+        if not self.created_patient_id or not self.created_category_id:
+            return self.log_test("Create Rendez-vous", False, "- Missing patient ID or category ID")
+        
+        # Create appointment for tomorrow at 10:00
+        from datetime import datetime, timedelta, timezone
+        tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
+        start_time = tomorrow.replace(hour=10, minute=0, second=0, microsecond=0)
+        end_time = start_time + timedelta(minutes=25)  # 25 minutes duration
+        
+        rdv_data = {
+            "patient_id": self.created_patient_id,
+            "patient_nom": "Marie Dupont",
+            "categorie_id": self.created_category_id,
+            "categorie_nom": "Test Catégorie",
+            "date_debut": start_time.isoformat(),
+            "date_fin": end_time.isoformat(),
+            "duree_minutes": 25,
+            "notes": "Premier rendez-vous de test"
+        }
+        
+        success, response = self.make_request('POST', 'rendez-vous', rdv_data)
+        if success and response:
+            data = response.json()
+            self.created_rdv_id = data.get('id')
+            success = self.created_rdv_id is not None
+        
+        return self.log_test("Create Rendez-vous", success, f"- RDV ID: {self.created_rdv_id}")
+
+    def test_conflict_detection(self):
+        """Test appointment conflict detection"""
+        if not self.created_patient_id or not self.created_category_id:
+            return self.log_test("Test Conflict Detection", False, "- Missing patient ID or category ID")
+        
+        # Try to create overlapping appointment
+        from datetime import datetime, timedelta, timezone
+        tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
+        start_time = tomorrow.replace(hour=10, minute=10, second=0, microsecond=0)  # Overlaps with previous
+        end_time = start_time + timedelta(minutes=25)
+        
+        rdv_data = {
+            "patient_id": self.created_patient_id,
+            "patient_nom": "Marie Dupont",
+            "categorie_id": self.created_category_id,
+            "categorie_nom": "Test Catégorie",
+            "date_debut": start_time.isoformat(),
+            "date_fin": end_time.isoformat(),
+            "duree_minutes": 25,
+            "notes": "Rendez-vous en conflit"
+        }
+        
+        success, response = self.make_request('POST', 'rendez-vous', rdv_data, expected_status=400)
+        if success and response:
+            data = response.json()
+            success = 'conflit' in data.get('detail', '').lower()
+        
+        return self.log_test("Test Conflict Detection", success, f"- Conflict properly detected: {success}")
+
+    def test_get_rendez_vous(self):
+        """Test getting appointments"""
+        success, response = self.make_request('GET', 'rendez-vous')
+        if success and response:
+            data = response.json()
+            success = len(data) >= 1  # Should have at least our created appointment
+        
+        return self.log_test("Get Rendez-vous", success, f"- Found {len(data) if success and response else 0} appointments")
+
+    def test_get_rendez_vous_with_filters(self):
+        """Test getting appointments with date filters"""
+        from datetime import datetime, timedelta, timezone
+        today = datetime.now(timezone.utc)
+        tomorrow = today + timedelta(days=1)
+        day_after = today + timedelta(days=2)
+        
+        # Filter for tomorrow's appointments
+        params = f"?date_debut={tomorrow.isoformat()}&date_fin={day_after.isoformat()}"
+        success, response = self.make_request('GET', f'rendez-vous{params}')
+        if success and response:
+            data = response.json()
+            success = len(data) >= 1  # Should find our tomorrow appointment
+        
+        return self.log_test("Get Rendez-vous with Filters", success, f"- Found {len(data) if success and response else 0} filtered appointments")
+
+    def test_agenda_statistiques(self):
+        """Test agenda statistics endpoint"""
+        success, response = self.make_request('GET', 'agenda/statistiques')
+        if success and response:
+            data = response.json()
+            required_keys = ['rdv_aujourd_hui', 'rdv_semaine', 'prochains_rdv']
+            success = all(key in data for key in required_keys)
+            stats_msg = f"Today: {data.get('rdv_aujourd_hui', 0)}, Week: {data.get('rdv_semaine', 0)}"
+        else:
+            stats_msg = "Failed"
+        
+        return self.log_test("Agenda Statistics", success, f"- Stats: {stats_msg}")
+
+    def test_update_rendez_vous(self):
+        """Test updating an appointment"""
+        if not self.created_rdv_id:
+            return self.log_test("Update Rendez-vous", False, "- No RDV ID available")
+        
+        # Update the appointment notes
+        from datetime import datetime, timedelta, timezone
+        tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
+        start_time = tomorrow.replace(hour=10, minute=0, second=0, microsecond=0)
+        end_time = start_time + timedelta(minutes=25)
+        
+        update_data = {
+            "patient_id": self.created_patient_id,
+            "patient_nom": "Marie Dupont",
+            "categorie_id": self.created_category_id,
+            "categorie_nom": "Test Catégorie",
+            "date_debut": start_time.isoformat(),
+            "date_fin": end_time.isoformat(),
+            "duree_minutes": 25,
+            "notes": "Notes mises à jour - rendez-vous confirmé",
+            "statut": "confirme"
+        }
+        
+        success, response = self.make_request('PUT', f'rendez-vous/{self.created_rdv_id}', update_data)
+        if success and response:
+            data = response.json()
+            success = data.get('statut') == 'confirme' and 'confirmé' in data.get('notes', '')
+        
+        status_msg = data.get('statut', 'unknown') if success and response else 'Failed'
+        return self.log_test("Update Rendez-vous", success, f"- Status updated to: {status_msg}")
+
+    def test_delete_rendez_vous(self):
+        """Test deleting an appointment"""
+        if not self.created_rdv_id:
+            return self.log_test("Delete Rendez-vous", False, "- No RDV ID available")
+        
+        success, response = self.make_request('DELETE', f'rendez-vous/{self.created_rdv_id}')
+        if success and response:
+            data = response.json()
+            success = 'supprimé' in data.get('message', '')
+        
+        msg = data.get('message', '') if success and response else 'Failed'
+        return self.log_test("Delete Rendez-vous", success, f"- Deletion: {msg}")
+
+    def test_delete_category_with_protection(self):
+        """Test that categories with appointments cannot be deleted"""
+        if not self.created_category_id:
+            return self.log_test("Delete Category Protection", False, "- No category ID available")
+        
+        # First create a new appointment to test protection
+        from datetime import datetime, timedelta, timezone
+        tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
+        start_time = tomorrow.replace(hour=14, minute=0, second=0, microsecond=0)
+        end_time = start_time + timedelta(minutes=25)
+        
+        rdv_data = {
+            "patient_id": self.created_patient_id,
+            "patient_nom": "Marie Dupont",
+            "categorie_id": self.created_category_id,
+            "categorie_nom": "Test Catégorie",
+            "date_debut": start_time.isoformat(),
+            "date_fin": end_time.isoformat(),
+            "duree_minutes": 25,
+            "notes": "RDV pour tester la protection"
+        }
+        
+        # Create the appointment
+        rdv_success, rdv_response = self.make_request('POST', 'rendez-vous', rdv_data)
+        if not rdv_success:
+            return self.log_test("Delete Category Protection", False, "- Could not create test appointment")
+        
+        # Now try to delete the category (should fail)
+        success, response = self.make_request('DELETE', f'categories-seances/{self.created_category_id}', expected_status=400)
+        if success and response:
+            data = response.json()
+            success = 'impossible' in data.get('detail', '').lower()
+        
+        return self.log_test("Delete Category Protection", success, f"- Protection working: {success}")
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting KineTrack Backend API Tests")
