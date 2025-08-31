@@ -118,7 +118,7 @@ backend:
         comment: "Ajout de la déclaration 'const App = () => {' manquante avant le return statement à la ligne 3531. Build frontend compile maintenant sans erreur."
 
   - task: "Backend API pour système d'agenda - modèles et endpoints"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
@@ -127,7 +127,7 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "À implémenter: modèles Pydantic pour rendez-vous, catégories de séances, praticiens, rappels. Endpoints CRUD pour agenda."
+        comment: "Modèles Pydantic ajoutés: CategorieSeance, RendezVous, CreneauDisponible, ConfigurationRappel. Endpoints CRUD complets pour categories-seances et rendez-vous avec détection de conflits. Endpoint d'initialisation des catégories par défaut et statistiques d'agenda."
 
   - task: "Intégration service rappels SMS/Email"
     implemented: false
