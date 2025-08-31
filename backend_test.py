@@ -24,6 +24,9 @@ class KineTrackAPITester:
         self.created_exercice_id = None
         self.created_category_id = None
         self.created_rdv_id = None
+        self.created_media_id = None
+        self.created_media_id_2 = None
+        self.created_media_id_3 = None
 
     def log_test(self, name, success, details=""):
         """Log test results"""
