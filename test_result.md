@@ -143,7 +143,7 @@ backend:
 
 frontend:
   - task: "Page Agenda avec vues multiples"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
@@ -152,10 +152,10 @@ frontend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "À implémenter: interface agenda avec navigation jour/3jours/semaine/mois, durées flexibles 15min-1H, drag&drop"
+        comment: "Interface agenda complète implémentée avec navigation jour/3jours/semaine/mois, créneaux 15min, création RDV avec modal, affichage couleurs par catégorie, détection conflits. Build compilé avec succès."
 
   - task: "Gestion catégories de séances personnalisées"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
@@ -164,7 +164,7 @@ frontend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "À implémenter: interface pour créer/modifier catégories (Bilan, suivi, consultation, hors nomenclature, uro-gynécologie, etc.)"
+        comment: "Interface pour sélection catégories avec couleurs. Initialisation automatique des catégories par défaut (Bilan, Suivi, Consultation, etc.). Durées flexibles 15-60min."
 
 metadata:
   created_by: "main_agent"
