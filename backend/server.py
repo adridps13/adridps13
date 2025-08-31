@@ -1690,6 +1690,10 @@ class MediaFile(BaseModel):
 async def get_patient_media(patient_id: str):
     """Récupère tous les fichiers média d'un patient"""
     media_files = await db.patient_media.find({"patient_id": patient_id}).sort("date", -1).to_list(None)
+    # Remove MongoDB _id field to avoid serialization issues
+    for media_file in media_files:
+        if '_id' in media_file:
+            del media_file['_id']
     return media_files
 
 @api_router.post("/patients/{patient_id}/media")
