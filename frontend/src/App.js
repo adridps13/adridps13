@@ -3577,7 +3577,22 @@ const AgendaPage = () => {
     dimanche: { active: false, start: '09:00', end: '12:00', pauseStart: '', pauseEnd: '' }
   });
   const [practitioners, setPractitioners] = useState([
-    { id: 'default', nom: 'Dr. Principal', actif: true, couleur: '#3B82F6' }
+    { 
+      id: 'default', 
+      nom: 'Dr. Principal', 
+      actif: true, 
+      couleur: '#3B82F6',
+      cabinet: {
+        nom: 'DUPUIS ADRIEN',
+        titre: 'Kinésithérapeute',
+        adresse: '2 Rue Jean Baptiste Weckerlin',
+        ville: '68500 Guebwiller', 
+        telephone: '03 89 37 31 90',
+        email: 'adrien.dupuis.kine@gmail.com',
+        rpps: '10107211574',
+        am: '9774555773'
+      }
+    }
   ]);
   const [selectedPractitioner, setSelectedPractitioner] = useState('default');
   const [showPractitionersModal, setShowPractitionersModal] = useState(false);
