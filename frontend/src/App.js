@@ -415,6 +415,18 @@ const PatientsList = () => {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => {
+                    setSelectedPatient(patient);
+                    setShowCoachingPanel(true);
+                  }}
+                  className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700"
+                >
+                  <Target className="w-4 h-4 mr-1" />
+                  Coaching
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => generateDocuments(patient.id, 'anamnese')}
                   className="flex-1"
                 >
