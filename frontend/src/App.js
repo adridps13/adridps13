@@ -250,6 +250,22 @@ const PatientsList = () => {
     fetchPatients();
   }, []);
 
+  useEffect(() => {
+    // Check for patient ID in URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const patientId = urlParams.get('id');
+    
+    if (patientId && patients.length > 0) {
+      const patient = patients.find(p => p.id === patientId);
+      if (patient) {
+        setSelectedPatient(patient);
+        setShowPatientDetails(true);
+        // Clear the URL parameter
+        window.history.replaceState({}, '', '/patients');
+      }
+    }
+  }, [patients]);
+
   const fetchPatients = async () => {
     try {
       const response = await axios.get(`${API}/patients`);
