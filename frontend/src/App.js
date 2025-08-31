@@ -4270,6 +4270,18 @@ const AgendaPage = () => {
         />
       )}
 
+      {showSeriesModal && (
+        <SeriesModal
+          rdv={showSeriesModal.rdv}
+          onSave={(seriesData) => {
+            // Handle series creation
+            createRdvSeries(seriesData);
+            setShowSeriesModal(null);
+          }}
+          onClose={() => setShowSeriesModal(null)}
+        />
+      )}
+
       {selectedRdv && (
         <RdvDetailsModal
           rdv={selectedRdv}
@@ -4284,6 +4296,29 @@ const AgendaPage = () => {
             setSelectedRdv(null);
           }}
         />
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          rdv={contextMenu.rdv}
+          onCopy={() => handleCopyRdv(contextMenu.rdv)}
+          onDuplicate={() => handleDuplicateRdv(contextMenu.rdv)}
+          onCreateSeries={() => handleCreateSeries(contextMenu.rdv)}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {/* Keyboard shortcuts info */}
+      {copiedRdv && (
+        <div className="fixed bottom-4 right-4 bg-emerald-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          <div className="flex items-center space-x-2">
+            <Copy className="w-4 h-4" />
+            <span className="text-sm">RDV copié • Ctrl+V pour coller</span>
+          </div>
+        </div>
       )}
     </div>
   );
