@@ -4625,6 +4625,17 @@ const AgendaPage = () => {
         />
       )}
 
+      {showPractitionersModal && (
+        <PractitionersModal
+          practitioners={practitioners}
+          onSave={(updatedPractitioners) => {
+            setPractitioners(updatedPractitioners);
+            setShowPractitionersModal(false);
+          }}
+          onClose={() => setShowPractitionersModal(false)}
+        />
+      )}
+
       {showWorkingHoursModal && (
         <WorkingHoursModal
           workingHours={workingHours}
