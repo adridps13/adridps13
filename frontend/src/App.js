@@ -6183,6 +6183,211 @@ const SeriesSelectionModal = ({ selectedSlots, categories, patients, onSave, onC
   );
 };
 
+// Practitioners Management Modal Component
+const PractitionersModal = ({ practitioners, onSave, onClose }) => {
+  const [practitionersList, setPractitionersList] = useState(practitioners);
+  const [newPractitioner, setNewPractitioner] = useState({
+    nom: '',
+    couleur: '#3B82F6',
+    actif: true
+  });
+  const [isAddingNew, setIsAddingNew] = useState(false);
+
+  const colors = [
+    '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', 
+    '#06B6D4', '#84CC16', '#EF4444', '#6B7280', '#14B8A6'
+  ];
+
+  const handleSavePractitioner = () => {
+    if (!newPractitioner.nom.trim()) {
+      alert('Le nom du praticien est obligatoire');
+      return;
+    }
+
+    const practitioner = {
+      id: `practitioner_${Date.now()}`,
+      ...newPractitioner
+    };
+
+    setPractitionersList([...practitionersList, practitioner]);
+    setNewPractitioner({
+      nom: '',
+      couleur: '#3B82F6',
+      actif: true
+    });
+    setIsAddingNew(false);
+  };
+
+  const handleDeletePractitioner = (practitionerId) => {
+    if (practitionerId === 'default') {
+      alert('Impossible de supprimer le praticien principal');
+      return;
+    }
+
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce praticien ?')) {
+      return;
+    }
+
+    setPractitionersList(practitionersList.filter(p => p.id !== practitionerId));
+  };
+
+  const handleUpdatePractitioner = (practitionerId, updatedData) => {
+    setPractitionersList(practitionersList.map(p => 
+      p.id === practitionerId ? { ...p, ...updatedData } : p
+    ));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Gestion des Praticiens</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {/* Existing Practitioners */}
+          <div className="space-y-4 mb-6">
+            {practitionersList.map((practitioner) => (
+              <div key={practitioner.id} className="flex items-center p-4 border rounded-lg">
+                <div 
+                  className="w-6 h-6 rounded-full mr-4 flex-shrink-0"
+                  style={{ backgroundColor: practitioner.couleur }}
+                ></div>
+                
+                <div className="flex-1 grid grid-cols-3 gap-4 items-center">
+                  <input
+                    type="text"
+                    value={practitioner.nom}
+                    onChange={(e) => handleUpdatePractitioner(practitioner.id, { nom: e.target.value })}
+                    className="font-medium border rounded px-2 py-1"
+                    disabled={practitioner.id === 'default'}
+                  />
+                  
+                  <select
+                    value={practitioner.couleur}
+                    onChange={(e) => handleUpdatePractitioner(practitioner.id, { couleur: e.target.value })}
+                    className="border rounded px-2 py-1 text-sm"
+                  >
+                    {colors.map(color => (
+                      <option key={color} value={color}>
+                        {color}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <div className="flex items-center space-x-2">
+                    <label className="flex items-center text-sm">
+                      <input
+                        type="checkbox"
+                        checked={practitioner.actif}
+                        onChange={(e) => handleUpdatePractitioner(practitioner.id, { actif: e.target.checked })}
+                        className="mr-1"
+                        disabled={practitioner.id === 'default'}
+                      />
+                      Actif
+                    </label>
+                    
+                    {practitioner.id !== 'default' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeletePractitioner(practitioner.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Add New Practitioner */}
+          {!isAddingNew ? (
+            <Button
+              onClick={() => setIsAddingNew(true)}
+              variant="outline"
+              className="w-full border-dashed border-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Ajouter un praticien
+            </Button>
+          ) : (
+            <div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <Label>Nom du praticien</Label>
+                  <Input
+                    value={newPractitioner.nom}
+                    onChange={(e) => setNewPractitioner({...newPractitioner, nom: e.target.value})}
+                    placeholder="Ex: Dr. Martin"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Couleur</Label>
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className="w-8 h-8 rounded-full border-2 border-gray-300"
+                      style={{ backgroundColor: newPractitioner.couleur }}
+                    ></div>
+                    <Select 
+                      value={newPractitioner.couleur}
+                      onValueChange={(value) => setNewPractitioner({...newPractitioner, couleur: value})}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colors.map(color => (
+                          <SelectItem key={color} value={color}>
+                            <div className="flex items-center">
+                              <div 
+                                className="w-4 h-4 rounded-full mr-2"
+                                style={{ backgroundColor: color }}
+                              ></div>
+                              {color}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsAddingNew(false);
+                    setNewPractitioner({ nom: '', couleur: '#3B82F6', actif: true });
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button onClick={handleSavePractitioner} className="bg-blue-600 hover:bg-blue-700">
+                  Sauvegarder
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end p-6 border-t bg-gray-50">
+          <Button onClick={() => onSave(practitionersList)} className="bg-emerald-600 hover:bg-emerald-700">
+            Fermer et sauvegarder
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
