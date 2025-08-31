@@ -236,6 +236,7 @@ const PatientsList = () => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
   const [showDocumentEditor, setShowDocumentEditor] = useState(false);
+  const [showCoachingPanel, setShowCoachingPanel] = useState(false);
   const [currentDocument, setCurrentDocument] = useState(null);
   const [documentContent, setDocumentContent] = useState('');
   const [aiInstructions, setAiInstructions] = useState('');
