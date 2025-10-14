@@ -6594,6 +6594,437 @@ const NotificationsPage = () => {
   );
 };
 
+// Coaching Page Component (TrueCoach Style)
+const CoachingPage = () => {
+  const [patients, setPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [programs, setPrograms] = useState({});
+  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [exerciseLibrary, setExerciseLibrary] = useState([]);
+  const [showProgramModal, setShowProgramModal] = useState(false);
+
+  useEffect(() => {
+    fetchPatients();
+    fetchExercises();
+    fetchPrograms();
+  }, []);
+
+  const fetchPatients = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`);
+      setPatients(response.data);
+      if (response.data.length > 0) {
+        setSelectedPatient(response.data[0]);
+      }
+    } catch (error) {
+      console.error('Erreur chargement patients:', error);
+    }
+  };
+
+  const fetchExercises = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/exercices`);
+      setExerciseLibrary(response.data);
+    } catch (error) {
+      console.error('Erreur chargement exercices:', error);
+    }
+  };
+
+  const fetchPrograms = async () => {
+    // Simulate coaching programs data
+    const mockPrograms = {
+      'patient_1': {
+        '2025-10-14': {
+          exercises: [
+            { id: '1', name: 'Étirement cervical', sets: 3, reps: '30s', rest: '30s', completed: false },
+            { id: '2', name: 'Renforcement épaules', sets: 3, reps: 12, rest: '60s', completed: true }
+          ],
+          notes: 'Focus sur la mobilité cervicale'
+        },
+        '2025-10-15': {
+          exercises: [
+            { id: '3', name: 'Squat thérapeutique', sets: 3, reps: 10, rest: '45s', completed: false }
+          ],
+          notes: 'Progression graduelle'
+        }
+      }
+    };
+    setPrograms(mockPrograms);
+  };
+
+  const getWeekDays = () => {
+    const startOfWeek = new Date(currentWeek);
+    startOfWeek.setDate(currentWeek.getDate() - currentWeek.getDay() + 1); // Start Monday
+    
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek);
+      day.setDate(startOfWeek.getDate() + i);
+      days.push(day);
+    }
+    return days;
+  };
+
+  const getDayProgram = (date) => {
+    if (!selectedPatient) return null;
+    const dateKey = date.toISOString().split('T')[0];
+    return programs[selectedPatient.id]?.[dateKey];
+  };
+
+  const addExerciseToDay = (date, exercise) => {
+    const dateKey = date.toISOString().split('T')[0];
+    const patientId = selectedPatient.id;
+    
+    const newPrograms = { ...programs };
+    if (!newPrograms[patientId]) {
+      newPrograms[patientId] = {};
+    }
+    if (!newPrograms[patientId][dateKey]) {
+      newPrograms[patientId][dateKey] = { exercises: [], notes: '' };
+    }
+    
+    newPrograms[patientId][dateKey].exercises.push({
+      id: Date.now().toString(),
+      name: exercise.nom,
+      sets: 3,
+      reps: 12,
+      rest: '60s',
+      completed: false
+    });
+    
+    setPrograms(newPrograms);
+  };
+
+  const toggleExerciseCompletion = (date, exerciseId) => {
+    const dateKey = date.toISOString().split('T')[0];
+    const patientId = selectedPatient.id;
+    
+    const newPrograms = { ...programs };
+    if (newPrograms[patientId]?.[dateKey]) {
+      const exercise = newPrograms[patientId][dateKey].exercises.find(e => e.id === exerciseId);
+      if (exercise) {
+        exercise.completed = !exercise.completed;
+        setPrograms(newPrograms);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Coaching</h1>
+              <p className="text-gray-600 mt-1">Programmes d'exercices personnalisés</p>
+            </div>
+            <Button 
+              onClick={() => setShowProgramModal(true)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nouveau Programme
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex gap-6 h-[calc(100vh-200px)]">
+          {/* Patient Sidebar */}
+          <div className="w-80 bg-white rounded-lg shadow-sm border overflow-y-auto">
+            <div className="p-4 border-b">
+              <h3 className="font-semibold text-gray-900">Patients</h3>
+            </div>
+            <div className="space-y-1 p-2">
+              {patients.map((patient) => (
+                <button
+                  key={patient.id}
+                  onClick={() => setSelectedPatient(patient)}
+                  className={`w-full text-left p-3 rounded-lg transition-colors ${
+                    selectedPatient?.id === patient.id
+                      ? 'bg-blue-100 text-blue-900 border-l-4 border-l-blue-600'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="font-medium">{patient.nom} {patient.prenom}</div>
+                  <div className="text-sm text-gray-500">{patient.pathologie}</div>
+                  <div className="flex items-center mt-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-xs text-gray-600">Actif</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Coaching Area */}
+          <div className="flex-1 bg-white rounded-lg shadow-sm border overflow-hidden">
+            {selectedPatient ? (
+              <div className="h-full flex flex-col">
+                {/* Patient Header */}
+                <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-2xl font-bold">
+                        {selectedPatient.nom} {selectedPatient.prenom}
+                      </h2>
+                      <p className="text-blue-100 mt-1">{selectedPatient.pathologie}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-blue-100">Âge</div>
+                      <div className="text-xl font-semibold">{selectedPatient.age} ans</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Week Navigation */}
+                <div className="p-4 border-b bg-gray-50">
+                  <div className="flex justify-between items-center">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const newWeek = new Date(currentWeek);
+                        newWeek.setDate(newWeek.getDate() - 7);
+                        setCurrentWeek(newWeek);
+                      }}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    
+                    <h3 className="text-lg font-semibold">
+                      Semaine du {getWeekDays()[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                    </h3>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const newWeek = new Date(currentWeek);
+                        newWeek.setDate(newWeek.getDate() + 7);
+                        setCurrentWeek(newWeek);
+                      }}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Weekly Program Grid */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="grid grid-cols-7 h-full">
+                    {getWeekDays().map((day, dayIndex) => {
+                      const dayProgram = getDayProgram(day);
+                      const isToday = day.toDateString() === new Date().toDateString();
+                      const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                      
+                      return (
+                        <div key={dayIndex} className={`border-r last:border-r-0 flex flex-col ${
+                          isWeekend ? 'bg-gray-50' : ''
+                        }`}>
+                          {/* Day Header */}
+                          <div className={`p-3 border-b text-center ${
+                            isToday ? 'bg-blue-100 text-blue-900' : 'bg-white'
+                          }`}>
+                            <div className="text-sm font-medium">
+                              {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
+                            </div>
+                            <div className={`text-lg font-semibold ${
+                              isToday ? 'text-blue-600' : ''
+                            }`}>
+                              {day.getDate()}
+                            </div>
+                          </div>
+
+                          {/* Day Content */}
+                          <div className="flex-1 p-2 space-y-2">
+                            {isWeekend ? (
+                              <div className="text-center text-gray-500 mt-4">
+                                <div className="text-xs">Jour de repos</div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="mt-2 w-full text-xs"
+                                  onClick={() => setShowProgramModal(day)}
+                                >
+                                  <Plus className="w-3 h-3 mr-1" />
+                                  Exercices à domicile
+                                </Button>
+                              </div>
+                            ) : (
+                              <>
+                                {/* Exercises */}
+                                {dayProgram?.exercises.map((exercise) => (
+                                  <div
+                                    key={exercise.id}
+                                    className={`p-2 rounded-lg border cursor-pointer transition-all ${
+                                      exercise.completed
+                                        ? 'bg-green-50 border-green-200'
+                                        : 'bg-white border-gray-200 hover:border-blue-300'
+                                    }`}
+                                    onClick={() => toggleExerciseCompletion(day, exercise.id)}
+                                  >
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1 min-w-0">
+                                        <div className={`text-sm font-medium truncate ${
+                                          exercise.completed ? 'text-green-800' : 'text-gray-900'
+                                        }`}>
+                                          {exercise.name}
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          {exercise.sets} × {exercise.reps} | {exercise.rest}
+                                        </div>
+                                      </div>
+                                      <div className="ml-2">
+                                        {exercise.completed ? (
+                                          <CheckCircle className="w-4 h-4 text-green-600" />
+                                        ) : (
+                                          <Circle className="w-4 h-4 text-gray-400" />
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {/* Add Exercise Button */}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full border-2 border-dashed border-gray-300 text-gray-500 hover:border-blue-400 hover:text-blue-600"
+                                  onClick={() => setShowProgramModal(day)}
+                                >
+                                  <Plus className="w-3 h-3 mr-1" />
+                                  Ajouter
+                                </Button>
+
+                                {/* Notes */}
+                                {dayProgram?.notes && (
+                                  <div className="text-xs text-gray-600 italic bg-yellow-50 p-2 rounded">
+                                    {dayProgram.notes}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                  <p>Sélectionnez un patient pour commencer</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Program Modal */}
+      {showProgramModal && (
+        <ProgramModal
+          selectedDate={showProgramModal}
+          exerciseLibrary={exerciseLibrary}
+          onAddExercise={(exercise) => {
+            addExerciseToDay(showProgramModal, exercise);
+            setShowProgramModal(false);
+          }}
+          onClose={() => setShowProgramModal(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Program Modal Component
+const ProgramModal = ({ selectedDate, exerciseLibrary, onAddExercise, onClose }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedBodyPart, setSelectedBodyPart] = useState('tous');
+
+  const bodyParts = [
+    'tous', 'cervical', 'epaule', 'coude', 'poignet', 
+    'thoracique', 'lombaire', 'hanche', 'genou', 'cheville'
+  ];
+
+  const filteredExercises = exerciseLibrary.filter(exercise => {
+    const matchesSearch = exercise.nom.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesBodyPart = selectedBodyPart === 'tous' || exercise.zone_corporelle === selectedBodyPart;
+    return matchesSearch && matchesBodyPart;
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">
+            Ajouter un exercice - {selectedDate.toLocaleDateString('fr-FR')}
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {/* Search and Filter */}
+          <div className="flex gap-4 mb-6">
+            <div className="flex-1">
+              <Input
+                type="text"
+                placeholder="Rechercher un exercice..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {bodyParts.map(part => (
+                  <SelectItem key={part} value={part}>
+                    {part.charAt(0).toUpperCase() + part.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Exercise List */}
+          <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+            {filteredExercises.map((exercise) => (
+              <Card
+                key={exercise.id}
+                className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => onAddExercise(exercise)}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <Dumbbell className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900">{exercise.nom}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{exercise.description}</p>
+                    <div className="flex items-center mt-2">
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        {exercise.zone_corporelle}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
