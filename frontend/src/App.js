@@ -6607,6 +6607,8 @@ const CoachingPage = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [exerciseLibrary, setExerciseLibrary] = useState([]);
   const [showProgramModal, setShowProgramModal] = useState(false);
+  const [copiedSession, setCopiedSession] = useState(null);
+  const [weekOffset, setWeekOffset] = useState(0); // For multi-week view
 
   useEffect(() => {
     fetchPatients();
