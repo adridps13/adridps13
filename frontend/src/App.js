@@ -3790,13 +3790,28 @@ const AgendaPage = () => {
   };
 
   const generateTimeSlots = () => {
+    const currentPractitioner = practitioners.find(p => p.id === selectedPractitioner);
+    const startTime = currentPractitioner?.horaires?.debut || '07:30';
+    const endTime = currentPractitioner?.horaires?.fin || '20:00';
+    
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    
     const slots = [];
-    for (let hour = 8; hour < 20; hour++) { // Extended to 20:00
-      for (let min = 0; min < 60; min += 15) {
-        const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
-        slots.push(time);
+    let currentHour = startHour;
+    let currentMin = startMin;
+    
+    while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
+      const time = `${currentHour.toString().padStart(2, '0')}:${currentMin.toString().padStart(2, '0')}`;
+      slots.push(time);
+      
+      currentMin += 15;
+      if (currentMin >= 60) {
+        currentMin = 0;
+        currentHour++;
       }
     }
+    
     return slots;
   };
 
