@@ -6445,6 +6445,152 @@ const PractitionersModal = ({ practitioners, onSave, onClose }) => {
   );
 };
 
+// Notifications Page Component
+const NotificationsPage = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [filter, setFilter] = useState('all'); // all, sessions, exercises, progress
+
+  useEffect(() => {
+    // Simulate notifications data
+    const mockNotifications = [
+      {
+        id: '1',
+        type: 'session_completed',
+        patientName: 'Marie Dupont',
+        message: 'a validé sa séance du 30/08/2025',
+        timestamp: new Date().toISOString(),
+        read: false
+      },
+      {
+        id: '2', 
+        type: 'exercise_completed',
+        patientName: 'Pierre Martin',
+        message: 'a complété l\'exercice "Étirement cervical" avec une charge de 5kg',
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        read: false
+      },
+      {
+        id: '3',
+        type: 'pain_reported',
+        patientName: 'Sophie Blanc',
+        message: 'a signalé une douleur niveau 6/10 après l\'exercice',
+        timestamp: new Date(Date.now() - 7200000).toISOString(),
+        read: true
+      }
+    ];
+    setNotifications(mockNotifications);
+  }, []);
+
+  const filterNotifications = () => {
+    if (filter === 'all') return notifications;
+    return notifications.filter(n => {
+      switch (filter) {
+        case 'sessions': return n.type === 'session_completed';
+        case 'exercises': return n.type === 'exercise_completed';
+        case 'progress': return n.type === 'pain_reported' || n.type === 'progress_update';
+        default: return true;
+      }
+    });
+  };
+
+  const markAsRead = (notificationId) => {
+    setNotifications(notifications.map(n => 
+      n.id === notificationId ? { ...n, read: true } : n
+    ));
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'session_completed': return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case 'exercise_completed': return <Dumbbell className="w-5 h-5 text-blue-600" />;
+      case 'pain_reported': return <AlertCircle className="w-5 h-5 text-red-600" />;
+      default: return <Bell className="w-5 h-5 text-gray-600" />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+          <p className="text-gray-600 mt-1">Activités et mises à jour des patients</p>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="mb-6 flex space-x-1 bg-white p-1 rounded-lg shadow-sm border">
+          {[
+            { key: 'all', label: 'Toutes', count: notifications.length },
+            { key: 'sessions', label: 'Séances', count: notifications.filter(n => n.type === 'session_completed').length },
+            { key: 'exercises', label: 'Exercices', count: notifications.filter(n => n.type === 'exercise_completed').length },
+            { key: 'progress', label: 'Progrès', count: notifications.filter(n => n.type === 'pain_reported').length }
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key)}
+              className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-colors ${
+                filter === tab.key
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-gray-600 hover:text-emerald-600'
+              }`}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                  filter === tab.key ? 'bg-white text-emerald-600' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Notifications List */}
+        <div className="space-y-3">
+          {filterNotifications().map((notification) => (
+            <Card 
+              key={notification.id}
+              className={`p-4 cursor-pointer transition-all hover:shadow-md ${
+                !notification.read ? 'border-l-4 border-l-emerald-500 bg-emerald-50' : ''
+              }`}
+              onClick={() => markAsRead(notification.id)}
+            >
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 mt-1">
+                  {getNotificationIcon(notification.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-gray-900">
+                      <span className="text-emerald-600 font-semibold">
+                        {notification.patientName}
+                      </span>{' '}
+                      {notification.message}
+                    </p>
+                    {!notification.read && (
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0"></div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(notification.timestamp).toLocaleString('fr-FR')}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ))}
+
+          {filterNotifications().length === 0 && (
+            <div className="text-center py-12">
+              <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">Aucune notification pour ce filtre</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
