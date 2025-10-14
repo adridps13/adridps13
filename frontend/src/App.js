@@ -6603,22 +6603,28 @@ const NotificationsPage = () => {
 const CoachingPage = () => {
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [programs, setPrograms] = useState({});
+  const [sessions, setSessions] = useState({}); // Patient sessions by date
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [exerciseLibrary, setExerciseLibrary] = useState([]);
   const [showProgramModal, setShowProgramModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [copiedSession, setCopiedSession] = useState(null);
-  const [weekOffset, setWeekOffset] = useState(0); // For multi-week view
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchPatients();
     fetchExercises();
-    fetchPrograms();
   }, []);
+
+  useEffect(() => {
+    if (selectedPatient) {
+      fetchPatientSessions(selectedPatient.id);
+    }
+  }, [selectedPatient]);
 
   const fetchPatients = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients`);
+      const response = await axios.get(`${API}/patients`);
       setPatients(response.data);
       if (response.data.length > 0) {
         setSelectedPatient(response.data[0]);
@@ -6630,33 +6636,28 @@ const CoachingPage = () => {
 
   const fetchExercises = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/exercices`);
+      const response = await axios.get(`${API}/exercices`);
       setExerciseLibrary(response.data);
     } catch (error) {
       console.error('Erreur chargement exercices:', error);
     }
   };
 
-  const fetchPrograms = async () => {
-    // Simulate coaching programs data
-    const mockPrograms = {
-      'patient_1': {
-        '2025-10-14': {
-          exercises: [
-            { id: '1', name: 'Étirement cervical', sets: 3, reps: '30s', rest: '30s', completed: false },
-            { id: '2', name: 'Renforcement épaules', sets: 3, reps: 12, rest: '60s', completed: true }
-          ],
-          notes: 'Focus sur la mobilité cervicale'
-        },
-        '2025-10-15': {
-          exercises: [
-            { id: '3', name: 'Squat thérapeutique', sets: 3, reps: 10, rest: '45s', completed: false }
-          ],
-          notes: 'Progression graduelle'
-        }
-      }
-    };
-    setPrograms(mockPrograms);
+  const fetchPatientSessions = async (patientId) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/coaching/seances/patient/${patientId}`);
+      const sessionsMap = {};
+      response.data.forEach(session => {
+        sessionsMap[session.date] = session;
+      });
+      setSessions(sessionsMap);
+    } catch (error) {
+      console.error('Erreur chargement séances:', error);
+      setSessions({});
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getWeekDays = () => {
