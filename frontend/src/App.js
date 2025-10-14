@@ -7471,6 +7471,430 @@ const ExerciseAssignmentModal = ({
   );
 };
 
+// Patient Detail Page Component
+const PatientDetailPage = () => {
+  const [patient, setPatient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [notes, setNotes] = useState('');
+  const [appointments, setAppointments] = useState([]);
+
+  // Get patient ID from URL
+  const patientId = window.location.pathname.split('/')[2];
+
+  useEffect(() => {
+    if (patientId) {
+      fetchPatientDetails();
+      fetchPatientAppointments();
+    }
+  }, [patientId]);
+
+  const fetchPatientDetails = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}`);
+      setPatient(response.data);
+      setNotes(response.data.notes || '');
+    } catch (error) {
+      console.error('Erreur chargement patient:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPatientAppointments = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous?patient_id=${patientId}`);
+      setAppointments(response.data);
+    } catch (error) {
+      console.error('Erreur chargement RDV:', error);
+    }
+  };
+
+  const saveNotes = async () => {
+    try {
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}`, {
+        ...patient,
+        notes: notes
+      });
+      alert('Notes sauvegardées');
+    } catch (error) {
+      console.error('Erreur sauvegarde notes:', error);
+    }
+  };
+
+  const cancelAppointment = async (appointmentId) => {
+    if (!confirm('Voulez-vous vraiment annuler ce rendez-vous ?')) return;
+    
+    try {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous/${appointmentId}`);
+      setAppointments(appointments.filter(apt => apt.id !== appointmentId));
+      alert('Rendez-vous annulé');
+    } catch (error) {
+      console.error('Erreur annulation RDV:', error);
+      alert('Erreur lors de l\'annulation');
+    }
+  };
+
+  const sendSMSNotification = async (message) => {
+    try {
+      // Simulate SMS sending
+      alert(`SMS envoyé à ${patient.prenom} ${patient.nom}: ${message}`);
+    } catch (error) {
+      console.error('Erreur envoi SMS:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  if (!patient) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Patient non trouvé</h2>
+          <Button onClick={() => window.location.href = '/patients'}>
+            Retour à la liste
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: 'overview', label: 'Vue d\'ensemble', icon: <Users className="w-4 h-4" /> },
+    { id: 'exercises', label: 'Exercices', icon: <Dumbbell className="w-4 h-4" /> },
+    { id: 'appointments', label: 'Rendez-vous', icon: <Calendar className="w-4 h-4" /> },
+    { id: 'notes', label: 'Notes', icon: <FileText className="w-4 h-4" /> },
+    { id: 'media', label: 'Médias', icon: <Camera className="w-4 h-4" /> }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => window.location.href = '/patients'}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                <ChevronLeft className="w-5 h-5 mr-1" />
+                Retour
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {patient.prenom} {patient.nom}
+                </h1>
+                <p className="text-gray-600">{patient.pathologie} • {patient.age} ans</p>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <Button 
+                onClick={() => sendSMSNotification('Rappel de votre prochain rendez-vous')}
+                variant="outline"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                SMS
+              </Button>
+              <Button 
+                onClick={() => window.location.href = `/coaching?patient=${patient.id}`}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                Coaching
+              </Button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="mt-6 border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                    activeTab === tab.id
+                      ? 'border-emerald-500 text-emerald-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-7xl mx-auto p-6">
+        {activeTab === 'overview' && (
+          <PatientOverviewTab patient={patient} />
+        )}
+        
+        {activeTab === 'exercises' && (
+          <PatientExercisesTab patient={patient} />
+        )}
+        
+        {activeTab === 'appointments' && (
+          <PatientAppointmentsTab 
+            appointments={appointments}
+            onCancelAppointment={cancelAppointment}
+            onSendSMS={sendSMSNotification}
+          />
+        )}
+        
+        {activeTab === 'notes' && (
+          <PatientNotesTab 
+            notes={notes}
+            setNotes={setNotes}
+            onSave={saveNotes}
+          />
+        )}
+        
+        {activeTab === 'media' && (
+          <PatientMediaTab patient={patient} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Patient Overview Tab Component
+const PatientOverviewTab = ({ patient }) => {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Patient Info */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Informations Patient</h3>
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Nom complet:</span>
+            <span className="font-medium">{patient.prenom} {patient.nom}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Âge:</span>
+            <span className="font-medium">{patient.age} ans</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Téléphone:</span>
+            <span className="font-medium">{patient.telephone}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Email:</span>
+            <span className="font-medium text-blue-600">{patient.email}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Pathologie:</span>
+            <span className="font-medium">{patient.pathologie}</span>
+          </div>
+        </div>
+      </Card>
+
+      {/* Medical Info */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Informations Médicales</h3>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium text-gray-600">Prescription médicale</Label>
+            <p className="text-sm bg-gray-50 p-3 rounded-md mt-1">
+              {patient.prescription_medicale}
+            </p>
+          </div>
+          <div>
+            <Label className="text-sm font-medium text-gray-600">Date de création</Label>
+            <p className="text-sm mt-1">
+              {new Date(patient.created_at).toLocaleDateString('fr-FR')}
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Quick Actions */}
+      <Card className="p-6 lg:col-span-2">
+        <h3 className="text-lg font-semibold mb-4">Actions Rapides</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Button className="h-20 flex-col space-y-2">
+            <FileText className="w-6 h-6" />
+            <span className="text-xs">Générer Rapport</span>
+          </Button>
+          <Button variant="outline" className="h-20 flex-col space-y-2">
+            <Calendar className="w-6 h-6" />
+            <span className="text-xs">Nouveau RDV</span>
+          </Button>
+          <Button variant="outline" className="h-20 flex-col space-y-2">
+            <Dumbbell className="w-6 h-6" />
+            <span className="text-xs">Ajouter Exercice</span>
+          </Button>
+          <Button variant="outline" className="h-20 flex-col space-y-2">
+            <Camera className="w-6 h-6" />
+            <span className="text-xs">Photos/Vidéos</span>
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+// Patient Exercises Tab Component  
+const PatientExercisesTab = ({ patient }) => {
+  return (
+    <div className="space-y-6">
+      <ExerciseAssignmentSection patient={patient} />
+    </div>
+  );
+};
+
+// Patient Appointments Tab Component
+const PatientAppointmentsTab = ({ appointments, onCancelAppointment, onSendSMS }) => {
+  const upcomingAppointments = appointments.filter(apt => 
+    new Date(apt.date_debut) > new Date() && apt.statut !== 'annule'
+  );
+  const pastAppointments = appointments.filter(apt => 
+    new Date(apt.date_debut) <= new Date() || apt.statut === 'annule'
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Upcoming Appointments */}
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Rendez-vous à venir ({upcomingAppointments.length})</h3>
+          <Button 
+            onClick={() => onSendSMS('Rappel: Vous avez un rendez-vous prévu prochainement')}
+            variant="outline"
+            className="text-blue-600"
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Rappel SMS
+          </Button>
+        </div>
+        
+        {upcomingAppointments.length > 0 ? (
+          <div className="space-y-3">
+            {upcomingAppointments.map((appointment) => (
+              <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div>
+                    <div className="font-medium">
+                      {new Date(appointment.date_debut).toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        year: 'numeric', 
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {new Date(appointment.date_debut).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })} • {appointment.categorie_nom}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onSendSMS(`Rappel: RDV le ${new Date(appointment.date_debut).toLocaleDateString('fr-FR')} à ${new Date(appointment.date_debut).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}`)}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onCancelAppointment(appointment.id)}
+                    className="text-red-600 hover:bg-red-50"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center py-8">Aucun rendez-vous à venir</p>
+        )}
+      </Card>
+
+      {/* Past Appointments */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Historique ({pastAppointments.length})</h3>
+        {pastAppointments.length > 0 ? (
+          <div className="space-y-2">
+            {pastAppointments.slice(0, 5).map((appointment) => (
+              <div key={appointment.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                <div className="flex items-center space-x-4">
+                  <div className={`w-3 h-3 rounded-full ${
+                    appointment.statut === 'annule' ? 'bg-red-500' : 'bg-gray-400'
+                  }`}></div>
+                  <div>
+                    <div className="font-medium">
+                      {new Date(appointment.date_debut).toLocaleDateString('fr-FR')}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {appointment.categorie_nom} • {appointment.statut}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center py-8">Aucun historique</p>
+        )}
+      </Card>
+    </div>
+  );
+};
+
+// Patient Notes Tab Component
+const PatientNotesTab = ({ notes, setNotes, onSave }) => {
+  return (
+    <Card className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Notes Patient</h3>
+        <Button onClick={onSave} className="bg-emerald-600 hover:bg-emerald-700">
+          <FileText className="w-4 h-4 mr-2" />
+          Sauvegarder
+        </Button>
+      </div>
+      
+      <Textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Saisissez vos notes sur ce patient..."
+        className="min-h-[400px] resize-none"
+      />
+      
+      <div className="mt-4 text-sm text-gray-500">
+        Dernière modification: {new Date().toLocaleString('fr-FR')}
+      </div>
+    </Card>
+  );
+};
+
+// Patient Media Tab Component
+const PatientMediaTab = ({ patient }) => {
+  return (
+    <div className="space-y-6">
+      <MediaSection patient={patient} />
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
