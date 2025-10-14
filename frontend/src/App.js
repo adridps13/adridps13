@@ -3602,6 +3602,8 @@ const AgendaPage = () => {
   const [selectedPractitioner, setSelectedPractitioner] = useState('default');
   const [showPractitionersModal, setShowPractitionersModal] = useState(false);
   const [blockedSlots, setBlockedSlots] = useState({});
+  const [showCoachingModal, setShowCoachingModal] = useState(false);
+  const [selectedPatientForCoaching, setSelectedPatientForCoaching] = useState(null);
   const [seriesSelection, setSeriesSelection] = useState({
     isSelecting: false,
     selectedSlots: [],
