@@ -965,6 +965,24 @@ class KineTrackAPITester:
         self.test_delete_patient_media()
         self.test_delete_nonexistent_media()
         
+        # ===== COACHING API SYSTEM TESTS =====
+        print("\n🏋️ Testing Coaching API System...")
+        
+        # Test coaching session creation and management
+        self.test_create_seance_coaching()
+        self.test_get_seances_by_patient()
+        self.test_get_seance_by_date()
+        self.test_update_seance_coaching()
+        self.test_duplicate_seance_coaching()
+        
+        # Test exercise parameters and validation
+        self.test_coaching_exercise_parameters()
+        self.test_delete_seance_coaching()
+        
+        # Test data persistence and validation
+        self.test_coaching_data_persistence()
+        self.test_coaching_session_validation()
+        
         # Print results
         print("=" * 50)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
