@@ -211,12 +211,11 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 2
+  test_sequence: 3
   run_ui: false
 
 test_plan:
   current_focus:
-    - "API Coaching - Modèles et Endpoints"
     - "Interface de Coaching Avancée - CoachingPage"
     - "Composant ExerciseCard Visuel et Éditable"
     - "Integration Backend API Coaching"
