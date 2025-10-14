@@ -77,6 +77,7 @@ const Navigation = () => {
     { path: '/programmes', label: 'Programmes', icon: Calendar },
     { path: '/agenda', label: 'Agenda', icon: Clock },
     { path: '/messagerie', label: 'Messagerie', icon: MessageCircle },
+    { path: '/notifications', label: 'Notifications', icon: Bell },
     { path: '/suggestions', label: 'Suggestions', icon: Star },
   ];
 
