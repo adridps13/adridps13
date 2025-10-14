@@ -6459,6 +6459,7 @@ const App = () => {
           <Route path="/programmes" element={<ProgrammesPage />} />
           <Route path="/agenda" element={<AgendaPage />} />
           <Route path="/messagerie" element={<MessagingPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/suggestions" element={<SuggestionsPage />} />
         </Routes>
       </BrowserRouter>
