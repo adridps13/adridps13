@@ -102,9 +102,21 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implémentation du système d'agenda KineTrack avec durées flexibles (15min/20min/30min/45min/1H), navigation multi-vues (jour/3jours/semaine/mois), catégories de séances personnalisables (Bilan, suivi, consultation, hors nomenclature, etc.), et système de rappels automatiques par email/SMS 24h avant les RDV."
+user_problem_statement: "Implémentation du système de coaching avancé KineTrack avec interface spacieuse et visuelle style TrueCoach, cartes d'exercices éditables avec paramètres détaillés (séries, reps, tempo, repos, charge, RIR, RPE), vue hebdomadaire, duplication de séances, et persistance MongoDB."
 
 backend:
+  - task: "API Coaching - Modèles et Endpoints"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Nouveaux modèles Pydantic ajoutés: ExerciceCoaching (avec tous paramètres: sets, reps, tempo, rest, weight, RIR, RPE), SeanceCoaching, SeanceCoachingCreate, SeanceCoachingUpdate. Endpoints CRUD complets: POST /api/coaching/seances, GET /api/coaching/seances/patient/{patient_id}, GET by date, PUT update, DELETE, POST duplicate. Persistance MongoDB collection 'seances_coaching'. Backend redémarré avec succès."
+
   - task: "Correction erreur ESLint parsing 'return outside function'"
     implemented: true
     working: true
