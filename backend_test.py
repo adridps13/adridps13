@@ -675,6 +675,220 @@ class KineTrackAPITester:
         
         return self.log_test("Delete Non-existent Media", success, "- 404 error properly returned")
 
+    # ===== COACHING API SYSTEM TESTS =====
+    
+    def test_create_seance_coaching(self):
+        """Test creating a coaching session with exercises"""
+        if not self.created_patient_id or not self.created_exercice_id:
+            return self.log_test("Create Coaching Session", False, "- Missing patient ID or exercise ID")
+        
+        seance_data = {
+            "patient_id": self.created_patient_id,
+            "date": "2025-10-15",
+            "exercices": [
+                {
+                    "exercice_id": self.created_exercice_id,
+                    "nom": "Squat thérapeutique",
+                    "sets": 3,
+                    "reps": "12",
+                    "tempo": "2-0-2-0",
+                    "rest": "60s",
+                    "weight": "20kg",
+                    "rir": 2,
+                    "rpe": 7,
+                    "notes": "Focus sur la forme",
+                    "completed": False,
+                    "ordre": 0
+                }
+            ],
+            "notes": "Première séance de la semaine"
+        }
+        
+        success, response = self.make_request('POST', 'coaching/seances', seance_data)
+        if success and response:
+            data = response.json()
+            self.created_seance_id = data.get('id')
+            success = (self.created_seance_id is not None and 
+                      data.get('patient_id') == self.created_patient_id and
+                      data.get('date') == "2025-10-15" and
+                      len(data.get('exercices', [])) == 1)
+        
+        return self.log_test("Create Coaching Session", success, f"- Session ID: {getattr(self, 'created_seance_id', 'None')}")
+
+    def test_get_seances_by_patient(self):
+        """Test retrieving all sessions for a patient"""
+        if not self.created_patient_id:
+            return self.log_test("Get Sessions by Patient", False, "- No patient ID available")
+        
+        success, response = self.make_request('GET', f'coaching/seances/patient/{self.created_patient_id}')
+        if success and response:
+            data = response.json()
+            success = (isinstance(data, list) and len(data) >= 1 and
+                      data[0].get('patient_id') == self.created_patient_id)
+        
+        return self.log_test("Get Sessions by Patient", success, f"- Found {len(data) if success and response else 0} sessions")
+
+    def test_get_seance_by_date(self):
+        """Test retrieving session by specific date"""
+        if not self.created_patient_id:
+            return self.log_test("Get Session by Date", False, "- No patient ID available")
+        
+        success, response = self.make_request('GET', f'coaching/seances/patient/{self.created_patient_id}/date/2025-10-15')
+        if success and response:
+            data = response.json()
+            success = (data is not None and 
+                      data.get('patient_id') == self.created_patient_id and
+                      data.get('date') == "2025-10-15")
+        
+        return self.log_test("Get Session by Date", success, f"- Session found for date 2025-10-15")
+
+    def test_update_seance_coaching(self):
+        """Test updating a coaching session"""
+        if not hasattr(self, 'created_seance_id') or not self.created_seance_id:
+            return self.log_test("Update Coaching Session", False, "- No session ID available")
+        
+        update_data = {
+            "exercices": [
+                {
+                    "exercice_id": self.created_exercice_id,
+                    "nom": "Squat thérapeutique modifié",
+                    "sets": 4,
+                    "reps": "15",
+                    "tempo": "3-1-2-1",
+                    "rest": "90s",
+                    "weight": "25kg",
+                    "rir": 1,
+                    "rpe": 8,
+                    "notes": "Progression - augmentation charge",
+                    "completed": True,
+                    "ordre": 0
+                }
+            ],
+            "notes": "Séance modifiée - excellente progression",
+            "statut": "termine"
+        }
+        
+        success, response = self.make_request('PUT', f'coaching/seances/{self.created_seance_id}', update_data)
+        if success and response:
+            data = response.json()
+            success = (data.get('statut') == 'termine' and
+                      'modifiée' in data.get('notes', '') and
+                      len(data.get('exercices', [])) == 1 and
+                      data.get('exercices', [{}])[0].get('sets') == 4)
+        
+        return self.log_test("Update Coaching Session", success, f"- Session updated successfully")
+
+    def test_duplicate_seance_coaching(self):
+        """Test duplicating a coaching session for a new date"""
+        if not hasattr(self, 'created_seance_id') or not self.created_seance_id:
+            return self.log_test("Duplicate Coaching Session", False, "- No session ID available")
+        
+        success, response = self.make_request('POST', f'coaching/seances/duplicate/{self.created_seance_id}?new_date=2025-10-16')
+        if success and response:
+            data = response.json()
+            self.duplicated_seance_id = data.get('id')
+            success = (self.duplicated_seance_id is not None and
+                      data.get('date') == "2025-10-16" and
+                      data.get('statut') == 'planifie' and
+                      len(data.get('exercices', [])) >= 1 and
+                      data.get('exercices', [{}])[0].get('completed') == False)
+        
+        return self.log_test("Duplicate Coaching Session", success, f"- Duplicated session ID: {getattr(self, 'duplicated_seance_id', 'None')}")
+
+    def test_coaching_exercise_parameters(self):
+        """Test that all exercise parameters are properly saved and retrieved"""
+        if not self.created_patient_id or not self.created_exercice_id:
+            return self.log_test("Test Exercise Parameters", False, "- Missing patient ID or exercise ID")
+        
+        # Create session with detailed exercise parameters
+        seance_data = {
+            "patient_id": self.created_patient_id,
+            "date": "2025-10-17",
+            "exercices": [
+                {
+                    "exercice_id": self.created_exercice_id,
+                    "nom": "Test Paramètres Complets",
+                    "sets": 5,
+                    "reps": "8-12",
+                    "tempo": "4-2-1-1",
+                    "rest": "120s",
+                    "weight": "Body weight",
+                    "rir": 3,
+                    "rpe": 6,
+                    "notes": "Test de tous les paramètres d'exercice",
+                    "completed": False,
+                    "ordre": 0
+                }
+            ],
+            "notes": "Test des paramètres d'exercices"
+        }
+        
+        success, response = self.make_request('POST', 'coaching/seances', seance_data)
+        if success and response:
+            data = response.json()
+            exercice = data.get('exercices', [{}])[0]
+            success = (exercice.get('sets') == 5 and
+                      exercice.get('reps') == "8-12" and
+                      exercice.get('tempo') == "4-2-1-1" and
+                      exercice.get('rest') == "120s" and
+                      exercice.get('weight') == "Body weight" and
+                      exercice.get('rir') == 3 and
+                      exercice.get('rpe') == 6)
+            self.test_params_seance_id = data.get('id')
+        
+        return self.log_test("Test Exercise Parameters", success, "- All exercise parameters saved correctly")
+
+    def test_delete_seance_coaching(self):
+        """Test deleting a coaching session"""
+        if not hasattr(self, 'test_params_seance_id') or not self.test_params_seance_id:
+            return self.log_test("Delete Coaching Session", False, "- No test session ID available")
+        
+        success, response = self.make_request('DELETE', f'coaching/seances/{self.test_params_seance_id}')
+        if success and response:
+            data = response.json()
+            success = 'supprimé' in data.get('message', '').lower()
+        
+        return self.log_test("Delete Coaching Session", success, f"- Deletion: {data.get('message', '') if success and response else 'Failed'}")
+
+    def test_coaching_data_persistence(self):
+        """Test that coaching data persists correctly in MongoDB"""
+        if not self.created_patient_id:
+            return self.log_test("Test Data Persistence", False, "- No patient ID available")
+        
+        # Get all sessions for the patient
+        success, response = self.make_request('GET', f'coaching/seances/patient/{self.created_patient_id}')
+        if success and response:
+            data = response.json()
+            # Should have at least 2 sessions (original + duplicated)
+            success = (len(data) >= 2 and
+                      all(session.get('patient_id') == self.created_patient_id for session in data))
+            
+            # Check that different dates exist
+            dates = [session.get('date') for session in data]
+            success = success and len(set(dates)) >= 2  # At least 2 different dates
+        
+        return self.log_test("Test Data Persistence", success, f"- Found {len(data) if success and response else 0} persisted sessions")
+
+    def test_coaching_session_validation(self):
+        """Test validation of coaching session data"""
+        if not self.created_patient_id:
+            return self.log_test("Test Session Validation", False, "- No patient ID available")
+        
+        # Test with invalid data (missing required fields)
+        invalid_data = {
+            "patient_id": self.created_patient_id,
+            # Missing date field
+            "exercices": [],
+            "notes": "Test validation"
+        }
+        
+        success, response = self.make_request('POST', 'coaching/seances', invalid_data, expected_status=422)
+        if success and response:
+            data = response.json()
+            success = 'detail' in data  # Should return validation error
+        
+        return self.log_test("Test Session Validation", success, "- Validation working correctly")
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting KineTrack Backend API Tests")
