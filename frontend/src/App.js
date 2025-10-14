@@ -6915,105 +6915,142 @@ const CoachingPage = () => {
                   </div>
                 </div>
 
-                {/* Weekly Program Grid */}
-                <div className="flex-1 overflow-y-auto">
-                  <div className="grid grid-cols-7 h-full">
-                    {getWeekDays().map((day, dayIndex) => {
-                      const dayProgram = getDayProgram(day);
-                      const isToday = day.toDateString() === new Date().toDateString();
-                      const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-                      
-                      return (
-                        <div key={dayIndex} className={`border-r last:border-r-0 flex flex-col ${
-                          isWeekend ? 'bg-gray-50' : ''
-                        }`}>
-                          {/* Day Header */}
-                          <div className={`p-3 border-b text-center ${
-                            isToday ? 'bg-blue-100 text-blue-900' : 'bg-white'
-                          }`}>
-                            <div className="text-sm font-medium">
-                              {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
-                            </div>
-                            <div className={`text-lg font-semibold ${
-                              isToday ? 'text-blue-600' : ''
+                {/* Weekly Program Grid - Spacious Layout */}
+                <div className="flex-1 overflow-y-auto bg-gray-50">
+                  <div className="p-6">
+                    <div className="grid grid-cols-7 gap-4 min-h-[600px]">
+                      {getWeekDays().map((day, dayIndex) => {
+                        const dayProgram = getDayProgram(day);
+                        const isToday = day.toDateString() === new Date().toDateString();
+                        const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                        
+                        return (
+                          <div 
+                            key={dayIndex} 
+                            className={`bg-white rounded-xl shadow-sm border flex flex-col min-h-[600px] ${
+                              isToday ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+                            }`}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              if (copiedSession) {
+                                pasteSession(day);
+                              }
+                            }}
+                          >
+                            {/* Day Header */}
+                            <div className={`p-4 text-center border-b ${
+                              isToday 
+                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-xl' 
+                                : isWeekend 
+                                  ? 'bg-gray-100' 
+                                  : 'bg-white'
                             }`}>
-                              {day.getDate()}
-                            </div>
-                          </div>
-
-                          {/* Day Content */}
-                          <div className="flex-1 p-2 space-y-2">
-                            {isWeekend ? (
-                              <div className="text-center text-gray-500 mt-4">
-                                <div className="text-xs">Jour de repos</div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="mt-2 w-full text-xs"
-                                  onClick={() => setShowProgramModal(day)}
-                                >
-                                  <Plus className="w-3 h-3 mr-1" />
-                                  Exercices à domicile
-                                </Button>
+                              <div className={`text-sm font-medium uppercase tracking-wide ${
+                                isToday ? 'text-blue-100' : 'text-gray-500'
+                              }`}>
+                                {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
                               </div>
-                            ) : (
-                              <>
-                                {/* Exercises */}
-                                {dayProgram?.exercises.map((exercise) => (
-                                  <div
-                                    key={exercise.id}
-                                    className={`p-2 rounded-lg border cursor-pointer transition-all ${
-                                      exercise.completed
-                                        ? 'bg-green-50 border-green-200'
-                                        : 'bg-white border-gray-200 hover:border-blue-300'
-                                    }`}
-                                    onClick={() => toggleExerciseCompletion(day, exercise.id)}
+                              <div className={`text-2xl font-bold mt-1 ${
+                                isToday ? 'text-white' : 'text-gray-900'
+                              }`}>
+                                {day.getDate()}
+                              </div>
+                            </div>
+
+                            {/* Day Content */}
+                            <div className="flex-1 p-4">
+                              {isWeekend ? (
+                                <div className="text-center py-8">
+                                  <div className="text-gray-400 mb-4">
+                                    <Calendar className="w-8 h-8 mx-auto mb-2" />
+                                    <div className="text-sm">Jour de repos</div>
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    className="w-full border-dashed text-blue-600 border-blue-300 hover:bg-blue-50"
+                                    onClick={() => setShowProgramModal(day)}
                                   >
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1 min-w-0">
-                                        <div className={`text-sm font-medium truncate ${
-                                          exercise.completed ? 'text-green-800' : 'text-gray-900'
-                                        }`}>
-                                          {exercise.name}
-                                        </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                          {exercise.sets} × {exercise.reps} | {exercise.rest}
-                                        </div>
-                                      </div>
-                                      <div className="ml-2">
-                                        {exercise.completed ? (
-                                          <CheckCircle className="w-4 h-4 text-green-600" />
-                                        ) : (
-                                          <Circle className="w-4 h-4 text-gray-400" />
-                                        )}
-                                      </div>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Exercices à domicile
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
+                                  {/* Session Actions */}
+                                  <div className="flex justify-between items-center mb-4">
+                                    <div className="text-xs text-gray-500">
+                                      {dayProgram?.exercises?.length || 0} exercice(s)
+                                    </div>
+                                    <div className="flex space-x-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => copySession(day)}
+                                        className="p-1 h-6 w-6"
+                                        title="Copier la séance"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </Button>
+                                      {dayProgram && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            const newPrograms = { ...programs };
+                                            const patientId = selectedPatient.id;
+                                            const dateKey = day.toISOString().split('T')[0];
+                                            delete newPrograms[patientId]?.[dateKey];
+                                            setPrograms(newPrograms);
+                                          }}
+                                          className="p-1 h-6 w-6 text-red-600"
+                                          title="Effacer la séance"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                      )}
                                     </div>
                                   </div>
-                                ))}
 
-                                {/* Add Exercise Button */}
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full border-2 border-dashed border-gray-300 text-gray-500 hover:border-blue-400 hover:text-blue-600"
-                                  onClick={() => setShowProgramModal(day)}
-                                >
-                                  <Plus className="w-3 h-3 mr-1" />
-                                  Ajouter
-                                </Button>
-
-                                {/* Notes */}
-                                {dayProgram?.notes && (
-                                  <div className="text-xs text-gray-600 italic bg-yellow-50 p-2 rounded">
-                                    {dayProgram.notes}
+                                  {/* Exercises */}
+                                  <div className="space-y-3">
+                                    {dayProgram?.exercises.map((exercise, exerciseIndex) => (
+                                      <ExerciseCard
+                                        key={exercise.id}
+                                        exercise={exercise}
+                                        onToggleComplete={() => toggleExerciseCompletion(day, exercise.id)}
+                                        onEdit={(updatedExercise) => updateExercise(day, exercise.id, updatedExercise)}
+                                        onDelete={() => deleteExercise(day, exercise.id)}
+                                      />
+                                    ))}
                                   </div>
-                                )}
-                              </>
-                            )}
+
+                                  {/* Add Exercise Button */}
+                                  <Button
+                                    variant="outline"
+                                    className="w-full border-dashed border-2 border-gray-300 text-gray-500 hover:border-blue-400 hover:text-blue-600 py-3"
+                                    onClick={() => setShowProgramModal(day)}
+                                  >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Ajouter un exercice
+                                  </Button>
+
+                                  {/* Session Notes */}
+                                  <div className="mt-4 pt-3 border-t">
+                                    <Textarea
+                                      placeholder="Notes de séance..."
+                                      value={dayProgram?.notes || ''}
+                                      onChange={(e) => updateSessionNotes(day, e.target.value)}
+                                      className="text-xs resize-none"
+                                      rows={2}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
