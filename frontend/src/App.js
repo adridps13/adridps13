@@ -6334,17 +6334,19 @@ const PractitionersModal = ({ practitioners, onSave, onClose }) => {
                     disabled={practitioner.id === 'default'}
                   />
                   
-                  <select
-                    value={practitioner.couleur}
-                    onChange={(e) => handleUpdatePractitioner(practitioner.id, { couleur: e.target.value })}
-                    className="border rounded px-2 py-1 text-sm"
-                  >
+                  <div className="flex items-center space-x-1">
                     {colors.map(color => (
-                      <option key={color} value={color}>
-                        {color}
-                      </option>
+                      <button
+                        key={color}
+                        onClick={() => handleUpdatePractitioner(practitioner.id, { couleur: color })}
+                        className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
+                          practitioner.couleur === color ? 'border-gray-800' : 'border-gray-300'
+                        }`}
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      />
                     ))}
-                  </select>
+                  </div>
                   
                   <div className="flex items-center space-x-2">
                     <label className="flex items-center text-sm">
