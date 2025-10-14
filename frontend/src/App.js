@@ -4379,24 +4379,30 @@ const AgendaPage = () => {
                   <div className="flex">
                     {/* Day Headers */}
                     <div className="flex flex-1">
-                      {getViewDays().map((day, dayIndex) => (
-                        <div key={dayIndex} className="flex-1 border-r last:border-r-0">
-                          <div className="h-10 border-b bg-white flex items-center justify-center">
-                            <div className="text-center">
-                              <div className="text-xs font-medium text-gray-500 uppercase">
-                                {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
-                              </div>
-                              <div className={`text-sm font-semibold ${
-                                day.toDateString() === new Date().toDateString()
-                                  ? 'text-emerald-600'
-                                  : 'text-gray-900'
-                              }`}>
-                                {day.getDate()}
+                      {getViewDays().map((day, dayIndex) => {
+                        const isToday = day.toDateString() === new Date().toDateString();
+                        
+                        return (
+                          <div key={dayIndex} className="flex-1 border-r last:border-r-0">
+                            <div className={`h-10 border-b flex items-center justify-center ${
+                              isToday ? 'bg-emerald-100' : 'bg-white'
+                            }`}>
+                              <div className="text-center">
+                                <div className="text-xs font-medium text-gray-500 uppercase">
+                                  {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
+                                </div>
+                                <div className={`text-sm font-semibold ${
+                                  isToday
+                                    ? 'text-white bg-emerald-600 rounded-full w-6 h-6 flex items-center justify-center mx-auto'
+                                    : 'text-gray-900'
+                                }`}>
+                                  {day.getDate()}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
