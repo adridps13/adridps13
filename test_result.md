@@ -111,11 +111,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Nouveaux modèles Pydantic ajoutés: ExerciceCoaching (avec tous paramètres: sets, reps, tempo, rest, weight, RIR, RPE), SeanceCoaching, SeanceCoachingCreate, SeanceCoachingUpdate. Endpoints CRUD complets: POST /api/coaching/seances, GET /api/coaching/seances/patient/{patient_id}, GET by date, PUT update, DELETE, POST duplicate. Persistance MongoDB collection 'seances_coaching'. Backend redémarré avec succès."
+      - working: true
+        agent: "testing"
+        comment: "✅ COACHING API SYSTÈME TESTÉ ET FONCTIONNEL ! Tests complets réalisés: Création séances coaching ✅ (avec exercices détaillés: sets, reps, tempo, rest, weight, RIR, RPE), Récupération séances par patient ✅, Récupération par date ✅, Mise à jour séances ✅, Duplication séances ✅, Suppression séances ✅, Persistance MongoDB ✅, Validation données ✅. Tous les paramètres d'exercices correctement sauvegardés et récupérés. 8/8 tests coaching réussis. Système prêt pour interface TrueCoach."
 
   - task: "Correction erreur ESLint parsing 'return outside function'"
     implemented: true
