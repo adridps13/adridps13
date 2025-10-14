@@ -4192,6 +4192,34 @@ const AgendaPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Practitioner Header */}
+      {(() => {
+        const currentPractitioner = practitioners.find(p => p.id === selectedPractitioner);
+        const cabinet = currentPractitioner?.cabinet;
+        
+        return cabinet ? (
+          <div className="bg-white border-b border-gray-200 shadow-sm">
+            <div className="max-w-7xl mx-auto p-4">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-gray-900">{cabinet.titre}</h1>
+                <h2 className="text-xl font-semibold text-gray-700 mt-1">{cabinet.nom}</h2>
+                <div className="mt-2 text-sm text-gray-600">
+                  <div>{cabinet.adresse}, {cabinet.ville}</div>
+                  <div className="mt-1">
+                    <span className="mr-4">Tél : {cabinet.telephone}</span>
+                    <span className="text-blue-600">{cabinet.email}</span>
+                  </div>
+                  <div className="mt-1 text-xs">
+                    <span className="mr-4">IDENTIFIANT RPPS : {cabinet.rpps}</span>
+                    <span>N°AM : {cabinet.am}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null;
+      })()}
+      
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto p-6">
