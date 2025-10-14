@@ -433,7 +433,9 @@ const PatientsList = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleViewPatient(patient)}
+                  onClick={() => {
+                    window.location.href = `/patients/${patient.id}`;
+                  }}
                   className="flex-1"
                 >
                   <Eye className="w-4 h-4 mr-1" />
