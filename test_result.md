@@ -213,7 +213,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Système de gestion des médias patients"
+    - "API Coaching - Modèles et Endpoints"
+    - "Interface de Coaching Avancée - CoachingPage"
+    - "Composant ExerciseCard Visuel et Éditable"
+    - "Integration Backend API Coaching"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
