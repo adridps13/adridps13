@@ -6673,127 +6673,212 @@ const CoachingPage = () => {
     return days;
   };
 
-  const getDayProgram = (date) => {
+  const getDaySession = (date) => {
     if (!selectedPatient) return null;
     const dateKey = date.toISOString().split('T')[0];
-    return programs[selectedPatient.id]?.[dateKey];
+    return sessions[dateKey];
   };
 
-  const addExerciseToDay = (date, exercise) => {
+  const addExerciseToDay = async (date, exercise) => {
+    if (!selectedPatient) return;
+    
     const dateKey = date.toISOString().split('T')[0];
-    const patientId = selectedPatient.id;
+    const session = sessions[dateKey];
     
-    const newPrograms = { ...programs };
-    if (!newPrograms[patientId]) {
-      newPrograms[patientId] = {};
-    }
-    if (!newPrograms[patientId][dateKey]) {
-      newPrograms[patientId][dateKey] = { exercises: [], notes: '' };
-    }
-    
-    newPrograms[patientId][dateKey].exercises.push({
-      id: Date.now().toString(),
-      name: exercise.nom,
+    const newExercise = {
+      exercice_id: exercise.id,
+      nom: exercise.nom,
       sets: 3,
-      reps: 12,
-      rest: '60s',
-      completed: false
-    });
+      reps: "12",
+      tempo: "2-0-2-0",
+      rest: "60s",
+      weight: null,
+      rir: null,
+      rpe: null,
+      notes: "",
+      completed: false,
+      ordre: session ? session.exercices.length : 0
+    };
     
-    setPrograms(newPrograms);
+    try {
+      if (session) {
+        // Update existing session
+        const updatedExercices = [...session.exercices, newExercise];
+        await axios.put(`${API}/coaching/seances/${session.id}`, {
+          exercices: updatedExercices
+        });
+      } else {
+        // Create new session
+        await axios.post(`${API}/coaching/seances`, {
+          patient_id: selectedPatient.id,
+          date: dateKey,
+          exercices: [newExercise],
+          notes: ""
+        });
+      }
+      await fetchPatientSessions(selectedPatient.id);
+    } catch (error) {
+      console.error('Erreur ajout exercice:', error);
+    }
+  };
+
+  const updateExerciseParams = async (date, exerciseId, updates) => {
+    if (!selectedPatient) return;
+    
+    const dateKey = date.toISOString().split('T')[0];
+    const session = sessions[dateKey];
+    
+    if (!session) return;
+    
+    try {
+      const updatedExercices = session.exercices.map(ex => 
+        ex.id === exerciseId ? { ...ex, ...updates } : ex
+      );
+      
+      await axios.put(`${API}/coaching/seances/${session.id}`, {
+        exercices: updatedExercices
+      });
+      
+      await fetchPatientSessions(selectedPatient.id);
+    } catch (error) {
+      console.error('Erreur mise à jour exercice:', error);
+    }
+  };
+
+  const deleteExercise = async (date, exerciseId) => {
+    if (!selectedPatient) return;
+    
+    const dateKey = date.toISOString().split('T')[0];
+    const session = sessions[dateKey];
+    
+    if (!session) return;
+    
+    try {
+      const updatedExercices = session.exercices.filter(ex => ex.id !== exerciseId);
+      
+      if (updatedExercices.length === 0) {
+        // Delete session if no exercises left
+        await axios.delete(`${API}/coaching/seances/${session.id}`);
+      } else {
+        await axios.put(`${API}/coaching/seances/${session.id}`, {
+          exercices: updatedExercices
+        });
+      }
+      
+      await fetchPatientSessions(selectedPatient.id);
+    } catch (error) {
+      console.error('Erreur suppression exercice:', error);
+    }
+  };
+
+  const updateSessionNotes = async (date, notes) => {
+    if (!selectedPatient) return;
+    
+    const dateKey = date.toISOString().split('T')[0];
+    const session = sessions[dateKey];
+    
+    if (!session) return;
+    
+    try {
+      await axios.put(`${API}/coaching/seances/${session.id}`, {
+        notes: notes
+      });
+      
+      await fetchPatientSessions(selectedPatient.id);
+    } catch (error) {
+      console.error('Erreur mise à jour notes:', error);
+    }
   };
 
   const copySession = (date) => {
-    const dayProgram = getDayProgram(date);
-    if (dayProgram) {
+    const session = getDaySession(date);
+    if (session) {
       setCopiedSession({
-        ...dayProgram,
+        ...session,
         sourceDate: date.toISOString().split('T')[0]
       });
     }
   };
 
-  const pasteSession = (targetDate) => {
+  const pasteSession = async (targetDate) => {
     if (!copiedSession || !selectedPatient) return;
     
     const dateKey = targetDate.toISOString().split('T')[0];
-    const patientId = selectedPatient.id;
     
-    const newPrograms = { ...programs };
-    if (!newPrograms[patientId]) {
-      newPrograms[patientId] = {};
+    try {
+      // Create new session with copied exercises
+      await axios.post(`${API}/coaching/seances`, {
+        patient_id: selectedPatient.id,
+        date: dateKey,
+        exercices: copiedSession.exercices.map(ex => ({
+          ...ex,
+          completed: false
+        })),
+        notes: copiedSession.notes
+      });
+      
+      await fetchPatientSessions(selectedPatient.id);
+    } catch (error) {
+      console.error('Erreur copie séance:', error);
     }
-    
-    // Deep copy exercises with new IDs
-    const copiedExercises = copiedSession.exercises.map(exercise => ({
-      ...exercise,
-      id: Date.now().toString() + Math.random(),
-      completed: false
-    }));
-    
-    newPrograms[patientId][dateKey] = {
-      exercises: copiedExercises,
-      notes: copiedSession.notes
-    };
-    
-    setPrograms(newPrograms);
   };
 
-  const duplicateWeek = () => {
+  const duplicateWeek = async () => {
     if (!selectedPatient) return;
     
     const currentWeekDays = getWeekDays();
-    const nextWeekDays = currentWeekDays.map(day => {
-      const nextWeek = new Date(day);
-      nextWeek.setDate(day.getDate() + 7);
-      return nextWeek;
-    });
-
-    const patientId = selectedPatient.id;
-    const newPrograms = { ...programs };
     
-    currentWeekDays.forEach((currentDay, index) => {
-      const dayProgram = getDayProgram(currentDay);
-      if (dayProgram) {
-        const nextDay = nextWeekDays[index];
-        const nextDateKey = nextDay.toISOString().split('T')[0];
-        
-        if (!newPrograms[patientId]) {
-          newPrograms[patientId] = {};
+    try {
+      for (const currentDay of currentWeekDays) {
+        const session = getDaySession(currentDay);
+        if (session && session.exercices.length > 0) {
+          const nextWeek = new Date(currentDay);
+          nextWeek.setDate(currentDay.getDate() + 7);
+          const nextDateKey = nextWeek.toISOString().split('T')[0];
+          
+          await axios.post(`${API}/coaching/seances`, {
+            patient_id: selectedPatient.id,
+            date: nextDateKey,
+            exercices: session.exercices.map(ex => ({
+              ...ex,
+              completed: false
+            })),
+            notes: session.notes
+          });
         }
-        
-        const copiedExercises = dayProgram.exercises.map(exercise => ({
-          ...exercise,
-          id: Date.now().toString() + Math.random(),
-          completed: false
-        }));
-        
-        newPrograms[patientId][nextDateKey] = {
-          exercises: copiedExercises,
-          notes: dayProgram.notes
-        };
       }
-    });
-    
-    setPrograms(newPrograms);
-    
-    // Move to next week
-    const nextWeek = new Date(currentWeek);
-    nextWeek.setDate(currentWeek.getDate() + 7);
-    setCurrentWeek(nextWeek);
+      
+      // Move to next week
+      const nextWeek = new Date(currentWeek);
+      nextWeek.setDate(currentWeek.getDate() + 7);
+      setCurrentWeek(nextWeek);
+      
+      await fetchPatientSessions(selectedPatient.id);
+    } catch (error) {
+      console.error('Erreur duplication semaine:', error);
+    }
   };
 
-  const toggleExerciseCompletion = (date, exerciseId) => {
-    const dateKey = date.toISOString().split('T')[0];
-    const patientId = selectedPatient.id;
+  const toggleExerciseCompletion = async (date, exerciseId) => {
+    if (!selectedPatient) return;
     
-    const newPrograms = { ...programs };
-    if (newPrograms[patientId]?.[dateKey]) {
-      const exercise = newPrograms[patientId][dateKey].exercises.find(e => e.id === exerciseId);
-      if (exercise) {
-        exercise.completed = !exercise.completed;
-        setPrograms(newPrograms);
-      }
+    const dateKey = date.toISOString().split('T')[0];
+    const session = sessions[dateKey];
+    
+    if (!session) return;
+    
+    try {
+      const updatedExercices = session.exercices.map(ex => 
+        ex.id === exerciseId ? { ...ex, completed: !ex.completed } : ex
+      );
+      
+      await axios.put(`${API}/coaching/seances/${session.id}`, {
+        exercices: updatedExercices
+      });
+      
+      await fetchPatientSessions(selectedPatient.id);
+    } catch (error) {
+      console.error('Erreur toggle exercice:', error);
     }
   };
 
