@@ -7366,15 +7366,19 @@ const CoachingPage = () => {
       </div>
 
       {/* Program Modal */}
-      {showProgramModal && (
+      {showProgramModal && selectedDate && (
         <ProgramModal
-          selectedDate={showProgramModal}
+          selectedDate={selectedDate}
           exerciseLibrary={exerciseLibrary}
-          onAddExercise={(exercise) => {
-            addExerciseToDay(showProgramModal, exercise);
+          onAddExercise={async (exercise) => {
+            await addExerciseToDay(selectedDate, exercise);
             setShowProgramModal(false);
+            setSelectedDate(null);
           }}
-          onClose={() => setShowProgramModal(false)}
+          onClose={() => {
+            setShowProgramModal(false);
+            setSelectedDate(null);
+          }}
         />
       )}
     </div>
