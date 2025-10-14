@@ -3591,6 +3591,10 @@ const AgendaPage = () => {
         email: 'adrien.dupuis.kine@gmail.com',
         rpps: '10107211574',
         am: '9774555773'
+      },
+      horaires: {
+        debut: '07:30',
+        fin: '20:00'
       }
     }
   ]);
