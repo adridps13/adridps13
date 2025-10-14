@@ -7201,18 +7201,18 @@ const CoachingPage = () => {
 
                 {/* Weekly Program Grid - Spacious Layout */}
                 <div className="flex-1 overflow-y-auto bg-gray-50">
-                  <div className="p-6">
-                    <div className="grid grid-cols-7 gap-4 min-h-[600px]">
+                  <div className="p-8">
+                    <div className="grid grid-cols-7 gap-6 min-h-[700px]">
                       {getWeekDays().map((day, dayIndex) => {
-                        const dayProgram = getDayProgram(day);
+                        const daySession = getDaySession(day);
                         const isToday = day.toDateString() === new Date().toDateString();
                         const isWeekend = day.getDay() === 0 || day.getDay() === 6;
                         
                         return (
                           <div 
                             key={dayIndex} 
-                            className={`bg-white rounded-xl shadow-sm border flex flex-col min-h-[600px] ${
-                              isToday ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+                            className={`bg-white rounded-xl shadow-md border-2 flex flex-col min-h-[700px] transition-all hover:shadow-xl ${
+                              isToday ? 'ring-4 ring-emerald-400 border-emerald-400' : 'border-gray-200'
                             }`}
                             onContextMenu={(e) => {
                               e.preventDefault();
@@ -7222,64 +7222,72 @@ const CoachingPage = () => {
                             }}
                           >
                             {/* Day Header */}
-                            <div className={`p-4 text-center border-b ${
+                            <div className={`p-5 text-center border-b-2 ${
                               isToday 
-                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-xl' 
+                                ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-t-lg' 
                                 : isWeekend 
-                                  ? 'bg-gray-100' 
-                                  : 'bg-white'
+                                  ? 'bg-gradient-to-br from-gray-100 to-gray-200' 
+                                  : 'bg-gradient-to-br from-blue-50 to-blue-100'
                             }`}>
-                              <div className={`text-sm font-medium uppercase tracking-wide ${
-                                isToday ? 'text-blue-100' : 'text-gray-500'
+                              <div className={`text-sm font-bold uppercase tracking-wider ${
+                                isToday ? 'text-emerald-100' : 'text-gray-600'
                               }`}>
                                 {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
                               </div>
-                              <div className={`text-2xl font-bold mt-1 ${
+                              <div className={`text-3xl font-bold mt-2 ${
                                 isToday ? 'text-white' : 'text-gray-900'
                               }`}>
                                 {day.getDate()}
                               </div>
+                              <div className={`text-xs mt-1 ${
+                                isToday ? 'text-emerald-100' : 'text-gray-500'
+                              }`}>
+                                {day.toLocaleDateString('fr-FR', { month: 'short' })}
+                              </div>
                             </div>
 
                             {/* Day Content */}
-                            <div className="flex-1 p-4">
+                            <div className="flex-1 p-5 overflow-y-auto">
                               {isWeekend ? (
-                                <div className="text-center py-8">
-                                  <div className="text-gray-400 mb-4">
-                                    <Calendar className="w-8 h-8 mx-auto mb-2" />
-                                    <div className="text-sm">Jour de repos</div>
+                                <div className="text-center py-12">
+                                  <div className="text-gray-400 mb-6">
+                                    <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                    <div className="text-sm font-medium">Jour de repos</div>
                                   </div>
                                   <Button
                                     variant="outline"
-                                    className="w-full border-dashed text-blue-600 border-blue-300 hover:bg-blue-50"
-                                    onClick={() => setShowProgramModal(day)}
+                                    className="w-full border-2 border-dashed text-emerald-600 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400 py-3"
+                                    onClick={() => {
+                                      setSelectedDate(day);
+                                      setShowProgramModal(true);
+                                    }}
                                   >
                                     <Plus className="w-4 h-4 mr-2" />
                                     Exercices à domicile
                                   </Button>
                                 </div>
                               ) : (
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                   {/* Session Actions */}
                                   <div className="flex justify-between items-center mb-4">
-                                    <div className="text-xs text-gray-500">
-                                      {dayProgram?.exercises?.length || 0} exercice(s)
+                                    <div className="text-sm font-semibold text-gray-700">
+                                      {daySession?.exercices?.length || 0} exercice(s)
                                     </div>
-                                    <div className="flex space-x-1">
+                                    <div className="flex space-x-2">
                                       <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => copySession(day)}
-                                        className="p-1 h-6 w-6"
+                                        className="p-2 h-8 w-8 hover:bg-blue-100"
                                         title="Copier la séance"
                                       >
-                                        <Copy className="w-3 h-3" />
+                                        <Copy className="w-4 h-4 text-blue-600" />
                                       </Button>
-                                      {dayProgram && (
+                                      {daySession && (
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          onClick={() => {
+                                          onClick={async () => {
                                             const newPrograms = { ...programs };
                                             const patientId = selectedPatient.id;
                                             const dateKey = day.toISOString().split('T')[0];
