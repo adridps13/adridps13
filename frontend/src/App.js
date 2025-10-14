@@ -6600,6 +6600,204 @@ const NotificationsPage = () => {
 };
 
 // Coaching Page Component (TrueCoach Style)
+// Exercise Card Component - Visual and Editable
+const ExerciseCard = ({ exercise, onUpdate, onDelete, onToggleComplete }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [localExercise, setLocalExercise] = useState(exercise);
+
+  const handleSave = () => {
+    onUpdate(localExercise);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setLocalExercise(exercise);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className={`bg-white border-2 rounded-xl shadow-md hover:shadow-lg transition-all p-5 ${
+      exercise.completed ? 'border-green-400 bg-green-50' : 'border-gray-200'
+    }`}>
+      {/* Exercise Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <h4 className="font-semibold text-gray-900 text-base mb-1">{exercise.nom}</h4>
+          {exercise.notes && (
+            <p className="text-sm text-gray-600 italic">{exercise.notes}</p>
+          )}
+        </div>
+        <div className="flex space-x-1 ml-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onToggleComplete()}
+            className={`p-1 h-7 w-7 ${exercise.completed ? 'text-green-600' : 'text-gray-400'}`}
+            title={exercise.completed ? "Marquer incomplet" : "Marquer complet"}
+          >
+            {exercise.completed ? <CheckCircle className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditing(!isEditing)}
+            className="p-1 h-7 w-7 text-blue-600"
+            title="Modifier"
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="p-1 h-7 w-7 text-red-600"
+            title="Supprimer"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Exercise Parameters */}
+      {isEditing ? (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs font-medium text-gray-700">Séries</Label>
+              <Input
+                type="number"
+                value={localExercise.sets}
+                onChange={(e) => setLocalExercise({...localExercise, sets: parseInt(e.target.value) || 0})}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-medium text-gray-700">Reps</Label>
+              <Input
+                value={localExercise.reps}
+                onChange={(e) => setLocalExercise({...localExercise, reps: e.target.value})}
+                className="h-9 text-sm"
+                placeholder="12 ou 30s"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs font-medium text-gray-700">Tempo</Label>
+              <Input
+                value={localExercise.tempo || ''}
+                onChange={(e) => setLocalExercise({...localExercise, tempo: e.target.value})}
+                className="h-9 text-sm"
+                placeholder="2-0-2-0"
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-medium text-gray-700">Repos</Label>
+              <Input
+                value={localExercise.rest}
+                onChange={(e) => setLocalExercise({...localExercise, rest: e.target.value})}
+                className="h-9 text-sm"
+                placeholder="60s"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label className="text-xs font-medium text-gray-700">Charge</Label>
+              <Input
+                value={localExercise.weight || ''}
+                onChange={(e) => setLocalExercise({...localExercise, weight: e.target.value})}
+                className="h-9 text-sm"
+                placeholder="20kg"
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-medium text-gray-700">RIR</Label>
+              <Input
+                type="number"
+                value={localExercise.rir || ''}
+                onChange={(e) => setLocalExercise({...localExercise, rir: parseInt(e.target.value) || null})}
+                className="h-9 text-sm"
+                placeholder="0-3"
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-medium text-gray-700">RPE</Label>
+              <Input
+                type="number"
+                value={localExercise.rpe || ''}
+                onChange={(e) => setLocalExercise({...localExercise, rpe: parseInt(e.target.value) || null})}
+                className="h-9 text-sm"
+                placeholder="1-10"
+              />
+            </div>
+          </div>
+
+          <div className="flex space-x-2 pt-2">
+            <Button onClick={handleSave} size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700">
+              <Check className="w-4 h-4 mr-1" />
+              Enregistrer
+            </Button>
+            <Button onClick={handleCancel} variant="outline" size="sm" className="flex-1">
+              <X className="w-4 h-4 mr-1" />
+              Annuler
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-medium text-gray-500">Séries:</span>
+              <span className="text-sm font-semibold text-gray-900">{exercise.sets}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-medium text-gray-500">Reps:</span>
+              <span className="text-sm font-semibold text-gray-900">{exercise.reps}</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-medium text-gray-500">Tempo:</span>
+              <span className="text-sm font-semibold text-gray-900">{exercise.tempo || 'N/A'}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-medium text-gray-500">Repos:</span>
+              <span className="text-sm font-semibold text-gray-900">{exercise.rest}</span>
+            </div>
+          </div>
+
+          {(exercise.weight || exercise.rir || exercise.rpe) && (
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-200">
+              {exercise.weight && (
+                <div className="flex items-center space-x-1">
+                  <span className="text-xs text-gray-500">💪</span>
+                  <span className="text-xs font-semibold text-gray-900">{exercise.weight}</span>
+                </div>
+              )}
+              {exercise.rir && (
+                <div className="flex items-center space-x-1">
+                  <span className="text-xs text-gray-500">RIR:</span>
+                  <span className="text-xs font-semibold text-gray-900">{exercise.rir}</span>
+                </div>
+              )}
+              {exercise.rpe && (
+                <div className="flex items-center space-x-1">
+                  <span className="text-xs text-gray-500">RPE:</span>
+                  <span className="text-xs font-semibold text-gray-900">{exercise.rpe}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CoachingPage = () => {
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
