@@ -6400,32 +6400,18 @@ const PractitionersModal = ({ practitioners, onSave, onClose }) => {
                 
                 <div>
                   <Label>Couleur</Label>
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-8 h-8 rounded-full border-2 border-gray-300"
-                      style={{ backgroundColor: newPractitioner.couleur }}
-                    ></div>
-                    <Select 
-                      value={newPractitioner.couleur}
-                      onValueChange={(value) => setNewPractitioner({...newPractitioner, couleur: value})}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {colors.map(color => (
-                          <SelectItem key={color} value={color}>
-                            <div className="flex items-center">
-                              <div 
-                                className="w-4 h-4 rounded-full mr-2"
-                                style={{ backgroundColor: color }}
-                              ></div>
-                              {color}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="flex items-center space-x-1 mt-1">
+                    {colors.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setNewPractitioner({...newPractitioner, couleur: color})}
+                        className={`w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform ${
+                          newPractitioner.couleur === color ? 'border-gray-800' : 'border-gray-300'
+                        }`}
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
