@@ -6866,34 +6866,52 @@ const CoachingPage = () => {
                   </div>
                 </div>
 
-                {/* Week Navigation */}
-                <div className="p-4 border-b bg-gray-50">
+                {/* Week Navigation with Actions */}
+                <div className="p-4 border-b bg-gradient-to-r from-gray-50 to-gray-100">
                   <div className="flex justify-between items-center">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        const newWeek = new Date(currentWeek);
-                        newWeek.setDate(newWeek.getDate() - 7);
-                        setCurrentWeek(newWeek);
-                      }}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    
-                    <h3 className="text-lg font-semibold">
-                      Semaine du {getWeekDays()[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
-                    </h3>
-                    
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        const newWeek = new Date(currentWeek);
-                        newWeek.setDate(newWeek.getDate() + 7);
-                        setCurrentWeek(newWeek);
-                      }}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center space-x-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const newWeek = new Date(currentWeek);
+                          newWeek.setDate(newWeek.getDate() - 7);
+                          setCurrentWeek(newWeek);
+                        }}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      
+                      <h3 className="text-lg font-semibold">
+                        Semaine du {getWeekDays()[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                      </h3>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const newWeek = new Date(currentWeek);
+                          newWeek.setDate(newWeek.getDate() + 7);
+                          setCurrentWeek(newWeek);
+                        }}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      {copiedSession && (
+                        <div className="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-md">
+                          Séance copiée • Clic droit pour coller
+                        </div>
+                      )}
+                      <Button
+                        onClick={duplicateWeek}
+                        variant="outline"
+                        className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Dupliquer semaine
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
