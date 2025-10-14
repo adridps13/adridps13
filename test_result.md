@@ -169,29 +169,41 @@ backend:
         comment: "✅ SYSTÈME MÉDIA COMPLET TESTÉ ET FONCTIONNEL ! Endpoints GET/POST/DELETE /api/patients/{patient_id}/media implémentés. Validation des types de fichiers (images/vidéos), 3 catégories supportées (evaluation, exercice, resultat), génération automatique des noms de fichiers avec timestamp, CRUD complet. Tests: 7/7 réussis - Upload photos ✅, Validation types ✅, Génération noms ✅, Catégories ✅, Récupération ✅, Suppression ✅, Gestion erreurs ✅. Prêt pour capture tablette et documentation clinique."
 
 frontend:
-  - task: "Page Agenda avec vues multiples"
+  - task: "Interface de Coaching Avancée - CoachingPage"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
-    priority: "high" 
-    needs_retesting: false
+    priority: "high"
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Interface agenda complète avec navigation jour/3jours/semaine/mois, créneaux 15min compacts, saisie directe avec autocomplétion, navigation sticky, sidebar catégories colorées. Screenshot confirme fonctionnement parfait."
+        comment: "Refonte complète de CoachingPage avec layout spacieux inspiré TrueCoach. Vue hebdomadaire avec grille 7 jours (gap-6, padding augmenté). Integration complète avec API backend pour persistance. Fonctionnalités: sélection patients sidebar, navigation semaines, copier/coller séances, duplication semaine complète, ajout exercices, notes séance. Screenshot confirme interface spacieuse et moderne avec jour actuel (14 oct) en vert emerald."
 
-  - task: "Gestion catégories de séances personnalisées"
+  - task: "Composant ExerciseCard Visuel et Éditable"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
+    priority: "high"
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Modal de gestion complète des catégories avec CRUD, couleurs, durées, prix. 7 catégories par défaut initialisées. Interface intuitive pour praticiens."
+        comment: "Nouveau composant ExerciseCard avec design spacieux et moderne. Paramètres éditables inline: sets, reps, tempo (2-0-2-0), rest, weight, RIR (0-3), RPE (1-10). Mode édition avec formulaire complet et boutons Enregistrer/Annuler. État complété avec indicateur visuel vert. Actions rapides: éditer, compléter, supprimer. Cartes avec border-2, shadow-md, hover:shadow-lg."
+
+  - task: "Integration Backend API Coaching"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Fonctions async complètes pour API coaching: fetchPatientSessions, addExerciseToDay, updateExerciseParams, deleteExercise, updateSessionNotes, copySession, pasteSession, duplicateWeek, toggleExerciseCompletion. Toutes les actions persistent en MongoDB via endpoints /api/coaching/seances."
 
 metadata:
   created_by: "main_agent"
