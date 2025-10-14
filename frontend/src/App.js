@@ -7028,6 +7028,447 @@ const ProgramModal = ({ selectedDate, exerciseLibrary, onAddExercise, onClose })
   );
 };
 
+// Exercise Assignment Section Component
+const ExerciseAssignmentSection = ({ patient }) => {
+  const [assignedExercises, setAssignedExercises] = useState([]);
+  const [availableExercises, setAvailableExercises] = useState([]);
+  const [showExerciseModal, setShowExerciseModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedBodyPart, setSelectedBodyPart] = useState('tous');
+  const [exerciseStats, setExerciseStats] = useState({});
+
+  useEffect(() => {
+    loadPatientExercises();
+    loadAvailableExercises();
+    loadExerciseStats();
+  }, [patient.id]);
+
+  const loadPatientExercises = async () => {
+    try {
+      // Simulate loading patient exercises
+      const mockExercises = [
+        {
+          id: '1',
+          nom: 'Étirement cervical',
+          zone_corporelle: 'cervical',
+          description: 'Étirement doux des muscles cervicaux',
+          sets: 3,
+          reps: '30s',
+          frequency: 'quotidien',
+          assigned_date: new Date().toISOString(),
+          video_url: 'https://example.com/cervical.mp4'
+        }
+      ];
+      setAssignedExercises(mockExercises);
+    } catch (error) {
+      console.error('Erreur chargement exercices patient:', error);
+    }
+  };
+
+  const loadAvailableExercises = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/exercices`);
+      setAvailableExercises(response.data);
+    } catch (error) {
+      console.error('Erreur chargement exercices:', error);
+    }
+  };
+
+  const loadExerciseStats = async () => {
+    // Simulate exercise usage statistics (most assigned by body part)
+    const stats = {
+      cervical: [
+        { nom: 'Étirement cervical', count: 45 },
+        { nom: 'Rotation cervicale', count: 38 },
+        { nom: 'Renforcement cervical', count: 32 }
+      ],
+      genou: [
+        { nom: 'Squats thérapeutiques', count: 67 },
+        { nom: 'Extension genou', count: 54 },
+        { nom: 'Flexion genou', count: 41 }
+      ],
+      epaule: [
+        { nom: 'Élévation épaule', count: 52 },
+        { nom: 'Rotation externe', count: 44 },
+        { nom: 'Pendulaires', count: 39 }
+      ]
+    };
+    setExerciseStats(stats);
+  };
+
+  const assignExerciseToPatient = async (exercise, params) => {
+    const newAssignment = {
+      id: Date.now().toString(),
+      ...exercise,
+      sets: params.sets || 3,
+      reps: params.reps || 10,
+      frequency: params.frequency || 'quotidien',
+      assigned_date: new Date().toISOString()
+    };
+
+    setAssignedExercises([...assignedExercises, newAssignment]);
+    setShowExerciseModal(false);
+
+    // Update exercise statistics
+    const bodyPart = exercise.zone_corporelle;
+    if (exerciseStats[bodyPart]) {
+      const updated = exerciseStats[bodyPart].map(stat => 
+        stat.nom === exercise.nom 
+          ? { ...stat, count: stat.count + 1 }
+          : stat
+      );
+      setExerciseStats({ ...exerciseStats, [bodyPart]: updated });
+    }
+  };
+
+  const removeExercise = (exerciseId) => {
+    setAssignedExercises(assignedExercises.filter(ex => ex.id !== exerciseId));
+  };
+
+  const bodyParts = ['tous', 'cervical', 'epaule', 'coude', 'poignet', 'thoracique', 'lombaire', 'hanche', 'genou', 'cheville'];
+
+  // Get popular exercises for the selected body part
+  const getPopularExercises = (bodyPart) => {
+    if (bodyPart === 'tous') return [];
+    return exerciseStats[bodyPart]?.slice(0, 3) || [];
+  };
+
+  const filteredExercises = availableExercises.filter(exercise => {
+    const matchesSearch = exercise.nom.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesBodyPart = selectedBodyPart === 'tous' || exercise.zone_corporelle === selectedBodyPart;
+    return matchesSearch && matchesBodyPart;
+  });
+
+  // Sort by popularity for selected body part
+  const sortedExercises = filteredExercises.sort((a, b) => {
+    if (selectedBodyPart === 'tous') return 0;
+    
+    const aStats = exerciseStats[selectedBodyPart]?.find(stat => stat.nom === a.nom);
+    const bStats = exerciseStats[selectedBodyPart]?.find(stat => stat.nom === b.nom);
+    
+    const aCount = aStats?.count || 0;
+    const bCount = bStats?.count || 0;
+    
+    return bCount - aCount; // Most used first
+  });
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-3">
+        <Label className="text-sm font-medium text-gray-600">Exercices Assignés</Label>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowExerciseModal(true)}
+          className="text-blue-600 hover:bg-blue-50"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Ajouter Exercice
+        </Button>
+      </div>
+
+      {/* Assigned Exercises */}
+      <div className="bg-gray-50 p-3 rounded-md">
+        {assignedExercises.length > 0 ? (
+          <div className="space-y-2">
+            {assignedExercises.map((exercise) => (
+              <div key={exercise.id} className="bg-white p-3 rounded-lg border flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-medium text-sm">{exercise.nom}</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {exercise.sets} × {exercise.reps} • {exercise.frequency}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    Zone: {exercise.zone_corporelle}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {/* Open video modal */}}
+                    className="text-gray-600 hover:text-blue-600"
+                  >
+                    <Video className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeExercise(exercise.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-gray-500 text-sm py-4">
+            <Dumbbell className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            Aucun exercice assigné
+          </div>
+        )}
+      </div>
+
+      {/* Exercise Assignment Modal */}
+      {showExerciseModal && (
+        <ExerciseAssignmentModal
+          availableExercises={sortedExercises}
+          popularExercises={getPopularExercises(selectedBodyPart)}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedBodyPart={selectedBodyPart}
+          setSelectedBodyPart={setSelectedBodyPart}
+          bodyParts={bodyParts}
+          exerciseStats={exerciseStats}
+          onAssignExercise={assignExerciseToPatient}
+          onClose={() => setShowExerciseModal(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Exercise Assignment Modal Component
+const ExerciseAssignmentModal = ({ 
+  availableExercises, 
+  popularExercises, 
+  searchTerm, 
+  setSearchTerm, 
+  selectedBodyPart, 
+  setSelectedBodyPart, 
+  bodyParts,
+  exerciseStats,
+  onAssignExercise, 
+  onClose 
+}) => {
+  const [selectedExercise, setSelectedExercise] = useState(null);
+  const [exerciseParams, setExerciseParams] = useState({
+    sets: 3,
+    reps: 10,
+    frequency: 'quotidien'
+  });
+
+  const handleAssign = () => {
+    if (!selectedExercise) return;
+    onAssignExercise(selectedExercise, exerciseParams);
+  };
+
+  const getUsageCount = (exerciseName) => {
+    if (selectedBodyPart === 'tous') return 0;
+    const stat = exerciseStats[selectedBodyPart]?.find(s => s.nom === exerciseName);
+    return stat?.count || 0;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-lg font-semibold">Assigner des Exercices</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="flex h-[calc(90vh-80px)]">
+          {/* Exercise Library */}
+          <div className="flex-1 p-6 border-r">
+            {/* Search and Filter */}
+            <div className="flex gap-4 mb-6">
+              <Input
+                type="text"
+                placeholder="Rechercher un exercice..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1"
+              />
+              <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {bodyParts.map(part => (
+                    <SelectItem key={part} value={part}>
+                      {part.charAt(0).toUpperCase() + part.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Popular Exercises */}
+            {popularExercises.length > 0 && (
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                  <TrendingUp className="w-4 h-4 mr-2 text-orange-600" />
+                  Exercices populaires pour {selectedBodyPart}
+                </h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {popularExercises.map((popular) => {
+                    const exercise = availableExercises.find(ex => ex.nom === popular.nom);
+                    if (!exercise) return null;
+                    
+                    return (
+                      <div
+                        key={exercise.id}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                          selectedExercise?.id === exercise.id
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-orange-200 bg-orange-50 hover:border-orange-300'
+                        }`}
+                        onClick={() => setSelectedExercise(exercise)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{exercise.nom}</div>
+                            <div className="text-xs text-gray-600 mt-1">{exercise.description}</div>
+                          </div>
+                          <div className="flex items-center text-xs text-orange-600">
+                            <TrendingUp className="w-3 h-3 mr-1" />
+                            {popular.count}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* All Exercises */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">
+                Tous les exercices ({availableExercises.length})
+              </h4>
+              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+                {availableExercises.map((exercise) => {
+                  const usageCount = getUsageCount(exercise.nom);
+                  
+                  return (
+                    <div
+                      key={exercise.id}
+                      className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                        selectedExercise?.id === exercise.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-blue-300'
+                      }`}
+                      onClick={() => setSelectedExercise(exercise)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium">{exercise.nom}</div>
+                          <div className="text-sm text-gray-600 mt-1">{exercise.description}</div>
+                          <div className="flex items-center mt-2">
+                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                              {exercise.zone_corporelle}
+                            </span>
+                            {usageCount > 0 && (
+                              <span className="ml-2 text-xs text-gray-500">
+                                Utilisé {usageCount}× 
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <Video className="w-5 h-5 text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Assignment Parameters */}
+          <div className="w-96 p-6 bg-gray-50">
+            {selectedExercise ? (
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-4">Paramètres d'Assignment</h4>
+                
+                <div className="bg-white p-4 rounded-lg border mb-6">
+                  <h5 className="font-medium text-gray-900 mb-2">{selectedExercise.nom}</h5>
+                  <p className="text-sm text-gray-600 mb-3">{selectedExercise.description}</p>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      {selectedExercise.zone_corporelle}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600"
+                    >
+                      <Video className="w-4 h-4 mr-1" />
+                      Voir vidéo
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium">Séries</Label>
+                    <Input
+                      type="number"
+                      value={exerciseParams.sets}
+                      onChange={(e) => setExerciseParams({...exerciseParams, sets: parseInt(e.target.value)})}
+                      min="1"
+                      max="10"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium">Répétitions</Label>
+                    <Input
+                      type="number"
+                      value={exerciseParams.reps}
+                      onChange={(e) => setExerciseParams({...exerciseParams, reps: parseInt(e.target.value)})}
+                      min="1"
+                      max="50"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium">Fréquence</Label>
+                    <Select 
+                      value={exerciseParams.frequency}
+                      onValueChange={(value) => setExerciseParams({...exerciseParams, frequency: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="quotidien">Quotidien</SelectItem>
+                        <SelectItem value="2x/jour">2x par jour</SelectItem>
+                        <SelectItem value="3x/semaine">3x par semaine</SelectItem>
+                        <SelectItem value="hebdomadaire">Hebdomadaire</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleAssign}
+                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Assigner cet Exercice
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 mt-12">
+                <Dumbbell className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p>Sélectionnez un exercice pour configurer l'assignment</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
