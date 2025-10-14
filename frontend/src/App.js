@@ -6702,6 +6702,86 @@ const CoachingPage = () => {
     setPrograms(newPrograms);
   };
 
+  const copySession = (date) => {
+    const dayProgram = getDayProgram(date);
+    if (dayProgram) {
+      setCopiedSession({
+        ...dayProgram,
+        sourceDate: date.toISOString().split('T')[0]
+      });
+    }
+  };
+
+  const pasteSession = (targetDate) => {
+    if (!copiedSession || !selectedPatient) return;
+    
+    const dateKey = targetDate.toISOString().split('T')[0];
+    const patientId = selectedPatient.id;
+    
+    const newPrograms = { ...programs };
+    if (!newPrograms[patientId]) {
+      newPrograms[patientId] = {};
+    }
+    
+    // Deep copy exercises with new IDs
+    const copiedExercises = copiedSession.exercises.map(exercise => ({
+      ...exercise,
+      id: Date.now().toString() + Math.random(),
+      completed: false
+    }));
+    
+    newPrograms[patientId][dateKey] = {
+      exercises: copiedExercises,
+      notes: copiedSession.notes
+    };
+    
+    setPrograms(newPrograms);
+  };
+
+  const duplicateWeek = () => {
+    if (!selectedPatient) return;
+    
+    const currentWeekDays = getWeekDays();
+    const nextWeekDays = currentWeekDays.map(day => {
+      const nextWeek = new Date(day);
+      nextWeek.setDate(day.getDate() + 7);
+      return nextWeek;
+    });
+
+    const patientId = selectedPatient.id;
+    const newPrograms = { ...programs };
+    
+    currentWeekDays.forEach((currentDay, index) => {
+      const dayProgram = getDayProgram(currentDay);
+      if (dayProgram) {
+        const nextDay = nextWeekDays[index];
+        const nextDateKey = nextDay.toISOString().split('T')[0];
+        
+        if (!newPrograms[patientId]) {
+          newPrograms[patientId] = {};
+        }
+        
+        const copiedExercises = dayProgram.exercises.map(exercise => ({
+          ...exercise,
+          id: Date.now().toString() + Math.random(),
+          completed: false
+        }));
+        
+        newPrograms[patientId][nextDateKey] = {
+          exercises: copiedExercises,
+          notes: dayProgram.notes
+        };
+      }
+    });
+    
+    setPrograms(newPrograms);
+    
+    // Move to next week
+    const nextWeek = new Date(currentWeek);
+    nextWeek.setDate(currentWeek.getDate() + 7);
+    setCurrentWeek(nextWeek);
+  };
+
   const toggleExerciseCompletion = (date, exerciseId) => {
     const dateKey = date.toISOString().split('T')[0];
     const patientId = selectedPatient.id;
