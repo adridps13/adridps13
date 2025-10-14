@@ -7478,6 +7478,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/patients" element={<PatientsList />} />
+          <Route path="/patients/:patientId" element={<PatientDetailPage />} />
           <Route path="/nouveau-patient" element={<NewPatientForm />} />
           <Route path="/exercices" element={<ExercicesPage />} />
           <Route path="/programmes" element={<ProgrammesPage />} />
