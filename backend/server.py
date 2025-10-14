@@ -312,6 +312,44 @@ class MetriqueProgression(BaseModel):
     adaptation_auto_appliquee: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Modèles simplifiés pour interface de coaching
+class ExerciceCoaching(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    exercice_id: str  # Référence à la bibliothèque d'exercices
+    nom: str
+    sets: int = 3
+    reps: str = "12"  # Peut être "12" ou "30s" ou "12-15"
+    tempo: Optional[str] = "2-0-2-0"  # Excentrique-Pause-Concentrique-Pause
+    rest: str = "60s"
+    weight: Optional[str] = None  # "20kg" ou "Body weight"
+    rir: Optional[int] = None  # Reps in reserve (0-3)
+    rpe: Optional[int] = None  # Rate of perceived exertion (1-10)
+    notes: Optional[str] = None
+    completed: bool = False
+    ordre: int = 0
+
+class SeanceCoaching(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    date: str  # Format: "YYYY-MM-DD"
+    exercices: List[ExerciceCoaching] = []
+    notes: Optional[str] = None
+    duree_estimee: Optional[int] = None  # minutes
+    statut: str = "planifie"  # planifie, en_cours, termine
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SeanceCoachingCreate(BaseModel):
+    patient_id: str
+    date: str
+    exercices: List[Dict[str, Any]] = []
+    notes: Optional[str] = None
+
+class SeanceCoachingUpdate(BaseModel):
+    exercices: Optional[List[Dict[str, Any]]] = None
+    notes: Optional[str] = None
+    statut: Optional[str] = None
+
 # Fonctions de calcul pour le système de programmation
 def calculer_charge_exercice(exercice_data: Dict[str, Any]) -> float:
     """
