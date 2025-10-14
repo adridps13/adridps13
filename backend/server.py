@@ -889,6 +889,70 @@ async def update_seance_detail(seance_id: str, seance_update: SeanceUpdate):
     updated_seance = await db.seances_detail.find_one({"id": seance_id})
     return SeanceDetail(**updated_seance)
 
+# Routes Coaching (interface simplifiée)
+@api_router.post("/coaching/seances", response_model=SeanceCoaching)
+async def create_seance_coaching(seance: SeanceCoachingCreate):
+    seance_dict = seance.dict()
+    seance_obj = SeanceCoaching(**seance_dict)
+    await db.seances_coaching.insert_one(seance_obj.dict())
+    return seance_obj
+
+@api_router.get("/coaching/seances/patient/{patient_id}", response_model=List[SeanceCoaching])
+async def get_seances_coaching_by_patient(patient_id: str):
+    seances = await db.seances_coaching.find({"patient_id": patient_id}).to_list(1000)
+    return [SeanceCoaching(**seance) for seance in seances]
+
+@api_router.get("/coaching/seances/patient/{patient_id}/date/{date}")
+async def get_seance_coaching_by_date(patient_id: str, date: str):
+    seance = await db.seances_coaching.find_one({"patient_id": patient_id, "date": date})
+    if not seance:
+        return None
+    return SeanceCoaching(**seance)
+
+@api_router.put("/coaching/seances/{seance_id}", response_model=SeanceCoaching)
+async def update_seance_coaching(seance_id: str, seance_update: SeanceCoachingUpdate):
+    existing_seance = await db.seances_coaching.find_one({"id": seance_id})
+    if not existing_seance:
+        raise HTTPException(status_code=404, detail="Séance non trouvée")
+    
+    update_dict = seance_update.dict(exclude_unset=True)
+    update_dict['updated_at'] = datetime.now(timezone.utc)
+    
+    await db.seances_coaching.update_one({"id": seance_id}, {"$set": update_dict})
+    
+    updated_seance = await db.seances_coaching.find_one({"id": seance_id})
+    return SeanceCoaching(**updated_seance)
+
+@api_router.delete("/coaching/seances/{seance_id}")
+async def delete_seance_coaching(seance_id: str):
+    result = await db.seances_coaching.delete_one({"id": seance_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Séance non trouvée")
+    return {"message": "Séance supprimée avec succès"}
+
+@api_router.post("/coaching/seances/duplicate/{seance_id}", response_model=SeanceCoaching)
+async def duplicate_seance_coaching(seance_id: str, new_date: str):
+    original_seance = await db.seances_coaching.find_one({"id": seance_id})
+    if not original_seance:
+        raise HTTPException(status_code=404, detail="Séance originale non trouvée")
+    
+    # Créer une copie avec un nouvel ID et une nouvelle date
+    new_seance_dict = SeanceCoaching(**original_seance).dict()
+    new_seance_dict['id'] = str(uuid.uuid4())
+    new_seance_dict['date'] = new_date
+    new_seance_dict['statut'] = 'planifie'
+    new_seance_dict['created_at'] = datetime.now(timezone.utc)
+    new_seance_dict['updated_at'] = datetime.now(timezone.utc)
+    
+    # Réinitialiser les exercices comme non complétés
+    for exercice in new_seance_dict.get('exercices', []):
+        exercice['completed'] = False
+        exercice['id'] = str(uuid.uuid4())
+    
+    new_seance = SeanceCoaching(**new_seance_dict)
+    await db.seances_coaching.insert_one(new_seance.dict())
+    return new_seance
+
 # Route pour calculer les métriques de progression
 @api_router.post("/metriques/calculer/{programme_id}")
 async def calculer_metriques_progression(programme_id: str):
