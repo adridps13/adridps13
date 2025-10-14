@@ -533,6 +533,9 @@ const PatientsList = () => {
                 {/* Photos/Vidéos Section */}
                 <MediaSection patient={selectedPatient} />
                 
+                {/* Exercise Assignment Section */}
+                <ExerciseAssignmentSection patient={selectedPatient} />
+                
                 <Separator />
                 
                 <div>
