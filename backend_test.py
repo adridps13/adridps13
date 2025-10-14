@@ -13,7 +13,7 @@ from PIL import Image
 import io
 
 class KineTrackAPITester:
-    def __init__(self, base_url="https://kinetrack-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://kinetrack-app.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
