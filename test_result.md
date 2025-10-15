@@ -216,9 +216,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Interface de Coaching Avancée - CoachingPage"
-    - "Composant ExerciseCard Visuel et Éditable"
-    - "Integration Backend API Coaching"
+    - "Pain Drawing Mark Laslett - Canvas Dessinable"
+    - "Zone Notes Cliniques Étendue - Patient Detail"
+    - "Notifications Cliquables avec Redirection"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
