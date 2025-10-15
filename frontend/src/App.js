@@ -7188,17 +7188,17 @@ const CoachingPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header - Pleine largeur */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="px-6 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Coaching</h1>
-              <p className="text-gray-600 mt-1">Programmes d'exercices personnalisés</p>
+              <h1 className="text-2xl font-bold text-gray-900">Coaching - Programme d'exercices</h1>
+              <p className="text-gray-600 mt-1 text-sm">Vue hebdomadaire des séances</p>
             </div>
             <Button 
               onClick={() => setShowProgramModal(true)}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-emerald-600 hover:bg-emerald-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nouveau Programme
@@ -7207,10 +7207,10 @@ const CoachingPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="flex gap-6 h-[calc(100vh-200px)]">
-          {/* Patient Sidebar */}
-          <div className="w-80 bg-white rounded-lg shadow-sm border overflow-y-auto">
+      {/* Layout pleine largeur sans max-width */}
+      <div className="flex h-[calc(100vh-80px)]">
+        {/* Patient Sidebar - Plus compact */}
+        <div className="w-72 bg-white border-r shadow-sm overflow-y-auto flex-shrink-0">
             <div className="p-4 border-b">
               <h3 className="font-semibold text-gray-900">Patients</h3>
             </div>
