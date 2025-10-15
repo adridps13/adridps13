@@ -6545,27 +6545,32 @@ const NotificationsPage = () => {
   const [filter, setFilter] = useState('all'); // all, sessions, exercises, progress
 
   useEffect(() => {
-    // Simulate notifications data
+    // Simulate notifications data with patient IDs
     const mockNotifications = [
       {
         id: '1',
         type: 'session_completed',
+        patientId: 'patient_1',
         patientName: 'Marie Dupont',
         message: 'a validé sa séance du 30/08/2025',
         timestamp: new Date().toISOString(),
-        read: false
+        read: false,
+        sessionDate: '2025-08-30'
       },
       {
         id: '2', 
         type: 'exercise_completed',
+        patientId: 'patient_2',
         patientName: 'Pierre Martin',
         message: 'a complété l\'exercice "Étirement cervical" avec une charge de 5kg',
         timestamp: new Date(Date.now() - 3600000).toISOString(),
-        read: false
+        read: false,
+        exerciseId: 'ex_1'
       },
       {
         id: '3',
         type: 'pain_reported',
+        patientId: 'patient_3',
         patientName: 'Sophie Blanc',
         message: 'a signalé une douleur niveau 6/10 après l\'exercice',
         timestamp: new Date(Date.now() - 7200000).toISOString(),
