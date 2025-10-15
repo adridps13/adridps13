@@ -75,6 +75,7 @@ const Navigation = () => {
     { path: '/nouveau-patient', label: 'Nouveau Patient', icon: UserPlus },
     { path: '/exercices', label: 'Exercices', icon: Dumbbell },
     { path: '/programmes', label: 'Programmes', icon: Calendar },
+    { path: '/coaching', label: 'Coaching', icon: Target },
     { path: '/agenda', label: 'Agenda', icon: Clock },
     { path: '/messagerie', label: 'Messagerie', icon: MessageCircle },
     { path: '/notifications', label: 'Notifications', icon: Bell },
