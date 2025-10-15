@@ -7187,9 +7187,10 @@ const CoachingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header - Pleine largeur */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+    <>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header - Pleine largeur */}
+        <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-6 py-4">
           <div className="flex justify-between items-center">
             <div>
