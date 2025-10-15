@@ -172,7 +172,7 @@ backend:
         comment: "✅ SYSTÈME MÉDIA COMPLET TESTÉ ET FONCTIONNEL ! Endpoints GET/POST/DELETE /api/patients/{patient_id}/media implémentés. Validation des types de fichiers (images/vidéos), 3 catégories supportées (evaluation, exercice, resultat), génération automatique des noms de fichiers avec timestamp, CRUD complet. Tests: 7/7 réussis - Upload photos ✅, Validation types ✅, Génération noms ✅, Catégories ✅, Récupération ✅, Suppression ✅, Gestion erreurs ✅. Prêt pour capture tablette et documentation clinique."
 
 frontend:
-  - task: "Interface de Coaching Avancée - CoachingPage"
+  - task: "Pain Drawing Mark Laslett - Canvas Dessinable"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
@@ -182,9 +182,9 @@ frontend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Refonte complète de CoachingPage avec layout spacieux inspiré TrueCoach. Vue hebdomadaire avec grille 7 jours (gap-6, padding augmenté). Integration complète avec API backend pour persistance. Fonctionnalités: sélection patients sidebar, navigation semaines, copier/coller séances, duplication semaine complète, ajout exercices, notes séance. Screenshot confirme interface spacieuse et moderne avec jour actuel (14 oct) en vert emerald."
+        comment: "Nouveau composant PainDrawing avec canvas HTML5 dessinable (600x800px). Compatible souris et stylet tablette (touch events). Body chart anatomique SVG (vue face + dos) en arrière-plan. 6 codes couleurs Mark Laslett: Rouge (douleur aiguë), Jaune (profonde), Bleu (chaud/froid), Vert (fourmillement), Noir (engourdissement), Marron (raideur). Contrôle taille pinceau 2-15px. Bouton Effacer. Drawing data sauvegardable via callback onDrawingUpdate."
 
-  - task: "Composant ExerciseCard Visuel et Éditable"
+  - task: "Zone Notes Cliniques Étendue - Patient Detail"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
@@ -194,9 +194,9 @@ frontend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Nouveau composant ExerciseCard avec design spacieux et moderne. Paramètres éditables inline: sets, reps, tempo (2-0-2-0), rest, weight, RIR (0-3), RPE (1-10). Mode édition avec formulaire complet et boutons Enregistrer/Annuler. État complété avec indicateur visuel vert. Actions rapides: éditer, compléter, supprimer. Cartes avec border-2, shadow-md, hover:shadow-lg."
+        comment: "Grande zone notes (Textarea 4 lignes min) ajoutée en haut de PatientDetailPage, avant les tabs. Fond bleu clair (bg-blue-50) avec bordure bleue (border-2 border-blue-200). Titre 'Notes Cliniques - Ce que raconte le patient' avec icône FileText. Bouton Enregistrer visible. Placeholder descriptif. Message d'aide pratique. Persistance via PUT /api/patients/{id}. Screenshot confirme visibilité et design."
 
-  - task: "Integration Backend API Coaching"
+  - task: "Notifications Cliquables avec Redirection"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
@@ -206,7 +206,7 @@ frontend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Fonctions async complètes pour API coaching: fetchPatientSessions, addExerciseToDay, updateExerciseParams, deleteExercise, updateSessionNotes, copySession, pasteSession, duplicateWeek, toggleExerciseCompletion. Toutes les actions persistent en MongoDB via endpoints /api/coaching/seances."
+        comment: "Fonction handleNotificationClick() implémentée dans NotificationsPage. Redirection automatique selon type: session_completed → /coaching?patient={id}&date={date}, exercise_completed/pain_reported → /patients/{patientId}. Marquage automatique 'lu' au clic. Effet hover amélioré (scale-[1.01] + shadow-lg). Mock notifications enrichies avec patientId, sessionDate, exerciseId."
 
 metadata:
   created_by: "main_agent"
