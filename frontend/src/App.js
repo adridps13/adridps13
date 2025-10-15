@@ -6617,6 +6617,47 @@ const NotificationsPage = () => {
   );
 };
 
+// Coaching Page Component (placeholder pour implémentation complète)
+const CoachingPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Coaching</h1>
+          <p className="text-gray-600 mt-2">Interface de coaching avancé - En cours d'implémentation</p>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Programme d'exercices personnalisés</CardTitle>
+            <CardDescription>
+              Gérez les séances d'exercices de vos patients avec une interface visuelle et intuitive
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <Sparkles className="w-4 h-4" />
+              <AlertDescription>
+                L'interface de coaching complète sera disponible prochainement. 
+                Vous pouvez actuellement accéder au coaching d'un patient via la liste des patients.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="mt-6">
+              <Link to="/patients">
+                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                  <Users className="w-4 h-4 mr-2" />
+                  Aller à la liste des patients
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
