@@ -75,7 +75,6 @@ const Navigation = () => {
     { path: '/nouveau-patient', label: 'Nouveau Patient', icon: UserPlus },
     { path: '/exercices', label: 'Exercices', icon: Dumbbell },
     { path: '/programmes', label: 'Programmes', icon: Calendar },
-    { path: '/coaching', label: 'Coaching', icon: Target },
     { path: '/agenda', label: 'Agenda', icon: Clock },
     { path: '/messagerie', label: 'Messagerie', icon: MessageCircle },
     { path: '/notifications', label: 'Notifications', icon: Bell },
@@ -433,9 +432,7 @@ const PatientsList = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    window.location.href = `/patients/${patient.id}`;
-                  }}
+                  onClick={() => handleViewPatient(patient)}
                   className="flex-1"
                 >
                   <Eye className="w-4 h-4 mr-1" />
@@ -534,9 +531,6 @@ const PatientsList = () => {
 
                 {/* Photos/Vidéos Section */}
                 <MediaSection patient={selectedPatient} />
-                
-                {/* Exercise Assignment Section */}
-                <ExerciseAssignmentSection patient={selectedPatient} />
                 
                 <Separator />
                 
@@ -1269,227 +1263,141 @@ const NewPatientForm = () => {
 };
 
 // Pain Drawing Component
-// Pain Drawing Component - Mark Laslett Style with Canvas Drawing
-const PainDrawing = ({ painAreas, onPainAreaClick, onDrawingUpdate }) => {
-  const canvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [selectedColor, setSelectedColor] = useState('#FF0000'); // Rouge par défaut
-  const [brushSize, setBrushSize] = useState(5);
-  const [drawingData, setDrawingData] = useState([]);
-
-  // Codes couleurs Mark Laslett
-  const painColors = [
-    { id: 1, color: '#FF0000', name: 'Douleur aiguë', label: 'Rouge: Douleur aiguë, coup de poignard, pincement, élancement, traitement' },
-    { id: 2, color: '#FFFF00', name: 'Douleur profonde', label: 'Jaune: Douleur profonde, difficile à localiser précisément, sourde, floue' },
-    { id: 3, color: '#0000FF', name: 'Chaud/Froid', label: 'Bleu: Sensation de chaud ou de froid' },
-    { id: 4, color: '#00FF00', name: 'Fourmillement', label: 'Vert: Sensation de fourmillement ou de piqûre d\'aiguille' },
-    { id: 5, color: '#000000', name: 'Engourdissement', label: 'Noir: Engourdissement, anesthésie, perte de sensation' },
-    { id: 6, color: '#8B4513', name: 'Raideur/Fatigue', label: 'Marron: Sensation de raideur, de fatigue, autre' }
+const PainDrawing = ({ painAreas, onPainAreaClick }) => {
+  const bodyParts = [
+    { id: 'tete', name: 'Tête', x: 150, y: 30, width: 60, height: 50 },
+    { id: 'cou', name: 'Cou', x: 160, y: 80, width: 40, height: 25 },
+    { id: 'epaule_g', name: 'Épaule G', x: 110, y: 105, width: 40, height: 30 },
+    { id: 'epaule_d', name: 'Épaule D', x: 210, y: 105, width: 40, height: 30 },
+    { id: 'bras_g', name: 'Bras G', x: 90, y: 135, width: 25, height: 60 },
+    { id: 'bras_d', name: 'Bras D', x: 245, y: 135, width: 25, height: 60 },
+    { id: 'coude_g', name: 'Coude G', x: 85, y: 195, width: 30, height: 20 },
+    { id: 'coude_d', name: 'Coude D', x: 245, y: 195, width: 30, height: 20 },
+    { id: 'avant_bras_g', name: 'Avant-bras G', x: 90, y: 215, width: 25, height: 50 },
+    { id: 'avant_bras_d', name: 'Avant-bras D', x: 245, y: 215, width: 25, height: 50 },
+    { id: 'main_g', name: 'Main G', x: 85, y: 265, width: 30, height: 25 },
+    { id: 'main_d', name: 'Main D', x: 245, y: 265, width: 30, height: 25 },
+    { id: 'thorax', name: 'Thorax', x: 140, y: 105, width: 80, height: 60 },
+    { id: 'abdomen', name: 'Abdomen', x: 145, y: 165, width: 70, height: 50 },
+    { id: 'dos_haut', name: 'Dos Haut', x: 145, y: 105, width: 70, height: 40 },
+    { id: 'dos_bas', name: 'Dos Bas', x: 145, y: 145, width: 70, height: 50 },
+    { id: 'bassin', name: 'Bassin', x: 145, y: 215, width: 70, height: 40 },
+    { id: 'cuisse_g', name: 'Cuisse G', x: 140, y: 255, width: 30, height: 70 },
+    { id: 'cuisse_d', name: 'Cuisse D', x: 190, y: 255, width: 30, height: 70 },
+    { id: 'genou_g', name: 'Genou G', x: 140, y: 325, width: 30, height: 25 },
+    { id: 'genou_d', name: 'Genou D', x: 190, y: 325, width: 30, height: 25 },
+    { id: 'jambe_g', name: 'Jambe G', x: 140, y: 350, width: 25, height: 60 },
+    { id: 'jambe_d', name: 'Jambe D', x: 195, y: 350, width: 25, height: 60 },
+    { id: 'cheville_g', name: 'Cheville G', x: 140, y: 410, width: 25, height: 20 },
+    { id: 'cheville_d', name: 'Cheville D', x: 195, y: 410, width: 25, height: 20 },
+    { id: 'pied_g', name: 'Pied G', x: 135, y: 430, width: 30, height: 20 },
+    { id: 'pied_d', name: 'Pied D', x: 195, y: 430, width: 30, height: 20 }
   ];
 
-  const startDrawing = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-    const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
-
-    setIsDrawing(true);
-    const ctx = canvas.getContext('2d');
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
-
-  const draw = (e) => {
-    if (!isDrawing) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-    const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
-
-    const ctx = canvas.getContext('2d');
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = selectedColor;
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-
-    // Save drawing data
-    const newPoint = { x, y, color: selectedColor, size: brushSize };
-    setDrawingData([...drawingData, newPoint]);
-  };
-
-  const stopDrawing = () => {
-    if (isDrawing) {
-      setIsDrawing(false);
-      if (onDrawingUpdate) {
-        onDrawingUpdate(drawingData);
-      }
-    }
-  };
-
-  const clearCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    setDrawingData([]);
-    if (onDrawingUpdate) {
-      onDrawingUpdate([]);
-    }
+  const getPainColor = (bodyPartId) => {
+    if (!painAreas[bodyPartId]) return 'transparent';
+    const intensity = painAreas[bodyPartId];
+    if (intensity <= 3) return 'rgba(34, 197, 94, 0.6)'; // Vert (léger)
+    if (intensity <= 6) return 'rgba(251, 191, 36, 0.6)'; // Jaune (modéré)
+    return 'rgba(239, 68, 68, 0.6)'; // Rouge (intense)
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg border shadow-md">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-gray-900">Body Chart (code couleur M.Laslett)</h3>
+    <div className="bg-white p-4 rounded-lg border shadow-sm">
+      <h3 className="font-medium text-gray-900 mb-4 text-center">Dessin de la Douleur</h3>
+      <p className="text-sm text-gray-600 mb-4 text-center">
+        Cliquez sur les zones douloureuses pour indiquer l'intensité (1-10)
+      </p>
+      
+      <div className="flex justify-center mb-4">
+        <svg width="360" height="470" viewBox="0 0 360 470" className="border rounded">
+          {/* Corps humain simplifié */}
+          <defs>
+            <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style={{stopColor:'#f8fafc', stopOpacity:1}} />
+              <stop offset="100%" style={{stopColor:'#e2e8f0', stopOpacity:1}} />
+            </linearGradient>
+          </defs>
+          
+          {/* Anatomie de base */}
+          {/* Tête */}
+          <circle cx="180" cy="55" r="25" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Corps */}
+          <rect x="145" y="105" width="70" height="110" rx="15" fill="url(#bodyGradient)" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Bras */}
+          <rect x="95" y="135" width="20" height="80" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="245" y="135" width="20" height="80" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Mains */}
+          <ellipse cx="100" cy="275" rx="12" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="260" cy="275" rx="12" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Jambes */}
+          <rect x="145" y="255" width="25" height="100" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          <rect x="190" y="255" width="25" height="100" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Pieds */}
+          <ellipse cx="150" cy="440" rx="15" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          <ellipse cx="210" cy="440" rx="15" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
+          
+          {/* Zones cliquables pour douleur */}
+          {bodyParts.map((part) => (
+            <g key={part.id}>
+              <rect
+                x={part.x}
+                y={part.y}
+                width={part.width}
+                height={part.height}
+                fill={getPainColor(part.id)}
+                stroke={painAreas[part.id] ? "#ef4444" : "transparent"}
+                strokeWidth="2"
+                rx="5"
+                className="cursor-pointer hover:stroke-emerald-500 transition-all"
+                onClick={() => onPainAreaClick(part.id)}
+              />
+              {painAreas[part.id] && (
+                <text
+                  x={part.x + part.width/2}
+                  y={part.y + part.height/2 + 5}
+                  textAnchor="middle"
+                  className="text-xs font-bold fill-white pointer-events-none"
+                  style={{fontSize: '12px'}}
+                >
+                  {painAreas[part.id]}
+                </text>
+              )}
+            </g>
+          ))}
+        </svg>
+      </div>
+      
+      {/* Légende */}
+      <div className="flex justify-center space-x-4 text-xs">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-green-400 rounded"></div>
+          <span>Léger (1-3)</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+          <span>Modéré (4-6)</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-red-400 rounded"></div>
+          <span>Intense (7-10)</span>
+        </div>
+      </div>
+      
+      <div className="mt-3 text-center">
         <Button
-          onClick={clearCanvas}
           variant="outline"
           size="sm"
-          className="text-red-600 border-red-600 hover:bg-red-50"
+          onClick={() => onPainAreaClick('clear')}
+          className="text-xs"
         >
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Effacer
+          Effacer tout
         </Button>
-      </div>
-
-      <p className="text-sm text-gray-600 mb-4">
-        Dessinez sur le corps humain pour indiquer les zones de douleur (compatible souris et stylet)
-      </p>
-
-      {/* Color Palette - Mark Laslett */}
-      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-        <p className="text-sm font-semibold text-gray-700 mb-3">Sélectionnez le type de douleur :</p>
-        <div className="grid grid-cols-1 gap-2">
-          {painColors.map((painType) => (
-            <button
-              key={painType.id}
-              onClick={() => setSelectedColor(painType.color)}
-              className={`flex items-center space-x-3 p-2 rounded-lg border-2 transition-all hover:bg-white ${
-                selectedColor === painType.color ? 'border-emerald-500 bg-white shadow-md' : 'border-transparent'
-              }`}
-            >
-              <div 
-                className="w-8 h-8 rounded border-2 border-gray-300 flex-shrink-0"
-                style={{ backgroundColor: painType.color }}
-              ></div>
-              <span className="text-xs text-gray-700 text-left flex-1">{painType.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Brush Size Control */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-        <Label className="text-sm font-semibold text-gray-700 mb-2 block">
-          Taille du pinceau: {brushSize}px
-        </Label>
-        <input
-          type="range"
-          min="2"
-          max="15"
-          value={brushSize}
-          onChange={(e) => setBrushSize(parseInt(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
-        />
-      </div>
-
-      {/* Canvas Drawing Area with Body Chart Background */}
-      <div className="flex justify-center mb-4 bg-white p-4 rounded-lg border-2 border-gray-300">
-        <div className="relative">
-          {/* Background Body Chart SVG */}
-          <svg 
-            width="600" 
-            height="800" 
-            viewBox="0 0 600 800" 
-            className="absolute top-0 left-0 pointer-events-none"
-            style={{ zIndex: 1 }}
-          >
-            {/* Vue de face */}
-            <g transform="translate(100, 50)">
-              {/* Tête */}
-              <ellipse cx="100" cy="40" rx="35" ry="45" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Cou */}
-              <rect x="85" y="85" width="30" height="20" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Corps/Torse */}
-              <ellipse cx="100" cy="170" rx="55" ry="80" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Bras gauche */}
-              <line x1="45" y1="120" x2="20" y2="180" stroke="#cbd5e1" strokeWidth="2"/>
-              <line x1="20" y1="180" x2="15" y2="240" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Bras droit */}
-              <line x1="155" y1="120" x2="180" y2="180" stroke="#cbd5e1" strokeWidth="2"/>
-              <line x1="180" y1="180" x2="185" y2="240" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Mains */}
-              <ellipse cx="15" cy="250" rx="8" ry="12" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              <ellipse cx="185" cy="250" rx="8" ry="12" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Bassin */}
-              <rect x="65" y="250" width="70" height="40" rx="10" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Jambe gauche */}
-              <line x1="75" y1="290" x2="70" y2="400" stroke="#cbd5e1" strokeWidth="2"/>
-              <line x1="70" y1="400" x2="68" y2="500" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Jambe droite */}
-              <line x1="125" y1="290" x2="130" y2="400" stroke="#cbd5e1" strokeWidth="2"/>
-              <line x1="130" y1="400" x2="132" y2="500" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Pieds */}
-              <ellipse cx="68" cy="510" rx="12" ry="6" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              <ellipse cx="132" cy="510" rx="12" ry="6" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-            </g>
-
-            {/* Vue de dos */}
-            <g transform="translate(350, 50)">
-              {/* Tête dos */}
-              <ellipse cx="100" cy="40" rx="35" ry="45" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Cou */}
-              <rect x="85" y="85" width="30" height="20" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Dos */}
-              <ellipse cx="100" cy="170" rx="55" ry="80" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Colonne vertébrale */}
-              <line x1="100" y1="100" x2="100" y2="250" stroke="#cbd5e1" strokeWidth="1" strokeDasharray="3,3"/>
-              {/* Bras gauche */}
-              <line x1="45" y1="120" x2="20" y2="180" stroke="#cbd5e1" strokeWidth="2"/>
-              <line x1="20" y1="180" x2="15" y2="240" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Bras droit */}
-              <line x1="155" y1="120" x2="180" y2="180" stroke="#cbd5e1" strokeWidth="2"/>
-              <line x1="180" y1="180" x2="185" y2="240" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Mains */}
-              <ellipse cx="15" cy="250" rx="8" ry="12" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              <ellipse cx="185" cy="250" rx="8" ry="12" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Bassin */}
-              <rect x="65" y="250" width="70" height="40" rx="10" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Jambe gauche */}
-              <line x1="75" y1="290" x2="70" y2="400" stroke="#cbd5e1" strokeWidth="2"/>
-              <line x1="70" y1="400" x2="68" y2="500" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Jambe droite */}
-              <line x1="125" y1="290" x2="130" y2="400" stroke="#cbd5e1" strokeWidth="2"/>
-              <line x1="130" y1="400" x2="132" y2="500" stroke="#cbd5e1" strokeWidth="2"/>
-              {/* Pieds */}
-              <ellipse cx="68" cy="510" rx="12" ry="6" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-              <ellipse cx="132" cy="510" rx="12" ry="6" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
-            </g>
-          </svg>
-
-          {/* Drawing Canvas */}
-          <canvas
-            ref={canvasRef}
-            width={600}
-            height={800}
-            className="border-2 border-gray-400 rounded cursor-crosshair"
-            style={{ touchAction: 'none', zIndex: 2, position: 'relative' }}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-          />
-        </div>
       </div>
     </div>
   );
@@ -6545,32 +6453,27 @@ const NotificationsPage = () => {
   const [filter, setFilter] = useState('all'); // all, sessions, exercises, progress
 
   useEffect(() => {
-    // Simulate notifications data with patient IDs
+    // Simulate notifications data
     const mockNotifications = [
       {
         id: '1',
         type: 'session_completed',
-        patientId: 'patient_1',
         patientName: 'Marie Dupont',
         message: 'a validé sa séance du 30/08/2025',
         timestamp: new Date().toISOString(),
-        read: false,
-        sessionDate: '2025-08-30'
+        read: false
       },
       {
         id: '2', 
         type: 'exercise_completed',
-        patientId: 'patient_2',
         patientName: 'Pierre Martin',
         message: 'a complété l\'exercice "Étirement cervical" avec une charge de 5kg',
         timestamp: new Date(Date.now() - 3600000).toISOString(),
-        read: false,
-        exerciseId: 'ex_1'
+        read: false
       },
       {
         id: '3',
         type: 'pain_reported',
-        patientId: 'patient_3',
         patientName: 'Sophie Blanc',
         message: 'a signalé une douleur niveau 6/10 après l\'exercice',
         timestamp: new Date(Date.now() - 7200000).toISOString(),
@@ -6596,21 +6499,6 @@ const NotificationsPage = () => {
     setNotifications(notifications.map(n => 
       n.id === notificationId ? { ...n, read: true } : n
     ));
-  };
-
-  const handleNotificationClick = (notification) => {
-    markAsRead(notification.id);
-    
-    // Rediriger vers la page patient appropriée
-    if (notification.patientId) {
-      if (notification.type === 'session_completed' && notification.sessionDate) {
-        // Rediriger vers la page coaching avec la date de la séance
-        window.location.href = `/coaching?patient=${notification.patientId}&date=${notification.sessionDate}`;
-      } else {
-        // Rediriger vers la fiche patient
-        window.location.href = `/patients/${notification.patientId}`;
-      }
-    }
   };
 
   const getNotificationIcon = (type) => {
@@ -6664,10 +6552,10 @@ const NotificationsPage = () => {
           {filterNotifications().map((notification) => (
             <Card 
               key={notification.id}
-              className={`p-4 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.01] ${
+              className={`p-4 cursor-pointer transition-all hover:shadow-md ${
                 !notification.read ? 'border-l-4 border-l-emerald-500 bg-emerald-50' : ''
               }`}
-              onClick={() => handleNotificationClick(notification)}
+              onClick={() => markAsRead(notification.id)}
             >
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0 mt-1">
@@ -6705,1767 +6593,6 @@ const NotificationsPage = () => {
   );
 };
 
-// Coaching Page Component (TrueCoach Style)
-// Exercise Card Component - Visual and Editable
-const ExerciseCard = ({ exercise, onUpdate, onDelete, onToggleComplete }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [localExercise, setLocalExercise] = useState(exercise);
-
-  const handleSave = () => {
-    onUpdate(localExercise);
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setLocalExercise(exercise);
-    setIsEditing(false);
-  };
-
-  return (
-    <div className={`bg-white border-2 rounded-xl shadow-md hover:shadow-lg transition-all p-5 ${
-      exercise.completed ? 'border-green-400 bg-green-50' : 'border-gray-200'
-    }`}>
-      {/* Exercise Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h4 className="font-semibold text-gray-900 text-base mb-1">{exercise.nom}</h4>
-          {exercise.notes && (
-            <p className="text-sm text-gray-600 italic">{exercise.notes}</p>
-          )}
-        </div>
-        <div className="flex space-x-1 ml-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onToggleComplete()}
-            className={`p-1 h-7 w-7 ${exercise.completed ? 'text-green-600' : 'text-gray-400'}`}
-            title={exercise.completed ? "Marquer incomplet" : "Marquer complet"}
-          >
-            {exercise.completed ? <CheckCircle className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(!isEditing)}
-            className="p-1 h-7 w-7 text-blue-600"
-            title="Modifier"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDelete}
-            className="p-1 h-7 w-7 text-red-600"
-            title="Supprimer"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Exercise Parameters */}
-      {isEditing ? (
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs font-medium text-gray-700">Séries</Label>
-              <Input
-                type="number"
-                value={localExercise.sets}
-                onChange={(e) => setLocalExercise({...localExercise, sets: parseInt(e.target.value) || 0})}
-                className="h-9 text-sm"
-              />
-            </div>
-            <div>
-              <Label className="text-xs font-medium text-gray-700">Reps</Label>
-              <Input
-                value={localExercise.reps}
-                onChange={(e) => setLocalExercise({...localExercise, reps: e.target.value})}
-                className="h-9 text-sm"
-                placeholder="12 ou 30s"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs font-medium text-gray-700">Tempo</Label>
-              <Input
-                value={localExercise.tempo || ''}
-                onChange={(e) => setLocalExercise({...localExercise, tempo: e.target.value})}
-                className="h-9 text-sm"
-                placeholder="2-0-2-0"
-              />
-            </div>
-            <div>
-              <Label className="text-xs font-medium text-gray-700">Repos</Label>
-              <Input
-                value={localExercise.rest}
-                onChange={(e) => setLocalExercise({...localExercise, rest: e.target.value})}
-                className="h-9 text-sm"
-                placeholder="60s"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <Label className="text-xs font-medium text-gray-700">Charge</Label>
-              <Input
-                value={localExercise.weight || ''}
-                onChange={(e) => setLocalExercise({...localExercise, weight: e.target.value})}
-                className="h-9 text-sm"
-                placeholder="20kg"
-              />
-            </div>
-            <div>
-              <Label className="text-xs font-medium text-gray-700">RIR</Label>
-              <Input
-                type="number"
-                value={localExercise.rir || ''}
-                onChange={(e) => setLocalExercise({...localExercise, rir: parseInt(e.target.value) || null})}
-                className="h-9 text-sm"
-                placeholder="0-3"
-              />
-            </div>
-            <div>
-              <Label className="text-xs font-medium text-gray-700">RPE</Label>
-              <Input
-                type="number"
-                value={localExercise.rpe || ''}
-                onChange={(e) => setLocalExercise({...localExercise, rpe: parseInt(e.target.value) || null})}
-                className="h-9 text-sm"
-                placeholder="1-10"
-              />
-            </div>
-          </div>
-
-          <div className="flex space-x-2 pt-2">
-            <Button onClick={handleSave} size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700">
-              <Check className="w-4 h-4 mr-1" />
-              Enregistrer
-            </Button>
-            <Button onClick={handleCancel} variant="outline" size="sm" className="flex-1">
-              <X className="w-4 h-4 mr-1" />
-              Annuler
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-medium text-gray-500">Séries:</span>
-              <span className="text-sm font-semibold text-gray-900">{exercise.sets}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-medium text-gray-500">Reps:</span>
-              <span className="text-sm font-semibold text-gray-900">{exercise.reps}</span>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-medium text-gray-500">Tempo:</span>
-              <span className="text-sm font-semibold text-gray-900">{exercise.tempo || 'N/A'}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-medium text-gray-500">Repos:</span>
-              <span className="text-sm font-semibold text-gray-900">{exercise.rest}</span>
-            </div>
-          </div>
-
-          {(exercise.weight || exercise.rir || exercise.rpe) && (
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-200">
-              {exercise.weight && (
-                <div className="flex items-center space-x-1">
-                  <span className="text-xs text-gray-500">💪</span>
-                  <span className="text-xs font-semibold text-gray-900">{exercise.weight}</span>
-                </div>
-              )}
-              {exercise.rir && (
-                <div className="flex items-center space-x-1">
-                  <span className="text-xs text-gray-500">RIR:</span>
-                  <span className="text-xs font-semibold text-gray-900">{exercise.rir}</span>
-                </div>
-              )}
-              {exercise.rpe && (
-                <div className="flex items-center space-x-1">
-                  <span className="text-xs text-gray-500">RPE:</span>
-                  <span className="text-xs font-semibold text-gray-900">{exercise.rpe}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const CoachingPage = () => {
-  const [patients, setPatients] = useState([]);
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [sessions, setSessions] = useState({}); // Patient sessions by date
-  const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [exerciseLibrary, setExerciseLibrary] = useState([]);
-  const [showProgramModal, setShowProgramModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [copiedSession, setCopiedSession] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetchPatients();
-    fetchExercises();
-  }, []);
-
-  useEffect(() => {
-    if (selectedPatient) {
-      fetchPatientSessions(selectedPatient.id);
-    }
-  }, [selectedPatient]);
-
-  const fetchPatients = async () => {
-    try {
-      const response = await axios.get(`${API}/patients`);
-      setPatients(response.data);
-      if (response.data.length > 0) {
-        setSelectedPatient(response.data[0]);
-      }
-    } catch (error) {
-      console.error('Erreur chargement patients:', error);
-    }
-  };
-
-  const fetchExercises = async () => {
-    try {
-      const response = await axios.get(`${API}/exercices`);
-      setExerciseLibrary(response.data);
-    } catch (error) {
-      console.error('Erreur chargement exercices:', error);
-    }
-  };
-
-  const fetchPatientSessions = async (patientId) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/coaching/seances/patient/${patientId}`);
-      const sessionsMap = {};
-      response.data.forEach(session => {
-        sessionsMap[session.date] = session;
-      });
-      setSessions(sessionsMap);
-    } catch (error) {
-      console.error('Erreur chargement séances:', error);
-      setSessions({});
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getWeekDays = () => {
-    const startOfWeek = new Date(currentWeek);
-    startOfWeek.setDate(currentWeek.getDate() - currentWeek.getDay() + 1); // Start Monday
-    
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startOfWeek);
-      day.setDate(startOfWeek.getDate() + i);
-      days.push(day);
-    }
-    return days;
-  };
-
-  const getDaySession = (date) => {
-    if (!selectedPatient) return null;
-    const dateKey = date.toISOString().split('T')[0];
-    return sessions[dateKey];
-  };
-
-  const addExerciseToDay = async (date, exercise) => {
-    if (!selectedPatient) return;
-    
-    const dateKey = date.toISOString().split('T')[0];
-    const session = sessions[dateKey];
-    
-    const newExercise = {
-      exercice_id: exercise.id,
-      nom: exercise.nom,
-      sets: 3,
-      reps: "12",
-      tempo: "2-0-2-0",
-      rest: "60s",
-      weight: null,
-      rir: null,
-      rpe: null,
-      notes: "",
-      completed: false,
-      ordre: session ? session.exercices.length : 0
-    };
-    
-    try {
-      if (session) {
-        // Update existing session
-        const updatedExercices = [...session.exercices, newExercise];
-        await axios.put(`${API}/coaching/seances/${session.id}`, {
-          exercices: updatedExercices
-        });
-      } else {
-        // Create new session
-        await axios.post(`${API}/coaching/seances`, {
-          patient_id: selectedPatient.id,
-          date: dateKey,
-          exercices: [newExercise],
-          notes: ""
-        });
-      }
-      await fetchPatientSessions(selectedPatient.id);
-    } catch (error) {
-      console.error('Erreur ajout exercice:', error);
-    }
-  };
-
-  const updateExerciseParams = async (date, exerciseId, updates) => {
-    if (!selectedPatient) return;
-    
-    const dateKey = date.toISOString().split('T')[0];
-    const session = sessions[dateKey];
-    
-    if (!session) return;
-    
-    try {
-      const updatedExercices = session.exercices.map(ex => 
-        ex.id === exerciseId ? { ...ex, ...updates } : ex
-      );
-      
-      await axios.put(`${API}/coaching/seances/${session.id}`, {
-        exercices: updatedExercices
-      });
-      
-      await fetchPatientSessions(selectedPatient.id);
-    } catch (error) {
-      console.error('Erreur mise à jour exercice:', error);
-    }
-  };
-
-  const deleteExercise = async (date, exerciseId) => {
-    if (!selectedPatient) return;
-    
-    const dateKey = date.toISOString().split('T')[0];
-    const session = sessions[dateKey];
-    
-    if (!session) return;
-    
-    try {
-      const updatedExercices = session.exercices.filter(ex => ex.id !== exerciseId);
-      
-      if (updatedExercices.length === 0) {
-        // Delete session if no exercises left
-        await axios.delete(`${API}/coaching/seances/${session.id}`);
-      } else {
-        await axios.put(`${API}/coaching/seances/${session.id}`, {
-          exercices: updatedExercices
-        });
-      }
-      
-      await fetchPatientSessions(selectedPatient.id);
-    } catch (error) {
-      console.error('Erreur suppression exercice:', error);
-    }
-  };
-
-  const updateSessionNotes = async (date, notes) => {
-    if (!selectedPatient) return;
-    
-    const dateKey = date.toISOString().split('T')[0];
-    const session = sessions[dateKey];
-    
-    if (!session) return;
-    
-    try {
-      await axios.put(`${API}/coaching/seances/${session.id}`, {
-        notes: notes
-      });
-      
-      await fetchPatientSessions(selectedPatient.id);
-    } catch (error) {
-      console.error('Erreur mise à jour notes:', error);
-    }
-  };
-
-  const copySession = (date) => {
-    const session = getDaySession(date);
-    if (session) {
-      setCopiedSession({
-        ...session,
-        sourceDate: date.toISOString().split('T')[0]
-      });
-    }
-  };
-
-  const pasteSession = async (targetDate) => {
-    if (!copiedSession || !selectedPatient) return;
-    
-    const dateKey = targetDate.toISOString().split('T')[0];
-    
-    try {
-      // Create new session with copied exercises
-      await axios.post(`${API}/coaching/seances`, {
-        patient_id: selectedPatient.id,
-        date: dateKey,
-        exercices: copiedSession.exercices.map(ex => ({
-          ...ex,
-          completed: false
-        })),
-        notes: copiedSession.notes
-      });
-      
-      await fetchPatientSessions(selectedPatient.id);
-    } catch (error) {
-      console.error('Erreur copie séance:', error);
-    }
-  };
-
-  const duplicateWeek = async () => {
-    if (!selectedPatient) return;
-    
-    const currentWeekDays = getWeekDays();
-    
-    try {
-      for (const currentDay of currentWeekDays) {
-        const session = getDaySession(currentDay);
-        if (session && session.exercices.length > 0) {
-          const nextWeek = new Date(currentDay);
-          nextWeek.setDate(currentDay.getDate() + 7);
-          const nextDateKey = nextWeek.toISOString().split('T')[0];
-          
-          await axios.post(`${API}/coaching/seances`, {
-            patient_id: selectedPatient.id,
-            date: nextDateKey,
-            exercices: session.exercices.map(ex => ({
-              ...ex,
-              completed: false
-            })),
-            notes: session.notes
-          });
-        }
-      }
-      
-      // Move to next week
-      const nextWeek = new Date(currentWeek);
-      nextWeek.setDate(currentWeek.getDate() + 7);
-      setCurrentWeek(nextWeek);
-      
-      await fetchPatientSessions(selectedPatient.id);
-    } catch (error) {
-      console.error('Erreur duplication semaine:', error);
-    }
-  };
-
-  const toggleExerciseCompletion = async (date, exerciseId) => {
-    if (!selectedPatient) return;
-    
-    const dateKey = date.toISOString().split('T')[0];
-    const session = sessions[dateKey];
-    
-    if (!session) return;
-    
-    try {
-      const updatedExercices = session.exercices.map(ex => 
-        ex.id === exerciseId ? { ...ex, completed: !ex.completed } : ex
-      );
-      
-      await axios.put(`${API}/coaching/seances/${session.id}`, {
-        exercices: updatedExercices
-      });
-      
-      await fetchPatientSessions(selectedPatient.id);
-    } catch (error) {
-      console.error('Erreur toggle exercice:', error);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-        {/* Header - Pleine largeur */}
-        <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Coaching - Programme d'exercices</h1>
-              <p className="text-gray-600 mt-1 text-sm">Vue hebdomadaire des séances</p>
-            </div>
-            <Button 
-              onClick={() => setShowProgramModal(true)}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nouveau Programme
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Layout pleine largeur sans max-width */}
-      <div className="flex h-[calc(100vh-80px)]">
-        {/* Patient Sidebar - Plus compact */}
-        <div className="w-72 bg-white border-r shadow-sm overflow-y-auto flex-shrink-0">
-            <div className="p-4 border-b">
-              <h3 className="font-semibold text-gray-900">Patients</h3>
-            </div>
-            <div className="space-y-1 p-2">
-              {patients.map((patient) => (
-                <button
-                  key={patient.id}
-                  onClick={() => setSelectedPatient(patient)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors ${
-                    selectedPatient?.id === patient.id
-                      ? 'bg-blue-100 text-blue-900 border-l-4 border-l-blue-600'
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="font-medium">{patient.nom} {patient.prenom}</div>
-                  <div className="text-sm text-gray-500">{patient.pathologie}</div>
-                  <div className="flex items-center mt-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    <span className="text-xs text-gray-600">Actif</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Coaching Area - Pleine largeur */}
-          <div className="flex-1 bg-white overflow-hidden">
-            {selectedPatient ? (
-              <div className="h-full flex flex-col">
-                {/* Patient Header - Plus compact */}
-                <div className="px-6 py-3 border-b bg-gradient-to-r from-emerald-500 to-emerald-600 text-white flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div>
-                      <h2 className="text-xl font-bold">
-                        {selectedPatient.nom} {selectedPatient.prenom}
-                      </h2>
-                      <p className="text-emerald-100 text-sm">{selectedPatient.pathologie}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-emerald-100">Âge</div>
-                    <div className="text-lg font-semibold">{selectedPatient.age} ans</div>
-                  </div>
-                </div>
-
-                {/* Week Navigation with Actions - Plus compact */}
-                <div className="px-6 py-3 border-b bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          const newWeek = new Date(currentWeek);
-                          newWeek.setDate(newWeek.getDate() - 7);
-                          setCurrentWeek(newWeek);
-                        }}
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      
-                      <h3 className="text-lg font-semibold">
-                        Semaine du {getWeekDays()[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
-                      </h3>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          const newWeek = new Date(currentWeek);
-                          newWeek.setDate(newWeek.getDate() + 7);
-                          setCurrentWeek(newWeek);
-                        }}
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      {copiedSession && (
-                        <div className="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-md">
-                          Séance copiée • Clic droit pour coller
-                        </div>
-                      )}
-                      <Button
-                        onClick={duplicateWeek}
-                        variant="outline"
-                        className="text-purple-600 border-purple-600 hover:bg-purple-50"
-                      >
-                        <Copy className="w-4 h-4 mr-2" />
-                        Dupliquer semaine
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Weekly Program Grid - Pleine largeur avec scroll horizontal */}
-                <div className="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50">
-                  <div className="flex gap-4 p-4 h-full" style={{ minWidth: 'max-content' }}>
-                      {getWeekDays().map((day, dayIndex) => {
-                        const daySession = getDaySession(day);
-                        const isToday = day.toDateString() === new Date().toDateString();
-                        const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-                        
-                        return (
-                          <div 
-                            key={dayIndex} 
-                            className={`bg-white rounded-xl shadow-lg border-2 flex flex-col flex-shrink-0 transition-all hover:shadow-2xl ${
-                              isToday ? 'ring-4 ring-emerald-400 border-emerald-400' : 'border-gray-200'
-                            }`}
-                            style={{ width: '320px', height: 'calc(100vh - 220px)' }}
-                            onContextMenu={(e) => {
-                              e.preventDefault();
-                              if (copiedSession) {
-                                pasteSession(day);
-                              }
-                            }}
-                          >
-                            {/* Day Header - Plus compact */}
-                            <div className={`p-4 text-center border-b-2 flex-shrink-0 ${
-                              isToday 
-                                ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white' 
-                                : isWeekend 
-                                  ? 'bg-gradient-to-br from-gray-100 to-gray-200' 
-                                  : 'bg-gradient-to-br from-blue-50 to-blue-100'
-                            }`}>
-                              <div className={`text-xs font-bold uppercase tracking-wider ${
-                                isToday ? 'text-emerald-100' : 'text-gray-600'
-                              }`}>
-                                {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
-                              </div>
-                              <div className={`text-2xl font-bold mt-1 ${
-                                isToday ? 'text-white' : 'text-gray-900'
-                              }`}>
-                                {day.getDate()}
-                              </div>
-                              <div className={`text-xs ${
-                                isToday ? 'text-emerald-100' : 'text-gray-500'
-                              }`}>
-                                {day.toLocaleDateString('fr-FR', { month: 'short' })}
-                              </div>
-                            </div>
-
-                            {/* Day Content - Scrollable verticalement */}
-                            <div className="flex-1 p-4 overflow-y-auto">
-                              {isWeekend ? (
-                                <div className="text-center py-8">
-                                  <div className="text-gray-400 mb-4">
-                                    <Calendar className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                                    <div className="text-sm font-medium">Jour de repos</div>
-                                  </div>
-                                  <Button
-                                    variant="outline"
-                                    className="w-full border-2 border-dashed text-emerald-600 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400 py-2 text-sm"
-                                    onClick={() => {
-                                      setSelectedDate(day);
-                                      setShowProgramModal(true);
-                                    }}
-                                  >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Exercices à domicile
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="space-y-3">
-                                  {/* Session Actions - Plus compact */}
-                                  <div className="flex justify-between items-center mb-3">
-                                    <div className="text-xs font-semibold text-gray-600">
-                                      {daySession?.exercices?.length || 0} exercice(s)
-                                    </div>
-                                    <div className="flex space-x-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => copySession(day)}
-                                        className="p-1 h-7 w-7 hover:bg-blue-100"
-                                        title="Copier la séance"
-                                      >
-                                        <Copy className="w-3 h-3 text-blue-600" />
-                                      </Button>
-                                      {daySession && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={async () => {
-                                            if (window.confirm('Supprimer toute la séance ?')) {
-                                              await axios.delete(`${API}/coaching/seances/${daySession.id}`);
-                                              await fetchPatientSessions(selectedPatient.id);
-                                            }
-                                          }}
-                                          className="p-1 h-7 w-7 hover:bg-red-100"
-                                          title="Effacer la séance"
-                                        >
-                                          <Trash2 className="w-3 h-3 text-red-600" />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {/* Exercises - Plus compact */}
-                                  <div className="space-y-3">
-                                    {daySession?.exercices?.map((exercise) => (
-                                      <ExerciseCard
-                                        key={exercise.id}
-                                        exercise={exercise}
-                                        onToggleComplete={() => toggleExerciseCompletion(day, exercise.id)}
-                                        onUpdate={(updatedExercise) => updateExerciseParams(day, exercise.id, updatedExercise)}
-                                        onDelete={() => deleteExercise(day, exercise.id)}
-                                      />
-                                    ))}
-                                  </div>
-
-                                  {/* Add Exercise Button - Plus compact */}
-                                  <Button
-                                    variant="outline"
-                                    className="w-full border-dashed border-2 border-emerald-300 text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 py-2 mt-3 text-sm"
-                                    onClick={() => {
-                                      setSelectedDate(day);
-                                      setShowProgramModal(true);
-                                    }}
-                                  >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Ajouter exercice
-                                  </Button>
-
-                                  {/* Session Notes - Plus compact */}
-                                  {daySession && (
-                                    <div className="mt-3 pt-3 border-t border-gray-200">
-                                      <Label className="text-xs font-semibold text-gray-700 mb-1 block">
-                                        Notes
-                                      </Label>
-                                      <Textarea
-                                        placeholder="Notes de séance..."
-                                        value={daySession.notes || ''}
-                                        onChange={(e) => updateSessionNotes(day, e.target.value)}
-                                        className="text-xs resize-none border focus:border-emerald-400"
-                                        rows={2}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <div className="text-center">
-                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <p>Sélectionnez un patient pour commencer</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {showProgramModal && selectedDate && (
-            <ProgramModal
-              selectedDate={selectedDate}
-              exerciseLibrary={exerciseLibrary}
-              onAddExercise={async (exercise) => {
-                await addExerciseToDay(selectedDate, exercise);
-                setShowProgramModal(false);
-                setSelectedDate(null);
-              }}
-              onClose={() => {
-                setShowProgramModal(false);
-                setSelectedDate(null);
-              }}
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Program Modal Component
-const ProgramModal = ({ selectedDate, exerciseLibrary, onAddExercise, onClose }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBodyPart, setSelectedBodyPart] = useState('tous');
-
-  const bodyParts = [
-    'tous', 'cervical', 'epaule', 'coude', 'poignet', 
-    'thoracique', 'lombaire', 'hanche', 'genou', 'cheville'
-  ];
-
-  const filteredExercises = exerciseLibrary.filter(exercise => {
-    const matchesSearch = exercise.nom.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBodyPart = selectedBodyPart === 'tous' || exercise.zone_corporelle === selectedBodyPart;
-    return matchesSearch && matchesBodyPart;
-  });
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h3 className="text-lg font-semibold">
-            Ajouter un exercice - {selectedDate.toLocaleDateString('fr-FR')}
-          </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="p-6">
-          {/* Search and Filter */}
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1">
-              <Input
-                type="text"
-                placeholder="Rechercher un exercice..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {bodyParts.map(part => (
-                  <SelectItem key={part} value={part}>
-                    {part.charAt(0).toUpperCase() + part.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Exercise List */}
-          <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-            {filteredExercises.map((exercise) => (
-              <Card
-                key={exercise.id}
-                className="p-4 cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => onAddExercise(exercise)}
-              >
-                <div className="flex items-start space-x-3">
-                  <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <Dumbbell className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{exercise.nom}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{exercise.description}</p>
-                    <div className="flex items-center mt-2">
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                        {exercise.zone_corporelle}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Exercise Assignment Section Component
-const ExerciseAssignmentSection = ({ patient }) => {
-  const [assignedExercises, setAssignedExercises] = useState([]);
-  const [availableExercises, setAvailableExercises] = useState([]);
-  const [showExerciseModal, setShowExerciseModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBodyPart, setSelectedBodyPart] = useState('tous');
-  const [exerciseStats, setExerciseStats] = useState({});
-
-  useEffect(() => {
-    loadPatientExercises();
-    loadAvailableExercises();
-    loadExerciseStats();
-  }, [patient.id]);
-
-  const loadPatientExercises = async () => {
-    try {
-      // Simulate loading patient exercises
-      const mockExercises = [
-        {
-          id: '1',
-          nom: 'Étirement cervical',
-          zone_corporelle: 'cervical',
-          description: 'Étirement doux des muscles cervicaux',
-          sets: 3,
-          reps: '30s',
-          frequency: 'quotidien',
-          assigned_date: new Date().toISOString(),
-          video_url: 'https://example.com/cervical.mp4'
-        }
-      ];
-      setAssignedExercises(mockExercises);
-    } catch (error) {
-      console.error('Erreur chargement exercices patient:', error);
-    }
-  };
-
-  const loadAvailableExercises = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/exercices`);
-      setAvailableExercises(response.data);
-    } catch (error) {
-      console.error('Erreur chargement exercices:', error);
-    }
-  };
-
-  const loadExerciseStats = async () => {
-    // Simulate exercise usage statistics (most assigned by body part)
-    const stats = {
-      cervical: [
-        { nom: 'Étirement cervical', count: 45 },
-        { nom: 'Rotation cervicale', count: 38 },
-        { nom: 'Renforcement cervical', count: 32 }
-      ],
-      genou: [
-        { nom: 'Squats thérapeutiques', count: 67 },
-        { nom: 'Extension genou', count: 54 },
-        { nom: 'Flexion genou', count: 41 }
-      ],
-      epaule: [
-        { nom: 'Élévation épaule', count: 52 },
-        { nom: 'Rotation externe', count: 44 },
-        { nom: 'Pendulaires', count: 39 }
-      ]
-    };
-    setExerciseStats(stats);
-  };
-
-  const assignExerciseToPatient = async (exercise, params) => {
-    const newAssignment = {
-      id: Date.now().toString(),
-      ...exercise,
-      sets: params.sets || 3,
-      reps: params.reps || 10,
-      frequency: params.frequency || 'quotidien',
-      assigned_date: new Date().toISOString()
-    };
-
-    setAssignedExercises([...assignedExercises, newAssignment]);
-    setShowExerciseModal(false);
-
-    // Update exercise statistics
-    const bodyPart = exercise.zone_corporelle;
-    if (exerciseStats[bodyPart]) {
-      const updated = exerciseStats[bodyPart].map(stat => 
-        stat.nom === exercise.nom 
-          ? { ...stat, count: stat.count + 1 }
-          : stat
-      );
-      setExerciseStats({ ...exerciseStats, [bodyPart]: updated });
-    }
-  };
-
-  const removeExercise = (exerciseId) => {
-    setAssignedExercises(assignedExercises.filter(ex => ex.id !== exerciseId));
-  };
-
-  const bodyParts = ['tous', 'cervical', 'epaule', 'coude', 'poignet', 'thoracique', 'lombaire', 'hanche', 'genou', 'cheville'];
-
-  // Get popular exercises for the selected body part
-  const getPopularExercises = (bodyPart) => {
-    if (bodyPart === 'tous') return [];
-    return exerciseStats[bodyPart]?.slice(0, 3) || [];
-  };
-
-  const filteredExercises = availableExercises.filter(exercise => {
-    const matchesSearch = exercise.nom.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBodyPart = selectedBodyPart === 'tous' || exercise.zone_corporelle === selectedBodyPart;
-    return matchesSearch && matchesBodyPart;
-  });
-
-  // Sort by popularity for selected body part
-  const sortedExercises = filteredExercises.sort((a, b) => {
-    if (selectedBodyPart === 'tous') return 0;
-    
-    const aStats = exerciseStats[selectedBodyPart]?.find(stat => stat.nom === a.nom);
-    const bStats = exerciseStats[selectedBodyPart]?.find(stat => stat.nom === b.nom);
-    
-    const aCount = aStats?.count || 0;
-    const bCount = bStats?.count || 0;
-    
-    return bCount - aCount; // Most used first
-  });
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-3">
-        <Label className="text-sm font-medium text-gray-600">Exercices Assignés</Label>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowExerciseModal(true)}
-          className="text-blue-600 hover:bg-blue-50"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Ajouter Exercice
-        </Button>
-      </div>
-
-      {/* Assigned Exercises */}
-      <div className="bg-gray-50 p-3 rounded-md">
-        {assignedExercises.length > 0 ? (
-          <div className="space-y-2">
-            {assignedExercises.map((exercise) => (
-              <div key={exercise.id} className="bg-white p-3 rounded-lg border flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="font-medium text-sm">{exercise.nom}</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {exercise.sets} × {exercise.reps} • {exercise.frequency}
-                  </div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    Zone: {exercise.zone_corporelle}
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {/* Open video modal */}}
-                    className="text-gray-600 hover:text-blue-600"
-                  >
-                    <Video className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeExercise(exercise.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center text-gray-500 text-sm py-4">
-            <Dumbbell className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-            Aucun exercice assigné
-          </div>
-        )}
-      </div>
-
-      {/* Exercise Assignment Modal */}
-      {showExerciseModal && (
-        <ExerciseAssignmentModal
-          availableExercises={sortedExercises}
-          popularExercises={getPopularExercises(selectedBodyPart)}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          selectedBodyPart={selectedBodyPart}
-          setSelectedBodyPart={setSelectedBodyPart}
-          bodyParts={bodyParts}
-          exerciseStats={exerciseStats}
-          onAssignExercise={assignExerciseToPatient}
-          onClose={() => setShowExerciseModal(false)}
-        />
-      )}
-    </div>
-  );
-};
-
-// Exercise Assignment Modal Component
-const ExerciseAssignmentModal = ({ 
-  availableExercises, 
-  popularExercises, 
-  searchTerm, 
-  setSearchTerm, 
-  selectedBodyPart, 
-  setSelectedBodyPart, 
-  bodyParts,
-  exerciseStats,
-  onAssignExercise, 
-  onClose 
-}) => {
-  const [selectedExercise, setSelectedExercise] = useState(null);
-  const [exerciseParams, setExerciseParams] = useState({
-    sets: 3,
-    reps: 10,
-    frequency: 'quotidien'
-  });
-
-  const handleAssign = () => {
-    if (!selectedExercise) return;
-    onAssignExercise(selectedExercise, exerciseParams);
-  };
-
-  const getUsageCount = (exerciseName) => {
-    if (selectedBodyPart === 'tous') return 0;
-    const stat = exerciseStats[selectedBodyPart]?.find(s => s.nom === exerciseName);
-    return stat?.count || 0;
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h3 className="text-lg font-semibold">Assigner des Exercices</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="flex h-[calc(90vh-80px)]">
-          {/* Exercise Library */}
-          <div className="flex-1 p-6 border-r">
-            {/* Search and Filter */}
-            <div className="flex gap-4 mb-6">
-              <Input
-                type="text"
-                placeholder="Rechercher un exercice..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1"
-              />
-              <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {bodyParts.map(part => (
-                    <SelectItem key={part} value={part}>
-                      {part.charAt(0).toUpperCase() + part.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Popular Exercises */}
-            {popularExercises.length > 0 && (
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                  <TrendingUp className="w-4 h-4 mr-2 text-orange-600" />
-                  Exercices populaires pour {selectedBodyPart}
-                </h4>
-                <div className="grid grid-cols-1 gap-2">
-                  {popularExercises.map((popular) => {
-                    const exercise = availableExercises.find(ex => ex.nom === popular.nom);
-                    if (!exercise) return null;
-                    
-                    return (
-                      <div
-                        key={exercise.id}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                          selectedExercise?.id === exercise.id
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-orange-200 bg-orange-50 hover:border-orange-300'
-                        }`}
-                        onClick={() => setSelectedExercise(exercise)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm">{exercise.nom}</div>
-                            <div className="text-xs text-gray-600 mt-1">{exercise.description}</div>
-                          </div>
-                          <div className="flex items-center text-xs text-orange-600">
-                            <TrendingUp className="w-3 h-3 mr-1" />
-                            {popular.count}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* All Exercises */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">
-                Tous les exercices ({availableExercises.length})
-              </h4>
-              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
-                {availableExercises.map((exercise) => {
-                  const usageCount = getUsageCount(exercise.nom);
-                  
-                  return (
-                    <div
-                      key={exercise.id}
-                      className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                        selectedExercise?.id === exercise.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-blue-300'
-                      }`}
-                      onClick={() => setSelectedExercise(exercise)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="font-medium">{exercise.nom}</div>
-                          <div className="text-sm text-gray-600 mt-1">{exercise.description}</div>
-                          <div className="flex items-center mt-2">
-                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                              {exercise.zone_corporelle}
-                            </span>
-                            {usageCount > 0 && (
-                              <span className="ml-2 text-xs text-gray-500">
-                                Utilisé {usageCount}× 
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <Video className="w-5 h-5 text-gray-400" />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Assignment Parameters */}
-          <div className="w-96 p-6 bg-gray-50">
-            {selectedExercise ? (
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-4">Paramètres d'Assignment</h4>
-                
-                <div className="bg-white p-4 rounded-lg border mb-6">
-                  <h5 className="font-medium text-gray-900 mb-2">{selectedExercise.nom}</h5>
-                  <p className="text-sm text-gray-600 mb-3">{selectedExercise.description}</p>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                      {selectedExercise.zone_corporelle}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-blue-600"
-                    >
-                      <Video className="w-4 h-4 mr-1" />
-                      Voir vidéo
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium">Séries</Label>
-                    <Input
-                      type="number"
-                      value={exerciseParams.sets}
-                      onChange={(e) => setExerciseParams({...exerciseParams, sets: parseInt(e.target.value)})}
-                      min="1"
-                      max="10"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium">Répétitions</Label>
-                    <Input
-                      type="number"
-                      value={exerciseParams.reps}
-                      onChange={(e) => setExerciseParams({...exerciseParams, reps: parseInt(e.target.value)})}
-                      min="1"
-                      max="50"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium">Fréquence</Label>
-                    <Select 
-                      value={exerciseParams.frequency}
-                      onValueChange={(value) => setExerciseParams({...exerciseParams, frequency: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="quotidien">Quotidien</SelectItem>
-                        <SelectItem value="2x/jour">2x par jour</SelectItem>
-                        <SelectItem value="3x/semaine">3x par semaine</SelectItem>
-                        <SelectItem value="hebdomadaire">Hebdomadaire</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={handleAssign}
-                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Assigner cet Exercice
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 mt-12">
-                <Dumbbell className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p>Sélectionnez un exercice pour configurer l'assignment</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Patient Detail Page Component
-const PatientDetailPage = () => {
-  const [patient, setPatient] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [notes, setNotes] = useState('');
-  const [appointments, setAppointments] = useState([]);
-
-  // Get patient ID from URL
-  const patientId = window.location.pathname.split('/')[2];
-
-  useEffect(() => {
-    if (patientId) {
-      fetchPatientDetails();
-      fetchPatientAppointments();
-    }
-  }, [patientId]);
-
-  const fetchPatientDetails = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}`);
-      setPatient(response.data);
-      setNotes(response.data.notes || '');
-    } catch (error) {
-      console.error('Erreur chargement patient:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPatientAppointments = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous?patient_id=${patientId}`);
-      setAppointments(response.data);
-    } catch (error) {
-      console.error('Erreur chargement RDV:', error);
-    }
-  };
-
-  const saveNotes = async () => {
-    try {
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/patients/${patientId}`, {
-        ...patient,
-        notes: notes
-      });
-      alert('Notes sauvegardées');
-    } catch (error) {
-      console.error('Erreur sauvegarde notes:', error);
-    }
-  };
-
-  const cancelAppointment = async (appointmentId) => {
-    if (!confirm('Voulez-vous vraiment annuler ce rendez-vous ?')) return;
-    
-    try {
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/rendez-vous/${appointmentId}`);
-      setAppointments(appointments.filter(apt => apt.id !== appointmentId));
-      alert('Rendez-vous annulé');
-    } catch (error) {
-      console.error('Erreur annulation RDV:', error);
-      alert('Erreur lors de l\'annulation');
-    }
-  };
-
-  const sendSMSNotification = async (message) => {
-    try {
-      // Simulate SMS sending
-      alert(`SMS envoyé à ${patient.prenom} ${patient.nom}: ${message}`);
-    } catch (error) {
-      console.error('Erreur envoi SMS:', error);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
-      </div>
-    );
-  }
-
-  if (!patient) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Patient non trouvé</h2>
-          <Button onClick={() => window.location.href = '/patients'}>
-            Retour à la liste
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const tabs = [
-    { id: 'overview', label: 'Vue d\'ensemble', icon: <Users className="w-4 h-4" /> },
-    { id: 'exercises', label: 'Exercices', icon: <Dumbbell className="w-4 h-4" /> },
-    { id: 'appointments', label: 'Rendez-vous', icon: <Calendar className="w-4 h-4" /> },
-    { id: 'notes', label: 'Notes', icon: <FileText className="w-4 h-4" /> },
-    { id: 'media', label: 'Médias', icon: <Camera className="w-4 h-4" /> }
-  ];
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="ghost" 
-                onClick={() => window.location.href = '/patients'}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <ChevronLeft className="w-5 h-5 mr-1" />
-                Retour
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {patient.prenom} {patient.nom}
-                </h1>
-                <p className="text-gray-600">{patient.pathologie} • {patient.age} ans</p>
-              </div>
-            </div>
-            
-            <div className="flex space-x-3">
-              <Button 
-                onClick={() => sendSMSNotification('Rappel de votre prochain rendez-vous')}
-                variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-50"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                SMS
-              </Button>
-              <Button 
-                onClick={() => window.location.href = `/coaching?patient=${patient.id}`}
-                className="bg-emerald-600 hover:bg-emerald-700"
-              >
-                <Target className="w-4 h-4 mr-2" />
-                Coaching
-              </Button>
-            </div>
-          </div>
-
-          {/* Zone Notes Cliniques - Grande zone en haut */}
-          <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-bold text-blue-900 flex items-center">
-                <FileText className="w-4 h-4 mr-2" />
-                Notes Cliniques - Ce que raconte le patient
-              </Label>
-              <Button 
-                onClick={saveNotes} 
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Check className="w-4 h-4 mr-1" />
-                Enregistrer
-              </Button>
-            </div>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Notez ici ce que le patient vous raconte : symptômes, plaintes, historique, observations cliniques..."
-              className="w-full min-h-[100px] text-sm border-2 border-blue-300 focus:border-blue-500 bg-white"
-              rows={4}
-            />
-            <p className="text-xs text-blue-700 mt-2">
-              💡 Zone de prise de notes rapide pendant la consultation. Enregistrez régulièrement.
-            </p>
-          </div>
-
-          {/* Tabs */}
-          <div className="mt-6 border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                    activeTab === tab.id
-                      ? 'border-emerald-500 text-emerald-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto p-6">
-        {activeTab === 'overview' && (
-          <PatientOverviewTab patient={patient} />
-        )}
-        
-        {activeTab === 'exercises' && (
-          <PatientExercisesTab patient={patient} />
-        )}
-        
-        {activeTab === 'appointments' && (
-          <PatientAppointmentsTab 
-            appointments={appointments}
-            onCancelAppointment={cancelAppointment}
-            onSendSMS={sendSMSNotification}
-          />
-        )}
-        
-        {activeTab === 'notes' && (
-          <PatientNotesTab 
-            notes={notes}
-            setNotes={setNotes}
-            onSave={saveNotes}
-          />
-        )}
-        
-        {activeTab === 'media' && (
-          <PatientMediaTab patient={patient} />
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Patient Overview Tab Component
-const PatientOverviewTab = ({ patient }) => {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Patient Info */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Informations Patient</h3>
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Nom complet:</span>
-            <span className="font-medium">{patient.prenom} {patient.nom}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Âge:</span>
-            <span className="font-medium">{patient.age} ans</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Téléphone:</span>
-            <span className="font-medium">{patient.telephone}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Email:</span>
-            <span className="font-medium text-blue-600">{patient.email}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Pathologie:</span>
-            <span className="font-medium">{patient.pathologie}</span>
-          </div>
-        </div>
-      </Card>
-
-      {/* Medical Info */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Informations Médicales</h3>
-        <div className="space-y-4">
-          <div>
-            <Label className="text-sm font-medium text-gray-600">Prescription médicale</Label>
-            <p className="text-sm bg-gray-50 p-3 rounded-md mt-1">
-              {patient.prescription_medicale}
-            </p>
-          </div>
-          <div>
-            <Label className="text-sm font-medium text-gray-600">Date de création</Label>
-            <p className="text-sm mt-1">
-              {new Date(patient.created_at).toLocaleDateString('fr-FR')}
-            </p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card className="p-6 lg:col-span-2">
-        <h3 className="text-lg font-semibold mb-4">Actions Rapides</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Button className="h-20 flex-col space-y-2">
-            <FileText className="w-6 h-6" />
-            <span className="text-xs">Générer Rapport</span>
-          </Button>
-          <Button variant="outline" className="h-20 flex-col space-y-2">
-            <Calendar className="w-6 h-6" />
-            <span className="text-xs">Nouveau RDV</span>
-          </Button>
-          <Button variant="outline" className="h-20 flex-col space-y-2">
-            <Dumbbell className="w-6 h-6" />
-            <span className="text-xs">Ajouter Exercice</span>
-          </Button>
-          <Button variant="outline" className="h-20 flex-col space-y-2">
-            <Camera className="w-6 h-6" />
-            <span className="text-xs">Photos/Vidéos</span>
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-};
-
-// Patient Exercises Tab Component  
-const PatientExercisesTab = ({ patient }) => {
-  return (
-    <div className="space-y-6">
-      <ExerciseAssignmentSection patient={patient} />
-    </div>
-  );
-};
-
-// Patient Appointments Tab Component
-const PatientAppointmentsTab = ({ appointments, onCancelAppointment, onSendSMS }) => {
-  const upcomingAppointments = appointments.filter(apt => 
-    new Date(apt.date_debut) > new Date() && apt.statut !== 'annule'
-  );
-  const pastAppointments = appointments.filter(apt => 
-    new Date(apt.date_debut) <= new Date() || apt.statut === 'annule'
-  );
-
-  return (
-    <div className="space-y-6">
-      {/* Upcoming Appointments */}
-      <Card className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Rendez-vous à venir ({upcomingAppointments.length})</h3>
-          <Button 
-            onClick={() => onSendSMS('Rappel: Vous avez un rendez-vous prévu prochainement')}
-            variant="outline"
-            className="text-blue-600"
-          >
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Rappel SMS
-          </Button>
-        </div>
-        
-        {upcomingAppointments.length > 0 ? (
-          <div className="space-y-3">
-            {upcomingAppointments.map((appointment) => (
-              <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div>
-                    <div className="font-medium">
-                      {new Date(appointment.date_debut).toLocaleDateString('fr-FR', {
-                        weekday: 'long',
-                        year: 'numeric', 
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {new Date(appointment.date_debut).toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })} • {appointment.categorie_nom}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onSendSMS(`Rappel: RDV le ${new Date(appointment.date_debut).toLocaleDateString('fr-FR')} à ${new Date(appointment.date_debut).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}`)}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onCancelAppointment(appointment.id)}
-                    className="text-red-600 hover:bg-red-50"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">Aucun rendez-vous à venir</p>
-        )}
-      </Card>
-
-      {/* Past Appointments */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Historique ({pastAppointments.length})</h3>
-        {pastAppointments.length > 0 ? (
-          <div className="space-y-2">
-            {pastAppointments.slice(0, 5).map((appointment) => (
-              <div key={appointment.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-3 h-3 rounded-full ${
-                    appointment.statut === 'annule' ? 'bg-red-500' : 'bg-gray-400'
-                  }`}></div>
-                  <div>
-                    <div className="font-medium">
-                      {new Date(appointment.date_debut).toLocaleDateString('fr-FR')}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {appointment.categorie_nom} • {appointment.statut}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">Aucun historique</p>
-        )}
-      </Card>
-    </div>
-  );
-};
-
-// Patient Notes Tab Component
-const PatientNotesTab = ({ notes, setNotes, onSave }) => {
-  return (
-    <Card className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Notes Patient</h3>
-        <Button onClick={onSave} className="bg-emerald-600 hover:bg-emerald-700">
-          <FileText className="w-4 h-4 mr-2" />
-          Sauvegarder
-        </Button>
-      </div>
-      
-      <Textarea
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder="Saisissez vos notes sur ce patient..."
-        className="min-h-[400px] resize-none"
-      />
-      
-      <div className="mt-4 text-sm text-gray-500">
-        Dernière modification: {new Date().toLocaleString('fr-FR')}
-      </div>
-    </Card>
-  );
-};
-
-// Patient Media Tab Component
-const PatientMediaTab = ({ patient }) => {
-  return (
-    <div className="space-y-6">
-      <MediaSection patient={patient} />
-    </div>
-  );
-};
-
 // Main App Component
 const App = () => {
   return (
@@ -8475,11 +6602,9 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/patients" element={<PatientsList />} />
-          <Route path="/patients/:patientId" element={<PatientDetailPage />} />
           <Route path="/nouveau-patient" element={<NewPatientForm />} />
           <Route path="/exercices" element={<ExercicesPage />} />
           <Route path="/programmes" element={<ProgrammesPage />} />
-          <Route path="/coaching" element={<CoachingPage />} />
           <Route path="/agenda" element={<AgendaPage />} />
           <Route path="/messagerie" element={<MessagingPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
