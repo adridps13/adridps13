@@ -174,9 +174,9 @@ backend:
 frontend:
   - task: "Pain Drawing Mark Laslett - Canvas Dessinable"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -186,6 +186,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ PAIN DRAWING TESTÉ ET FONCTIONNEL ! Composant présent dans étape 2 anamnèse avec titre correct 'Body Chart (code couleur M.Laslett)'. Canvas 600x800px dessinable ✅, 6 couleurs Mark Laslett avec labels corrects ✅, contrôle taille pinceau 2-15px ✅, bouton Effacer ✅, body chart anatomique SVG (vue face + dos) ✅, simulation dessin souris réussie ✅, sélection couleurs fonctionnelle ✅, modification taille pinceau ✅. Touch events configurés pour tablette. Tous les éléments UX professionnels présents."
+      - working: false
+        agent: "testing"
+        comment: "❌ PAIN DRAWING MARK LASLETT NON CONFORME - Tests E2E révèlent implémentation basique au lieu du Mark Laslett professionnel. Trouvé: SVG basique avec zones cliquables 'Dessin de la Douleur'. Manque: Canvas HTML5 600x800px, 6 codes couleurs médicaux (Rouge/Jaune/Bleu/Vert/Noir/Marron), contrôle taille pinceau 2-15px, bouton Effacer, titre 'Body Chart (code couleur M.Laslett)'. Navigation instable vers étape 2 anamnèse. Implémentation actuelle ne correspond pas aux spécifications Mark Laslett."
 
   - task: "Zone Notes Cliniques Étendue - Patient Detail"
     implemented: true
