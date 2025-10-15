@@ -1345,89 +1345,150 @@ const PainDrawing = ({ painAreas, onPainAreaClick, onDrawingUpdate }) => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg border shadow-sm">
-      <h3 className="font-medium text-gray-900 mb-4 text-center">Dessin de la Douleur</h3>
-      <p className="text-sm text-gray-600 mb-4 text-center">
-        Cliquez sur les zones douloureuses pour indiquer l'intensité (1-10)
-      </p>
-      
-      <div className="flex justify-center mb-4">
-        <svg width="360" height="470" viewBox="0 0 360 470" className="border rounded">
-          {/* Corps humain simplifié */}
-          <defs>
-            <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style={{stopColor:'#f8fafc', stopOpacity:1}} />
-              <stop offset="100%" style={{stopColor:'#e2e8f0', stopOpacity:1}} />
-            </linearGradient>
-          </defs>
-          
-          {/* Anatomie de base */}
-          {/* Tête */}
-          <circle cx="180" cy="55" r="25" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
-          
-          {/* Corps */}
-          <rect x="145" y="105" width="70" height="110" rx="15" fill="url(#bodyGradient)" stroke="#cbd5e1" strokeWidth="1"/>
-          
-          {/* Bras */}
-          <rect x="95" y="135" width="20" height="80" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
-          <rect x="245" y="135" width="20" height="80" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
-          
-          {/* Mains */}
-          <ellipse cx="100" cy="275" rx="12" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
-          <ellipse cx="260" cy="275" rx="12" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
-          
-          {/* Jambes */}
-          <rect x="145" y="255" width="25" height="100" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
-          <rect x="190" y="255" width="25" height="100" rx="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1"/>
-          
-          {/* Pieds */}
-          <ellipse cx="150" cy="440" rx="15" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
-          <ellipse cx="210" cy="440" rx="15" ry="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1"/>
-          
-          {/* Zones cliquables pour douleur */}
-          {bodyParts.map((part) => (
-            <g key={part.id}>
-              <rect
-                x={part.x}
-                y={part.y}
-                width={part.width}
-                height={part.height}
-                fill={getPainColor(part.id)}
-                stroke={painAreas[part.id] ? "#ef4444" : "transparent"}
-                strokeWidth="2"
-                rx="5"
-                className="cursor-pointer hover:stroke-emerald-500 transition-all"
-                onClick={() => onPainAreaClick(part.id)}
-              />
-              {painAreas[part.id] && (
-                <text
-                  x={part.x + part.width/2}
-                  y={part.y + part.height/2 + 5}
-                  textAnchor="middle"
-                  className="text-xs font-bold fill-white pointer-events-none"
-                  style={{fontSize: '12px'}}
-                >
-                  {painAreas[part.id]}
-                </text>
-              )}
-            </g>
-          ))}
-        </svg>
+    <div className="bg-white p-6 rounded-lg border shadow-md">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-gray-900">Body Chart (code couleur M.Laslett)</h3>
+        <Button
+          onClick={clearCanvas}
+          variant="outline"
+          size="sm"
+          className="text-red-600 border-red-600 hover:bg-red-50"
+        >
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Effacer
+        </Button>
       </div>
-      
-      {/* Légende */}
-      <div className="flex justify-center space-x-4 text-xs">
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-green-400 rounded"></div>
-          <span>Léger (1-3)</span>
+
+      <p className="text-sm text-gray-600 mb-4">
+        Dessinez sur le corps humain pour indiquer les zones de douleur (compatible souris et stylet)
+      </p>
+
+      {/* Color Palette - Mark Laslett */}
+      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+        <p className="text-sm font-semibold text-gray-700 mb-3">Sélectionnez le type de douleur :</p>
+        <div className="grid grid-cols-1 gap-2">
+          {painColors.map((painType) => (
+            <button
+              key={painType.id}
+              onClick={() => setSelectedColor(painType.color)}
+              className={`flex items-center space-x-3 p-2 rounded-lg border-2 transition-all hover:bg-white ${
+                selectedColor === painType.color ? 'border-emerald-500 bg-white shadow-md' : 'border-transparent'
+              }`}
+            >
+              <div 
+                className="w-8 h-8 rounded border-2 border-gray-300 flex-shrink-0"
+                style={{ backgroundColor: painType.color }}
+              ></div>
+              <span className="text-xs text-gray-700 text-left flex-1">{painType.label}</span>
+            </button>
+          ))}
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-yellow-400 rounded"></div>
-          <span>Modéré (4-6)</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-red-400 rounded"></div>
-          <span>Intense (7-10)</span>
+      </div>
+
+      {/* Brush Size Control */}
+      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+        <Label className="text-sm font-semibold text-gray-700 mb-2 block">
+          Taille du pinceau: {brushSize}px
+        </Label>
+        <input
+          type="range"
+          min="2"
+          max="15"
+          value={brushSize}
+          onChange={(e) => setBrushSize(parseInt(e.target.value))}
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+        />
+      </div>
+
+      {/* Canvas Drawing Area with Body Chart Background */}
+      <div className="flex justify-center mb-4 bg-white p-4 rounded-lg border-2 border-gray-300">
+        <div className="relative">
+          {/* Background Body Chart SVG */}
+          <svg 
+            width="600" 
+            height="800" 
+            viewBox="0 0 600 800" 
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{ zIndex: 1 }}
+          >
+            {/* Vue de face */}
+            <g transform="translate(100, 50)">
+              {/* Tête */}
+              <ellipse cx="100" cy="40" rx="35" ry="45" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Cou */}
+              <rect x="85" y="85" width="30" height="20" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Corps/Torse */}
+              <ellipse cx="100" cy="170" rx="55" ry="80" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Bras gauche */}
+              <line x1="45" y1="120" x2="20" y2="180" stroke="#cbd5e1" strokeWidth="2"/>
+              <line x1="20" y1="180" x2="15" y2="240" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Bras droit */}
+              <line x1="155" y1="120" x2="180" y2="180" stroke="#cbd5e1" strokeWidth="2"/>
+              <line x1="180" y1="180" x2="185" y2="240" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Mains */}
+              <ellipse cx="15" cy="250" rx="8" ry="12" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              <ellipse cx="185" cy="250" rx="8" ry="12" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Bassin */}
+              <rect x="65" y="250" width="70" height="40" rx="10" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Jambe gauche */}
+              <line x1="75" y1="290" x2="70" y2="400" stroke="#cbd5e1" strokeWidth="2"/>
+              <line x1="70" y1="400" x2="68" y2="500" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Jambe droite */}
+              <line x1="125" y1="290" x2="130" y2="400" stroke="#cbd5e1" strokeWidth="2"/>
+              <line x1="130" y1="400" x2="132" y2="500" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Pieds */}
+              <ellipse cx="68" cy="510" rx="12" ry="6" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              <ellipse cx="132" cy="510" rx="12" ry="6" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+            </g>
+
+            {/* Vue de dos */}
+            <g transform="translate(350, 50)">
+              {/* Tête dos */}
+              <ellipse cx="100" cy="40" rx="35" ry="45" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Cou */}
+              <rect x="85" y="85" width="30" height="20" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Dos */}
+              <ellipse cx="100" cy="170" rx="55" ry="80" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Colonne vertébrale */}
+              <line x1="100" y1="100" x2="100" y2="250" stroke="#cbd5e1" strokeWidth="1" strokeDasharray="3,3"/>
+              {/* Bras gauche */}
+              <line x1="45" y1="120" x2="20" y2="180" stroke="#cbd5e1" strokeWidth="2"/>
+              <line x1="20" y1="180" x2="15" y2="240" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Bras droit */}
+              <line x1="155" y1="120" x2="180" y2="180" stroke="#cbd5e1" strokeWidth="2"/>
+              <line x1="180" y1="180" x2="185" y2="240" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Mains */}
+              <ellipse cx="15" cy="250" rx="8" ry="12" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              <ellipse cx="185" cy="250" rx="8" ry="12" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Bassin */}
+              <rect x="65" y="250" width="70" height="40" rx="10" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Jambe gauche */}
+              <line x1="75" y1="290" x2="70" y2="400" stroke="#cbd5e1" strokeWidth="2"/>
+              <line x1="70" y1="400" x2="68" y2="500" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Jambe droite */}
+              <line x1="125" y1="290" x2="130" y2="400" stroke="#cbd5e1" strokeWidth="2"/>
+              <line x1="130" y1="400" x2="132" y2="500" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Pieds */}
+              <ellipse cx="68" cy="510" rx="12" ry="6" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+              <ellipse cx="132" cy="510" rx="12" ry="6" fill="none" stroke="#cbd5e1" strokeWidth="2"/>
+            </g>
+          </svg>
+
+          {/* Drawing Canvas */}
+          <canvas
+            ref={canvasRef}
+            width={600}
+            height={800}
+            className="border-2 border-gray-400 rounded cursor-crosshair"
+            style={{ touchAction: 'none', zIndex: 2, position: 'relative' }}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+          />
         </div>
       </div>
       
