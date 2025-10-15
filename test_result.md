@@ -192,9 +192,9 @@ frontend:
 
   - task: "Zone Notes Cliniques Étendue - Patient Detail"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -204,6 +204,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ ZONE NOTES CLINIQUES TESTÉE ET FONCTIONNELLE ! Zone présente en haut du dossier patient AVANT les tabs ✅, design bleu clair conforme (bg-blue-50, border-blue-200) ✅, titre correct 'Notes Cliniques - Ce que raconte le patient' ✅, textarea 4 lignes minimum avec placeholder approprié ✅, bouton 'Enregistrer' visible et fonctionnel ✅, saisie de texte opérationnelle ✅, positionnement correct avant les tabs vérifié ✅, message d'aide présent ✅. Appel API PUT /api/patients/{id} pour sauvegarde testé."
+      - working: false
+        agent: "testing"
+        comment: "❌ ZONE NOTES CLINIQUES INTROUVABLE - Tests E2E ne trouvent pas la section notes cliniques dans le dossier patient. Page /patients accessible avec patients listés et boutons 'Voir', mais modal patient ne contient pas la zone notes. Recherche exhaustive: 0 éléments 'Notes Cliniques', 0 éléments 'Ce que raconte le patient', 0 sections bg-blue-50, 0 textarea, 0 boutons Enregistrer. Navigation instable vers détail patient. Section notes cliniques manquante ou non accessible via interface utilisateur."
 
   - task: "Notifications Cliquables avec Redirection"
     implemented: true
