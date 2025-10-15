@@ -7467,6 +7467,7 @@ const CoachingPage = () => {
               </div>
             )}
           </div>
+        </div>
 
         {showProgramModal && selectedDate && (
           <ProgramModal
