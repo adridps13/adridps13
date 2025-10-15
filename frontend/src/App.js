@@ -2265,15 +2265,38 @@ const ProgrammesPage = () => {
               </div>
               
               <div className="flex space-x-2 mt-6">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => {
+                    // TODO: Ouvrir modal avec détails du programme
+                    alert(`Détails du programme: ${prog.nom_programme}\nPatient: ${prog.patient_nom}\nObjectif: ${prog.objectif_principal}`);
+                  }}
+                >
                   <Eye className="w-4 h-4 mr-1" />
                   Voir Détails
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => {
+                    // TODO: Ouvrir formulaire de modification
+                    alert(`Modification du programme: ${prog.nom_programme}`);
+                  }}
+                >
                   <Edit className="w-4 h-4 mr-1" />
                   Modifier
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    // TODO: Voir métriques de progression
+                    alert(`Métriques de progression pour ${prog.patient_nom}`);
+                  }}
+                >
                   <TrendingUp className="w-4 h-4" />
                 </Button>
               </div>
