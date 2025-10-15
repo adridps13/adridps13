@@ -536,7 +536,38 @@ const PatientsList = () => {
                 <Separator />
                 
                 <div>
-                  <Label className="text-sm font-medium text-gray-600 mb-3 block">Actions disponibles</Label>
+                  <Label className="text-sm font-medium text-gray-600 mb-3 block">Dossier Patient</Label>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        // TODO: Ouvrir modal anamnèse en lecture/édition
+                        alert(`Anamnèse de ${selectedPatient.prenom} ${selectedPatient.nom}\n\nDonnées anamnèse:\n- Pathologie: ${selectedPatient.pathologie}\n- Prescription: ${selectedPatient.prescription_medicale}\n\n(Interface d'édition à venir)`);
+                      }}
+                      className="justify-start bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Voir/Modifier Anamnèse
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedPatient(selectedPatient);
+                        setShowPatientDetails(false);
+                        setShowCoachingPanel(true);
+                      }}
+                      className="justify-start bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                    >
+                      <Target className="w-4 h-4 mr-2" />
+                      Coaching Patient
+                    </Button>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 mb-3 block">Documents & Actions</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <Button
                       variant="outline"
