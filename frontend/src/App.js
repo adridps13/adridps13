@@ -7465,22 +7465,23 @@ const CoachingPage = () => {
                 </div>
               </div>
             )}
+          </div>
 
-            {showProgramModal && selectedDate && (
-              <ProgramModal
-            selectedDate={selectedDate}
-            exerciseLibrary={exerciseLibrary}
-            onAddExercise={async (exercise) => {
-              await addExerciseToDay(selectedDate, exercise);
-              setShowProgramModal(false);
-              setSelectedDate(null);
-            }}
-            onClose={() => {
-              setShowProgramModal(false);
-              setSelectedDate(null);
-            }}
-          />
-        )}
+          {showProgramModal && selectedDate && (
+            <ProgramModal
+              selectedDate={selectedDate}
+              exerciseLibrary={exerciseLibrary}
+              onAddExercise={async (exercise) => {
+                await addExerciseToDay(selectedDate, exercise);
+                setShowProgramModal(false);
+                setSelectedDate(null);
+              }}
+              onClose={() => {
+                setShowProgramModal(false);
+                setSelectedDate(null);
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
