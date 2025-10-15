@@ -1269,43 +1269,79 @@ const NewPatientForm = () => {
 };
 
 // Pain Drawing Component
-const PainDrawing = ({ painAreas, onPainAreaClick }) => {
-  const bodyParts = [
-    { id: 'tete', name: 'Tête', x: 150, y: 30, width: 60, height: 50 },
-    { id: 'cou', name: 'Cou', x: 160, y: 80, width: 40, height: 25 },
-    { id: 'epaule_g', name: 'Épaule G', x: 110, y: 105, width: 40, height: 30 },
-    { id: 'epaule_d', name: 'Épaule D', x: 210, y: 105, width: 40, height: 30 },
-    { id: 'bras_g', name: 'Bras G', x: 90, y: 135, width: 25, height: 60 },
-    { id: 'bras_d', name: 'Bras D', x: 245, y: 135, width: 25, height: 60 },
-    { id: 'coude_g', name: 'Coude G', x: 85, y: 195, width: 30, height: 20 },
-    { id: 'coude_d', name: 'Coude D', x: 245, y: 195, width: 30, height: 20 },
-    { id: 'avant_bras_g', name: 'Avant-bras G', x: 90, y: 215, width: 25, height: 50 },
-    { id: 'avant_bras_d', name: 'Avant-bras D', x: 245, y: 215, width: 25, height: 50 },
-    { id: 'main_g', name: 'Main G', x: 85, y: 265, width: 30, height: 25 },
-    { id: 'main_d', name: 'Main D', x: 245, y: 265, width: 30, height: 25 },
-    { id: 'thorax', name: 'Thorax', x: 140, y: 105, width: 80, height: 60 },
-    { id: 'abdomen', name: 'Abdomen', x: 145, y: 165, width: 70, height: 50 },
-    { id: 'dos_haut', name: 'Dos Haut', x: 145, y: 105, width: 70, height: 40 },
-    { id: 'dos_bas', name: 'Dos Bas', x: 145, y: 145, width: 70, height: 50 },
-    { id: 'bassin', name: 'Bassin', x: 145, y: 215, width: 70, height: 40 },
-    { id: 'cuisse_g', name: 'Cuisse G', x: 140, y: 255, width: 30, height: 70 },
-    { id: 'cuisse_d', name: 'Cuisse D', x: 190, y: 255, width: 30, height: 70 },
-    { id: 'genou_g', name: 'Genou G', x: 140, y: 325, width: 30, height: 25 },
-    { id: 'genou_d', name: 'Genou D', x: 190, y: 325, width: 30, height: 25 },
-    { id: 'jambe_g', name: 'Jambe G', x: 140, y: 350, width: 25, height: 60 },
-    { id: 'jambe_d', name: 'Jambe D', x: 195, y: 350, width: 25, height: 60 },
-    { id: 'cheville_g', name: 'Cheville G', x: 140, y: 410, width: 25, height: 20 },
-    { id: 'cheville_d', name: 'Cheville D', x: 195, y: 410, width: 25, height: 20 },
-    { id: 'pied_g', name: 'Pied G', x: 135, y: 430, width: 30, height: 20 },
-    { id: 'pied_d', name: 'Pied D', x: 195, y: 430, width: 30, height: 20 }
+// Pain Drawing Component - Mark Laslett Style with Canvas Drawing
+const PainDrawing = ({ painAreas, onPainAreaClick, onDrawingUpdate }) => {
+  const canvasRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [selectedColor, setSelectedColor] = useState('#FF0000'); // Rouge par défaut
+  const [brushSize, setBrushSize] = useState(5);
+  const [drawingData, setDrawingData] = useState([]);
+
+  // Codes couleurs Mark Laslett
+  const painColors = [
+    { id: 1, color: '#FF0000', name: 'Douleur aiguë', label: 'Rouge: Douleur aiguë, coup de poignard, pincement, élancement, traitement' },
+    { id: 2, color: '#FFFF00', name: 'Douleur profonde', label: 'Jaune: Douleur profonde, difficile à localiser précisément, sourde, floue' },
+    { id: 3, color: '#0000FF', name: 'Chaud/Froid', label: 'Bleu: Sensation de chaud ou de froid' },
+    { id: 4, color: '#00FF00', name: 'Fourmillement', label: 'Vert: Sensation de fourmillement ou de piqûre d\'aiguille' },
+    { id: 5, color: '#000000', name: 'Engourdissement', label: 'Noir: Engourdissement, anesthésie, perte de sensation' },
+    { id: 6, color: '#8B4513', name: 'Raideur/Fatigue', label: 'Marron: Sensation de raideur, de fatigue, autre' }
   ];
 
-  const getPainColor = (bodyPartId) => {
-    if (!painAreas[bodyPartId]) return 'transparent';
-    const intensity = painAreas[bodyPartId];
-    if (intensity <= 3) return 'rgba(34, 197, 94, 0.6)'; // Vert (léger)
-    if (intensity <= 6) return 'rgba(251, 191, 36, 0.6)'; // Jaune (modéré)
-    return 'rgba(239, 68, 68, 0.6)'; // Rouge (intense)
+  const startDrawing = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+    const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+
+    setIsDrawing(true);
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+    const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+
+    const ctx = canvas.getContext('2d');
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = selectedColor;
+    ctx.lineWidth = brushSize;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Save drawing data
+    const newPoint = { x, y, color: selectedColor, size: brushSize };
+    setDrawingData([...drawingData, newPoint]);
+  };
+
+  const stopDrawing = () => {
+    if (isDrawing) {
+      setIsDrawing(false);
+      if (onDrawingUpdate) {
+        onDrawingUpdate(drawingData);
+      }
+    }
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setDrawingData([]);
+    if (onDrawingUpdate) {
+      onDrawingUpdate([]);
+    }
   };
 
   return (
