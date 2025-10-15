@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implémentation du système de coaching avancé KineTrack avec interface spacieuse et visuelle style TrueCoach, cartes d'exercices éditables avec paramètres détaillés (séries, reps, tempo, repos, charge, RIR, RPE), vue hebdomadaire, duplication de séances, et persistance MongoDB."
+user_problem_statement: "Phase 1 - Améliorations UX KineTrack : (1) Pain Drawing Mark Laslett professionnel avec canvas dessinable souris/stylet et 6 codes couleurs médicaux, (2) Zone notes cliniques étendue en haut du dossier patient pour notes rapides, (3) Notifications cliquables redirigeant vers fiche patient/séance concernée."
 
 backend:
   - task: "API Coaching - Modèles et Endpoints"
