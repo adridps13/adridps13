@@ -6664,10 +6664,10 @@ const NotificationsPage = () => {
           {filterNotifications().map((notification) => (
             <Card 
               key={notification.id}
-              className={`p-4 cursor-pointer transition-all hover:shadow-md ${
+              className={`p-4 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.01] ${
                 !notification.read ? 'border-l-4 border-l-emerald-500 bg-emerald-50' : ''
               }`}
-              onClick={() => markAsRead(notification.id)}
+              onClick={() => handleNotificationClick(notification)}
             >
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0 mt-1">
