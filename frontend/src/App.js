@@ -7207,10 +7207,10 @@ const CoachingPage = () => {
         </div>
       </div>
 
-      {/* Layout */}
-      <div className="flex gap-6 h-[calc(100vh-200px)] px-6 py-6">
-        {/* Patient Sidebar */}
-        <div className="w-80 bg-white rounded-lg shadow-sm border overflow-y-auto">
+      {/* Layout pleine largeur sans max-width */}
+      <div className="flex h-[calc(100vh-80px)]">
+        {/* Patient Sidebar - Plus compact */}
+        <div className="w-72 bg-white border-r shadow-sm overflow-y-auto flex-shrink-0">
             <div className="p-4 border-b">
               <h3 className="font-semibold text-gray-900">Patients</h3>
             </div>
@@ -7236,8 +7236,8 @@ const CoachingPage = () => {
             </div>
           </div>
 
-          {/* Main Coaching Area */}
-          <div className="flex-1 bg-white rounded-lg shadow-sm border overflow-hidden">
+          {/* Main Coaching Area - Pleine largeur */}
+          <div className="flex-1 bg-white overflow-hidden">
             {selectedPatient ? (
               <div className="h-full flex flex-col">
                 {/* Patient Header - Plus compact */}
@@ -7305,10 +7305,9 @@ const CoachingPage = () => {
                   </div>
                 </div>
 
-                {/* Weekly Program Grid */}
-                <div className="flex-1 overflow-y-auto bg-gray-50">
-                  <div className="p-8">
-                    <div className="grid grid-cols-7 gap-6 min-h-[700px]">
+                {/* Weekly Program Grid - Pleine largeur avec scroll horizontal */}
+                <div className="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50">
+                  <div className="flex gap-4 p-4 h-full" style={{ minWidth: 'max-content' }}>
                       {getWeekDays().map((day, dayIndex) => {
                         const daySession = getDaySession(day);
                         const isToday = day.toDateString() === new Date().toDateString();
@@ -7317,9 +7316,10 @@ const CoachingPage = () => {
                         return (
                           <div 
                             key={dayIndex} 
-                            className={`bg-white rounded-xl shadow-md border-2 flex flex-col min-h-[700px] transition-all hover:shadow-xl ${
+                            className={`bg-white rounded-xl shadow-lg border-2 flex flex-col flex-shrink-0 transition-all hover:shadow-2xl ${
                               isToday ? 'ring-4 ring-emerald-400 border-emerald-400' : 'border-gray-200'
                             }`}
+                            style={{ width: '320px', height: 'calc(100vh - 220px)' }}
                             onContextMenu={(e) => {
                               e.preventDefault();
                               if (copiedSession) {
@@ -7455,7 +7455,6 @@ const CoachingPage = () => {
                           </div>
                         );
                       })}
-                    </div>
                   </div>
                 </div>
             ) : (
@@ -7468,23 +7467,23 @@ const CoachingPage = () => {
             )}
           </div>
         </div>
-      </div>
 
-      {showProgramModal && selectedDate && (
-        <ProgramModal
-          selectedDate={selectedDate}
-          exerciseLibrary={exerciseLibrary}
-          onAddExercise={async (exercise) => {
-            await addExerciseToDay(selectedDate, exercise);
-            setShowProgramModal(false);
-            setSelectedDate(null);
-          }}
-          onClose={() => {
-            setShowProgramModal(false);
-            setSelectedDate(null);
-          }}
-        />
-      )}
+        {showProgramModal && selectedDate && (
+          <ProgramModal
+            selectedDate={selectedDate}
+            exerciseLibrary={exerciseLibrary}
+            onAddExercise={async (exercise) => {
+              await addExerciseToDay(selectedDate, exercise);
+              setShowProgramModal(false);
+              setSelectedDate(null);
+            }}
+            onClose={() => {
+              setShowProgramModal(false);
+              setSelectedDate(null);
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 };
