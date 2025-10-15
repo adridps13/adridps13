@@ -7305,9 +7305,10 @@ const CoachingPage = () => {
                   </div>
                 </div>
 
-                {/* Weekly Program Grid - Pleine largeur avec scroll horizontal */}
-                <div className="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50">
-                  <div className="flex gap-4 p-4 h-full" style={{ minWidth: 'max-content' }}>
+                {/* Weekly Program Grid */}
+                <div className="flex-1 overflow-y-auto bg-gray-50">
+                  <div className="p-8">
+                    <div className="grid grid-cols-7 gap-6 min-h-[700px]">
                       {getWeekDays().map((day, dayIndex) => {
                         const daySession = getDaySession(day);
                         const isToday = day.toDateString() === new Date().toDateString();
