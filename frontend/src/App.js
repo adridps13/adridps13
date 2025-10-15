@@ -7484,7 +7484,6 @@ const CoachingPage = () => {
             )}
           </div>
         </div>
-      </div>
     </div>
   );
 };
