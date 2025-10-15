@@ -7327,33 +7327,33 @@ const CoachingPage = () => {
                               }
                             }}
                           >
-                            {/* Day Header */}
-                            <div className={`p-5 text-center border-b-2 ${
+                            {/* Day Header - Plus compact */}
+                            <div className={`p-4 text-center border-b-2 flex-shrink-0 ${
                               isToday 
-                                ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-t-lg' 
+                                ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white' 
                                 : isWeekend 
                                   ? 'bg-gradient-to-br from-gray-100 to-gray-200' 
                                   : 'bg-gradient-to-br from-blue-50 to-blue-100'
                             }`}>
-                              <div className={`text-sm font-bold uppercase tracking-wider ${
+                              <div className={`text-xs font-bold uppercase tracking-wider ${
                                 isToday ? 'text-emerald-100' : 'text-gray-600'
                               }`}>
                                 {day.toLocaleDateString('fr-FR', { weekday: 'short' })}
                               </div>
-                              <div className={`text-3xl font-bold mt-2 ${
+                              <div className={`text-2xl font-bold mt-1 ${
                                 isToday ? 'text-white' : 'text-gray-900'
                               }`}>
                                 {day.getDate()}
                               </div>
-                              <div className={`text-xs mt-1 ${
+                              <div className={`text-xs ${
                                 isToday ? 'text-emerald-100' : 'text-gray-500'
                               }`}>
                                 {day.toLocaleDateString('fr-FR', { month: 'short' })}
                               </div>
                             </div>
 
-                            {/* Day Content */}
-                            <div className="flex-1 p-5 overflow-y-auto">
+                            {/* Day Content - Scrollable verticalement */}
+                            <div className="flex-1 p-4 overflow-y-auto">
                               {isWeekend ? (
                                 <div className="text-center py-12">
                                   <div className="text-gray-400 mb-6">
