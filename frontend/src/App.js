@@ -6598,6 +6598,21 @@ const NotificationsPage = () => {
     ));
   };
 
+  const handleNotificationClick = (notification) => {
+    markAsRead(notification.id);
+    
+    // Rediriger vers la page patient appropriée
+    if (notification.patientId) {
+      if (notification.type === 'session_completed' && notification.sessionDate) {
+        // Rediriger vers la page coaching avec la date de la séance
+        window.location.href = `/coaching?patient=${notification.patientId}&date=${notification.sessionDate}`;
+      } else {
+        // Rediriger vers la fiche patient
+        window.location.href = `/patients/${notification.patientId}`;
+      }
+    }
+  };
+
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'session_completed': return <CheckCircle className="w-5 h-5 text-green-600" />;
