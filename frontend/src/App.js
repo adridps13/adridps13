@@ -7355,14 +7355,14 @@ const CoachingPage = () => {
                             {/* Day Content - Scrollable verticalement */}
                             <div className="flex-1 p-4 overflow-y-auto">
                               {isWeekend ? (
-                                <div className="text-center py-12">
-                                  <div className="text-gray-400 mb-6">
-                                    <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                <div className="text-center py-8">
+                                  <div className="text-gray-400 mb-4">
+                                    <Calendar className="w-10 h-10 mx-auto mb-2 opacity-50" />
                                     <div className="text-sm font-medium">Jour de repos</div>
                                   </div>
                                   <Button
                                     variant="outline"
-                                    className="w-full border-2 border-dashed text-emerald-600 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400 py-3"
+                                    className="w-full border-2 border-dashed text-emerald-600 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400 py-2 text-sm"
                                     onClick={() => {
                                       setSelectedDate(day);
                                       setShowProgramModal(true);
