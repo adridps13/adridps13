@@ -7468,7 +7468,6 @@ const CoachingPage = () => {
             )}
           </div>
 
-        {/* Program Modal */}
         {showProgramModal && selectedDate && (
           <ProgramModal
             selectedDate={selectedDate}
