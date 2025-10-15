@@ -7207,10 +7207,10 @@ const CoachingPage = () => {
         </div>
       </div>
 
-      {/* Layout pleine largeur sans max-width */}
-      <div className="flex h-[calc(100vh-80px)]">
-        {/* Patient Sidebar - Plus compact */}
-        <div className="w-72 bg-white border-r shadow-sm overflow-y-auto flex-shrink-0">
+      {/* Layout */}
+      <div className="flex gap-6 h-[calc(100vh-200px)] px-6 py-6">
+        {/* Patient Sidebar */}
+        <div className="w-80 bg-white rounded-lg shadow-sm border overflow-y-auto">
             <div className="p-4 border-b">
               <h3 className="font-semibold text-gray-900">Patients</h3>
             </div>
