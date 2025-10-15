@@ -7236,8 +7236,8 @@ const CoachingPage = () => {
             </div>
           </div>
 
-          {/* Main Coaching Area - Pleine largeur */}
-          <div className="flex-1 bg-white overflow-hidden">
+          {/* Main Coaching Area */}
+          <div className="flex-1 bg-white rounded-lg shadow-sm border overflow-hidden">
             {selectedPatient ? (
               <div className="h-full flex flex-col">
                 {/* Patient Header - Plus compact */}
