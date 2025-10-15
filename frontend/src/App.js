@@ -1491,17 +1491,6 @@ const PainDrawing = ({ painAreas, onPainAreaClick, onDrawingUpdate }) => {
           />
         </div>
       </div>
-      
-      <div className="mt-3 text-center">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPainAreaClick('clear')}
-          className="text-xs"
-        >
-          Effacer tout
-        </Button>
-      </div>
     </div>
   );
 };
