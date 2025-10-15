@@ -7236,28 +7236,28 @@ const CoachingPage = () => {
             </div>
           </div>
 
-          {/* Main Coaching Area */}
-          <div className="flex-1 bg-white rounded-lg shadow-sm border overflow-hidden">
+          {/* Main Coaching Area - Pleine largeur */}
+          <div className="flex-1 bg-white overflow-hidden">
             {selectedPatient ? (
               <div className="h-full flex flex-col">
-                {/* Patient Header */}
-                <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                  <div className="flex justify-between items-center">
+                {/* Patient Header - Plus compact */}
+                <div className="px-6 py-3 border-b bg-gradient-to-r from-emerald-500 to-emerald-600 text-white flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
                     <div>
-                      <h2 className="text-2xl font-bold">
+                      <h2 className="text-xl font-bold">
                         {selectedPatient.nom} {selectedPatient.prenom}
                       </h2>
-                      <p className="text-blue-100 mt-1">{selectedPatient.pathologie}</p>
+                      <p className="text-emerald-100 text-sm">{selectedPatient.pathologie}</p>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-blue-100">Âge</div>
-                      <div className="text-xl font-semibold">{selectedPatient.age} ans</div>
-                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-emerald-100">Âge</div>
+                    <div className="text-lg font-semibold">{selectedPatient.age} ans</div>
                   </div>
                 </div>
 
-                {/* Week Navigation with Actions */}
-                <div className="p-4 border-b bg-gradient-to-r from-gray-50 to-gray-100">
+                {/* Week Navigation with Actions - Plus compact */}
+                <div className="px-6 py-3 border-b bg-gray-50">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-4">
                       <Button
