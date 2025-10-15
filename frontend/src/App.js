@@ -7373,21 +7373,21 @@ const CoachingPage = () => {
                                   </Button>
                                 </div>
                               ) : (
-                                <div className="space-y-4">
-                                  {/* Session Actions */}
-                                  <div className="flex justify-between items-center mb-4">
-                                    <div className="text-sm font-semibold text-gray-700">
+                                <div className="space-y-3">
+                                  {/* Session Actions - Plus compact */}
+                                  <div className="flex justify-between items-center mb-3">
+                                    <div className="text-xs font-semibold text-gray-600">
                                       {daySession?.exercices?.length || 0} exercice(s)
                                     </div>
-                                    <div className="flex space-x-2">
+                                    <div className="flex space-x-1">
                                       <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => copySession(day)}
-                                        className="p-2 h-8 w-8 hover:bg-blue-100"
+                                        className="p-1 h-7 w-7 hover:bg-blue-100"
                                         title="Copier la séance"
                                       >
-                                        <Copy className="w-4 h-4 text-blue-600" />
+                                        <Copy className="w-3 h-3 text-blue-600" />
                                       </Button>
                                       {daySession && (
                                         <Button
@@ -7399,17 +7399,17 @@ const CoachingPage = () => {
                                               await fetchPatientSessions(selectedPatient.id);
                                             }
                                           }}
-                                          className="p-2 h-8 w-8 hover:bg-red-100"
+                                          className="p-1 h-7 w-7 hover:bg-red-100"
                                           title="Effacer la séance"
                                         >
-                                          <Trash2 className="w-4 h-4 text-red-600" />
+                                          <Trash2 className="w-3 h-3 text-red-600" />
                                         </Button>
                                       )}
                                     </div>
                                   </div>
 
-                                  {/* Exercises */}
-                                  <div className="space-y-4">
+                                  {/* Exercises - Plus compact */}
+                                  <div className="space-y-3">
                                     {daySession?.exercices?.map((exercise) => (
                                       <ExerciseCard
                                         key={exercise.id}
