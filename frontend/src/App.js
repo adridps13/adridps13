@@ -7317,10 +7317,9 @@ const CoachingPage = () => {
                         return (
                           <div 
                             key={dayIndex} 
-                            className={`bg-white rounded-xl shadow-lg border-2 flex flex-col flex-shrink-0 transition-all hover:shadow-2xl ${
+                            className={`bg-white rounded-xl shadow-md border-2 flex flex-col min-h-[700px] transition-all hover:shadow-xl ${
                               isToday ? 'ring-4 ring-emerald-400 border-emerald-400' : 'border-gray-200'
                             }`}
-                            style={{ width: '320px', height: 'calc(100vh - 220px)' }}
                             onContextMenu={(e) => {
                               e.preventDefault();
                               if (copiedSession) {
