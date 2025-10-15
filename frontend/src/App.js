@@ -8141,6 +8141,34 @@ const PatientDetailPage = () => {
             </div>
           </div>
 
+          {/* Zone Notes Cliniques - Grande zone en haut */}
+          <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-sm font-bold text-blue-900 flex items-center">
+                <FileText className="w-4 h-4 mr-2" />
+                Notes Cliniques - Ce que raconte le patient
+              </Label>
+              <Button 
+                onClick={saveNotes} 
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Check className="w-4 h-4 mr-1" />
+                Enregistrer
+              </Button>
+            </div>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Notez ici ce que le patient vous raconte : symptômes, plaintes, historique, observations cliniques..."
+              className="w-full min-h-[100px] text-sm border-2 border-blue-300 focus:border-blue-500 bg-white"
+              rows={4}
+            />
+            <p className="text-xs text-blue-700 mt-2">
+              💡 Zone de prise de notes rapide pendant la consultation. Enregistrez régulièrement.
+            </p>
+          </div>
+
           {/* Tabs */}
           <div className="mt-6 border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
